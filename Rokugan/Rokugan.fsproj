@@ -39,6 +39,7 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GameTypes.fs" />
     <Compile Include="CardDef.fs" />
     <Compile Include="CoreCards.fs" />
     <Compile Include="CardRepository.fs" />

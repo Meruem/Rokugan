@@ -1,11 +1,11 @@
 module CoreCards
 
-open CardDef
+open GameTypes
 
 let coreCards = [
     {
         Title = Title "Akodo Gunsō" 
-        Spec = Dynasty (DynastyCardDef.Character {
+        Spec = CardSpec.Dynasty (DynastyCardDef.Character {
             Cost = 2
             Clan = Clan.Lion
             MilitarySkill = Some 2
@@ -18,7 +18,7 @@ let coreCards = [
 
     {
         Title = Title "Adept of the Waves" 
-        Spec = Dynasty (DynastyCardDef.Character {
+        Spec = CardSpec.Dynasty (DynastyCardDef.Character {
         Cost = 2
         Clan = Clan.Phoenix
         MilitarySkill = Some 2
@@ -31,7 +31,7 @@ let coreCards = [
         
     {
         Title = Title "Artisan Academy" 
-        Spec = Dynasty (DynastyCardDef.Holding {
+        Spec = CardSpec.Dynasty (DynastyCardDef.Holding {
             Clan = Clan.Crane
             BonusStrength = 1
             Traits = [Academy]
@@ -41,7 +41,7 @@ let coreCards = [
 
     {
         Title = Title "Admit Defeat"
-        Spec = Conflict (ConflictCardDef.Event {
+        Spec = CardSpec.Conflict (ConflictCardDef.Event {
             Clan = Clan.Crane
             Cost = 1
             Ability = Ability "Bow character or something" })
@@ -49,7 +49,7 @@ let coreCards = [
 
     {
         Title = Title "Ancestral Daishō"
-        Spec = Conflict (ConflictCardDef.Attachment {
+        Spec = CardSpec.Conflict (ConflictCardDef.Attachment {
             Clan = Clan.Dragon
             Cost = 1
             BonusMilitary = 2

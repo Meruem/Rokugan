@@ -1,5 +1,6 @@
 module SampleDeck
 
+open GameTypes
 open CardDef
 
 let rnd = System.Random()
@@ -9,7 +10,7 @@ let sampleDeck num (defList: List<_>) =
         |> List.map (fun _ -> 
             defList.[rnd.Next(defList.Length)])
 
-let getTitle def = def.Title
+let getTitle (def:CardDef) = def.Title
 
 let sampleConflictDeck num (defList : CardDef list) =
     defList 

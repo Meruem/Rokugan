@@ -1,11 +1,14 @@
 #I __SOURCE_DIRECTORY__
 #load @"c:\projects\FsEye\FsEye.fsx"
+#load @"GameTypes.fs"
 #load @"CardDef.fs"
 #load @"SampleDeck.fs"
 #load @"CoreCards.fs"
 #load @"CardRepository.fs"
 #load @"GameState.fs"
 
+
+open GameTypes
 open SampleDeck
 open CardDef
 open CoreCards
@@ -35,4 +38,8 @@ let p2config =
         Provinces = provinces
     }    
 
-let gs = initializeGameState p1config p2config
+let gs = 
+    initializeGameState p1config p2config
+    |> revealAllDynastyCardsAtProvinces
+    |> collectFateFromStronghold
+    |> getDynastyPhaseActions
