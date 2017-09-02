@@ -5,7 +5,8 @@ open GameTypes
 let createCard title player =
   { Title = title
     Owner = player
-    States = [] }
+    States = []
+    Fate = 0 }
 
 let createProviceCard title player = 
   { ProvinceCard = createCard title player

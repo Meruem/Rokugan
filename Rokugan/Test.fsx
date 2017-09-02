@@ -19,8 +19,8 @@ open CardDef
 open CoreCards
 open GameState
 
-let randomConflictDeck () = sampleConflictDeck 45 coreCards
-let randomDynastyDeck () = sampleDynastyDeck 45 coreCards
+let randomConflictDeck () = sampleConflictDeck 10 coreCards
+let randomDynastyDeck () = sampleDynastyDeck 10 coreCards
 let main :: provinces = sampleProvinces 5 coreCards
 let stronghold () = sampleStronghold coreCards
 
@@ -45,8 +45,6 @@ let p2config =
 
 let gs = 
     initializeGameState p1config p2config
-    |> revealAllDynastyCardsAtProvinces
-    |> collectFateFromStronghold
-    |> getDynastyPhaseActions
+    |> gotoDynastyPhase
 
-let gs2 = gs |> playAction 1
+let gs2 = gs |> playAction 0 |> playAction 0

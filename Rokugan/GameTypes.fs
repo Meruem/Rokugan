@@ -97,7 +97,8 @@ type CardState = Bowed | Honored | Dishonored | Hidden
 type Card = {
     Title : CardTitle
     Owner : Player
-    States : CardState list }
+    States : CardState list
+    Fate : int }
 
 type Province = {
     ProvinceCard : Card
@@ -116,21 +117,32 @@ type Zone =
             let (Zone lst) = this
             lst
 
+type PlayerFlagEnum = Passed
+
+//defines when the flag is cleared
+type Lifetime = Round | Phase | Game
+
+type PlayerFlag =
+  { Lifetime : Lifetime
+    Flag : PlayerFlagEnum}
+
 type PlayerState = {
-    Honor : int
-    Fate : int
     ConflictDeck : Deck
     DynastyDeck : Deck
+    DynastyDiscard : Zone
+    ConflictDiscard : Zone 
+    Honor : int
+    Fate : int
     Hand : Zone
     DynastyInProvinces : Zone
     Stonghold : Stronghold
     StrongholdProvince : Province
     Provinces : Province list
     Home: Zone
-    DynastyDiscard : Zone
-    ConflictDiscard : Zone }
+    Flags : PlayerFlag list }
 
-type GamePhase = Dynasty | Draw | Conflict | Fate | Regroup
+type GameEnd = Player1Won | Player2Won 
+type GamePhase = Dynasty | Draw | Conflict | Fate | Regroup | End of GameEnd 
 
 type GameState = {
     TurnNumber : int
@@ -138,16 +150,22 @@ type GameState = {
     GamePhase : GamePhase
     ActivePlayer : Player
     FirstPlayer : Player
+    Triggers : GameTrigger list
     Player1State : PlayerState
     Player2State : PlayerState }
-and GameStateChanger = GameState -> GameState
+and GameTrigger = 
+  { Name : string
+    Lifetime : Lifetime
+    Condition : GameState -> bool
+    Action : GameState -> GameState}
 and PlayerActionType = 
     | Pass
     | PlayCharacter of CardTitle
     | ActivateAction
+    | Choice of int
 and PlayerAction = 
   { Type : PlayerActionType
-    Action : GameStateChanger }
+    Action : GameState -> GameState }
 
 type InitialPlayerConfig = {
     Player : Player
