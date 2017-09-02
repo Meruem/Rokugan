@@ -11,6 +11,10 @@
 #load @"Deck.fs"
 #load @"PlayerState.fs"
 #load @"GameState.fs"
+#load @"Dynasty.fs"
+#load @"Draw.fs"
+#load @"Game.fs"
+
 
 
 open GameTypes
@@ -18,6 +22,7 @@ open SampleDeck
 open CardDef
 open CoreCards
 open GameState
+open Game
 
 let randomConflictDeck () = sampleConflictDeck 10 coreCards
 let randomDynastyDeck () = sampleDynastyDeck 10 coreCards
