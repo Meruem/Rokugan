@@ -1,35 +1,45 @@
 module GameState
 open GameTypes
+open System
 
-let chooseRandomPlayer () = 
-    let rnd = System.Random()
-    if rnd.Next(2) = 0 then Player1 else Player2
+let changePlayerState player playerState gameState =
+    match player with 
+    | Player1 -> {gameState with Player1State = playerState}
+    | Player2 -> {gameState with Player2State = playerState}
 
-let drawCardsFromDeck n (deck : Card list) = 
-    let c = min n deck.Length
-    List.splitAt c deck
-
-let drawCardFromDeck (deck : Card list) = 
-    match deck with
-    | card :: rest -> Some (card, rest)
+let drawCardFromDeck (deck : Deck) =
+    let (Deck lst) = deck
+    match lst with
+    | card :: rest -> Some (card, Deck rest)
     | _ -> None
 
 let addHonor honor (playerState:PlayerState) = 
     { playerState with Honor = playerState.Honor + honor}
 
-let shuffleDeck (deck:Card list) =
-    deck
+let shuffleDeck (deck:Deck) =
+    deck.Cards |> List.sortBy (fun c -> Guid.NewGuid ()) |> Deck
+
+let zoneToDeck = function Zone l -> Deck l
 
 let recycleDynastyDiscard playerState =
     { playerState with 
-        DynastyDiscard = []
-        DynastyDeck = playerState.DynastyDiscard |> shuffleDeck }
+        DynastyDiscard = Zone []
+        DynastyDeck = playerState.DynastyDiscard |> zoneToDeck |> shuffleDeck }
+
+let recycleConflictDiscard playerState =
+    { playerState with 
+        ConflictDiscard = Zone []
+        ConflictDeck = playerState.ConflictDiscard |> zoneToDeck |> shuffleDeck }
 
 let rec drawCardFromDynastyDeck (playerState : PlayerState) = 
     match drawCardFromDeck playerState.DynastyDeck with
     | Some (card, rest) -> card, { playerState with DynastyDeck = rest }
     | None -> playerState |> addHonor -5 |> recycleDynastyDiscard |> drawCardFromDynastyDeck      
 
+let rec drawCardFromConflictDeck (playerState : PlayerState) = 
+    match drawCardFromDeck playerState.ConflictDeck with
+    | Some (card, rest) -> card, { playerState with ConflictDeck = rest }
+    | None -> playerState |> addHonor -5 |> recycleDynastyDiscard |> drawCardFromConflictDeck      
 
 let createCard title player = {
     Title = title
@@ -42,32 +52,38 @@ let createProviceCard title player = {
 
 let createStrongholdCard title player = { StrongholdCard = createCard title player }
 
+let getCardsFromDeck n (deck:Deck) = 
+    let (Deck lst) = deck
+    let hand, rest = List.splitAt 4 lst
+    (Zone hand), (Deck rest)
+
 let initializePlayerState (initialConfig:InitialPlayerConfig) =
     let init card = createCard card initialConfig.Player 
-    let conflictDeck = initialConfig.ConflictDeck |> List.map init
-    let hand, conflictDeck' = drawCardsFromDeck 4 conflictDeck
-    let dynastyDeck = initialConfig.DynastyDeck |> List.map init
-    let dynastyHand, dynastyDeck' = drawCardsFromDeck 4 dynastyDeck
+    let conflictDeck = initialConfig.ConflictDeck |> List.map init |> Deck
+    let hand, conflictDeck' = getCardsFromDeck 4 conflictDeck
+    let dynastyDeck = initialConfig.DynastyDeck |> List.map init |> Deck
+    let dynastyHand, dynastyDeck' = getCardsFromDeck 4 dynastyDeck
     let initProvince title = createProviceCard title initialConfig.Player
     let stronghold = CardRepository.getStrongholdCard initialConfig.Stonghold
     {
-        DynastyDiscard = []
-        ConflictDiscard = []
-        Home = []
+        DynastyDiscard = Zone []
+        ConflictDiscard = Zone []
+        Home = Zone []
         Honor = stronghold.StartingHonor
         Fate = 0
         ConflictDeck = conflictDeck'
         DynastyDeck = dynastyDeck'
         Hand = hand
-        DynastyInProvinces = dynastyHand |> List.map (fun c -> {c with States = [Hidden]})
+        DynastyInProvinces = dynastyHand.Cards |> List.map (fun c -> {c with States = [Hidden]}) |> Zone
         Stonghold = createStrongholdCard initialConfig.Stonghold initialConfig.Player
         StrongholdProvince =  initProvince initialConfig.StrongholdProvince
         Provinces = initialConfig.Provinces |> List.map  initProvince
     } 
 
 let initializeGameState playerConfig1 playerConfig2 = 
-    let firstPlayer = chooseRandomPlayer ()
+    let firstPlayer = Utils.chooseRandomPlayer ()
     {
+        TurnNumber = 1
         ActivePlayer = firstPlayer
         AvailablePlayerActions = []
         GamePhase = Dynasty
@@ -81,7 +97,7 @@ let removeCardState state (card:Card) =
 let revealAllDynastyCardsAtProvinces gameState =
     let removeHiddenState = removeCardState Hidden
     let removeHiddenFromPlayerState pState =
-        { pState with DynastyInProvinces = pState.DynastyInProvinces |> List.map removeHiddenState }
+        { pState with DynastyInProvinces = pState.DynastyInProvinces.Cards |> List.map removeHiddenState |> Zone }
     { gameState with 
         Player1State = removeHiddenFromPlayerState gameState.Player1State
         Player2State = removeHiddenFromPlayerState gameState.Player2State }
@@ -95,28 +111,23 @@ let hasEnoughFate playerState cardDef = cardDef.Cost <= playerState.Fate
 
 let playDynastyCard position player gameState =
     let state = getPlayerState player gameState
-    let card = state.DynastyInProvinces.[position]
-    let home = card :: state.Home
+    let card = state.DynastyInProvinces.Cards.[position]
+    let home = card :: state.Home.Cards
     let newCard, state' = drawCardFromDynastyDeck state
     let cardDef = CardRepository.getCharacterCard card.Title
     // add new dynasty card
-    let (_, dynastyInProvinces') = 
-        state.DynastyInProvinces 
-        |> List.fold (fun (i, acc) d -> 
-            let c = if i = position then newCard else d
-            (i+1, List.append acc [c])) (0, [])
+    let dynastyInProvinces' = 
+        state.DynastyInProvinces.Cards 
+        |> Utils.replaceListElement newCard position
     let state'' = 
         {state' with 
-            Home = home
-            DynastyInProvinces = dynastyInProvinces'
+            Home = Zone home
+            DynastyInProvinces = Zone dynastyInProvinces'
             Fate = state'.Fate - cardDef.Cost}
-    match player with
-    | Player1 -> {gameState with Player1State = state''}
-    | Player2 -> {gameState with Player2State = state''}
-    
+    gameState |> changePlayerState player state''    
 
 let getPlayableDynastyPositions playerState =
-    playerState.DynastyInProvinces 
+    playerState.DynastyInProvinces.Cards 
     |> List.mapi (fun i card -> 
         let cardDef = CardRepository.getDynastyCard card.Title
         let enoughFate = 
@@ -147,9 +158,16 @@ let rec getDynastyPhaseActions gameState =
         | Player2 -> gameState.Player2State
     let actions = 
         getPlayableDynastyPositions playerState
-        |> List.map (fun pos ->  PlayCharacter (playerState.DynastyInProvinces.[pos].Title, playDynastyCard pos gameState.ActivePlayer))
-    let actions' = PlayerAction.Pass (fun gs -> 
-        let gs' = {gs with ActivePlayer = match gs.ActivePlayer with |Player1 -> Player2 |Player2 -> Player1}
-        getDynastyPhaseActions gs') :: actions
-    {gameState with AvailablePlayerActions = actions'}
+        |> List.map (fun pos -> 
+          { Action =  playDynastyCard pos gameState.ActivePlayer
+            Type = PlayCharacter playerState.DynastyInProvinces.Cards.[pos].Title })
+    let actions' = 
+        { Type = PlayerActionType.Pass 
+          Action = (fun gs -> 
+                let gs' = {gs with ActivePlayer = match gs.ActivePlayer with |Player1 -> Player2 |Player2 -> Player1}
+                getDynastyPhaseActions gs') } :: actions
+    { gameState with AvailablePlayerActions = actions'}
     
+let playAction n gameState =
+    if n > gameState.AvailablePlayerActions.Length then gameState
+        else gameState.AvailablePlayerActions.[n].Action gameState  

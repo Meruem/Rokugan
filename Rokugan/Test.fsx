@@ -1,6 +1,8 @@
 #I __SOURCE_DIRECTORY__
-#load @"c:\projects\FsEye\FsEye.fsx"
+ 
+//#load @"c:\projects\FsEye\FsEye.fsx"
 #load @"GameTypes.fs"
+#load @"Utils.fs"
 #load @"CardDef.fs"
 #load @"SampleDeck.fs"
 #load @"CoreCards.fs"

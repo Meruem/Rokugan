@@ -105,23 +105,35 @@ type Province = {
 
 type Stronghold = { StrongholdCard : Card }
 
+type Deck = 
+    Deck of Card list
+        member this.Cards = 
+            let (Deck lst) = this
+            lst
+type Zone = 
+    Zone of Card list
+        member this.Cards = 
+            let (Zone lst) = this
+            lst
+
 type PlayerState = {
     Honor : int
     Fate : int
-    ConflictDeck : Card list
-    DynastyDeck : Card list
-    Hand : Card list
-    DynastyInProvinces : Card list
+    ConflictDeck : Deck
+    DynastyDeck : Deck
+    Hand : Zone
+    DynastyInProvinces : Zone
     Stonghold : Stronghold
     StrongholdProvince : Province
     Provinces : Province list
-    Home: Card list
-    DynastyDiscard : Card list
-    ConflictDiscard : Card list }
+    Home: Zone
+    DynastyDiscard : Zone
+    ConflictDiscard : Zone }
 
 type GamePhase = Dynasty | Draw | Conflict | Fate | Regroup
 
 type GameState = {
+    TurnNumber : int
     AvailablePlayerActions : PlayerAction list
     GamePhase : GamePhase
     ActivePlayer : Player
@@ -129,10 +141,13 @@ type GameState = {
     Player1State : PlayerState
     Player2State : PlayerState }
 and GameStateChanger = GameState -> GameState
+and PlayerActionType = 
+    | Pass
+    | PlayCharacter of CardTitle
+    | ActivateAction
 and PlayerAction = 
-    | Pass of GameStateChanger
-    | PlayCharacter of CardTitle * GameStateChanger
-    | ActivateAction of GameStateChanger
+  { Type : PlayerActionType
+    Action : GameStateChanger }
 
 type InitialPlayerConfig = {
     Player : Player
