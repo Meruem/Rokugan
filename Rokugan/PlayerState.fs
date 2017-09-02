@@ -59,7 +59,7 @@ let initializePlayerState (initialConfig:InitialPlayerConfig) =
         Flags = []
     }   
 
-let addFateToPlayer fate playerState = 
+let addFateToPlayer fate (playerState:PlayerState) = 
     { playerState with Fate = playerState.Fate + fate }      
 
 let getPlayableDynastyPositions playerState =
