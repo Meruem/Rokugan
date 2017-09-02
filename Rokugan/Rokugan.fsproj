@@ -45,6 +45,9 @@
     <Compile Include="CoreCards.fs" />
     <Compile Include="CardRepository.fs" />
     <Compile Include="SampleDeck.fs" />
+    <Compile Include="Card.fs" />
+    <Compile Include="Deck.fs" />
+    <Compile Include="PlayerState.fs" />
     <Compile Include="GameState.fs" />
     <Compile Include="Rokugan.fs" />
   </ItemGroup>

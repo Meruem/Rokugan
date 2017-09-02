@@ -7,6 +7,9 @@
 #load @"SampleDeck.fs"
 #load @"CoreCards.fs"
 #load @"CardRepository.fs"
+#load @"Card.fs"
+#load @"Deck.fs"
+#load @"PlayerState.fs"
 #load @"GameState.fs"
 
 
@@ -45,3 +48,5 @@ let gs =
     |> revealAllDynastyCardsAtProvinces
     |> collectFateFromStronghold
     |> getDynastyPhaseActions
+
+let gs2 = gs |> playAction 1
