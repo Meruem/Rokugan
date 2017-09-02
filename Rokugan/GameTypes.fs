@@ -134,7 +134,7 @@ type GamePhase = Dynasty | Draw | Conflict | Fate | Regroup
 
 type GameState = {
     TurnNumber : int
-    AvailablePlayerActions : PlayerAction list
+    Actions : PlayerAction list
     GamePhase : GamePhase
     ActivePlayer : Player
     FirstPlayer : Player

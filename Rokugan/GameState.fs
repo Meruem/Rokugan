@@ -85,7 +85,7 @@ let initializeGameState playerConfig1 playerConfig2 =
     {
         TurnNumber = 1
         ActivePlayer = firstPlayer
-        AvailablePlayerActions = []
+        Actions = []
         GamePhase = Dynasty
         FirstPlayer = firstPlayer
         Player1State = initializePlayerState playerConfig1
@@ -151,23 +151,26 @@ let collectFateFromStronghold gameState =
         Player1State = (addFateToPlayer p1Add gameState.Player1State)    
         Player2State = (addFateToPlayer p2Add gameState.Player2State)  }
 
+let switchActivePlayer gs =
+    {gs with ActivePlayer = match gs.ActivePlayer with |Player1 -> Player2 |Player2 -> Player1}
+
+let activePlayerState gs =
+        match gs.ActivePlayer with
+        | Player1 -> gs.Player1State
+        | Player2 -> gs.Player2State
+
 let rec getDynastyPhaseActions gameState =
-    let playerState = 
-        match gameState.ActivePlayer with
-        | Player1 -> gameState.Player1State
-        | Player2 -> gameState.Player2State
+    let playerState = activePlayerState gameState
     let actions = 
         getPlayableDynastyPositions playerState
         |> List.map (fun pos -> 
-          { Action =  playDynastyCard pos gameState.ActivePlayer
+          { Action =  playDynastyCard pos gameState.ActivePlayer >> getDynastyPhaseActions >> switchActivePlayer
             Type = PlayCharacter playerState.DynastyInProvinces.Cards.[pos].Title })
     let actions' = 
         { Type = PlayerActionType.Pass 
-          Action = (fun gs -> 
-                let gs' = {gs with ActivePlayer = match gs.ActivePlayer with |Player1 -> Player2 |Player2 -> Player1}
-                getDynastyPhaseActions gs') } :: actions
-    { gameState with AvailablePlayerActions = actions'}
+          Action = getDynastyPhaseActions >> switchActivePlayer } :: actions
+    { gameState with Actions = actions'}
     
 let playAction n gameState =
-    if n > gameState.AvailablePlayerActions.Length then gameState
-        else gameState.AvailablePlayerActions.[n].Action gameState  
+    if n > gameState.Actions.Length then gameState
+        else gameState.Actions.[n].Action gameState  
