@@ -127,6 +127,7 @@ type PlayerFlag =
     Flag : PlayerFlagEnum}
 
 type PlayerState = {
+    Bid : int option
     ConflictDeck : Deck
     DynastyDeck : Deck
     DynastyDiscard : Zone
@@ -144,15 +145,15 @@ type PlayerState = {
 type GameEnd = Player1Won | Player2Won 
 type GamePhase = Dynasty | Draw | Conflict | Fate | Regroup | End of GameEnd 
 
-type GameState = {
-    TurnNumber : int
-    Actions : PlayerAction list
+type GameState = 
+  { TurnNumber : int
     GamePhase : GamePhase
     ActivePlayer : Player
     FirstPlayer : Player
     Triggers : GameTrigger list
     Player1State : PlayerState
-    Player2State : PlayerState }
+    Player2State : PlayerState 
+    Actions : PlayerAction list }
 and GameTrigger = 
   { Name : string
     Lifetime : Lifetime
@@ -162,7 +163,7 @@ and PlayerActionType =
     | Pass
     | PlayCharacter of CardTitle
     | ActivateAction
-    | Choice of int
+    | Choice of int * string
 and PlayerAction = 
   { Type : PlayerActionType
     Action : GameState -> GameState }

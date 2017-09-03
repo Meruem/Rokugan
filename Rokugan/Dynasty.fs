@@ -56,7 +56,7 @@ let rec addDynastyPhaseActions gs =
         |> List.map (fun (pos, remainingFate) ->
             let nextAction fate = playDynastyCard pos fate >> GameState.switchActivePlayer >> addDynastyPhaseActions
             { 
-                Action = createChoiceActions nextAction 0 remainingFate |> addChoiceActions
+                Action = createChoiceActions nextAction "Add fate" 0 remainingFate  |> addChoiceActions
                 Type = PlayCharacter playerState.DynastyInProvinces.Cards.[pos].Title })
     if PlayerState.hasPassed playerState then { gs with Actions = actions}
     else 

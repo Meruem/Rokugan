@@ -34,11 +34,11 @@ let activePlayerState gs =
 
 let passActive = changeActivePlayerState pass
 
-let createChoiceActions nextAction min max =
+let createChoiceActions nextAction desc min max =
     [min..max]
         |> List.map (fun i -> 
             { Action = nextAction i 
-              Type = Choice i })
+              Type = Choice (i, desc) })
 
 let addChoiceActions actionList gs =
     {gs with Actions = actionList}

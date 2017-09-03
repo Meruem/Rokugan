@@ -6,6 +6,8 @@ let otherPlayer player = if player = Player1 then Player2 else Player1
 let hasPlayerFlag flag playerState =
     playerState.Flags |> List.exists (fun ps -> ps.Flag = flag)
 
+let changeBid bid playerState = { playerState with Bid = Some bid }
+
 let hasPassed = hasPlayerFlag PlayerFlagEnum.Passed
 
 let pass ps = {ps with Flags = { Lifetime = Phase; Flag = Passed } :: ps.Flags}
@@ -32,8 +34,10 @@ let rec drawCardFromDynastyDeck (playerState : PlayerState) =
 
 let rec drawCardFromConflictDeck (playerState : PlayerState) = 
     match Deck.drawCardFromDeck playerState.ConflictDeck with
-    | Some (card, rest) -> card, { playerState with ConflictDeck = rest }
+    | Some (card, rest) -> { playerState with ConflictDeck = rest; Hand = Zone (card :: playerState.Hand.Cards) }
     | None -> playerState |> addHonor -5 |> recycleDynastyDiscard |> drawCardFromConflictDeck      
+
+let drawConflictCards n playerState = [1..n] |> List.fold (fun pstate i -> pstate |> drawCardFromConflictDeck) playerState
 
 let initializePlayerState (initialConfig:InitialPlayerConfig) =
     let init card = Card.createCard card initialConfig.Player 
@@ -44,6 +48,7 @@ let initializePlayerState (initialConfig:InitialPlayerConfig) =
     let initProvince title = Card.createProviceCard title initialConfig.Player
     let stronghold = CardRepository.getStrongholdCard initialConfig.Stonghold
     {
+        Bid = None
         DynastyDiscard = Zone []
         ConflictDiscard = Zone []
         Home = Zone []
