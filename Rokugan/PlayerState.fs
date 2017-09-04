@@ -62,19 +62,20 @@ let initializePlayerState (initialConfig:InitialPlayerConfig) =
         StrongholdProvince =  initProvince initialConfig.StrongholdProvince
         Provinces = initialConfig.Provinces |> List.map  initProvince
         Flags = []
+        DeclaredConflicts = []
     }   
 
 let addFateToPlayer fate (playerState:PlayerState) = 
     { playerState with Fate = playerState.Fate + fate }      
 
-let getPlayableDynastyPositions playerState =
-    playerState.DynastyInProvinces.Cards 
+let getPlayableDynastyPositions ps =
+    ps.DynastyInProvinces.Cards 
     |> List.mapi (fun i card -> 
         let cardDef = CardRepository.getDynastyCard card.Title
         let remainingFate = 
             match cardDef with 
             | Holding _ -> -1 
-            | DynastyCardDef.Character c -> playerState.Fate - c.Cost
+            | DynastyCardDef.Character c -> ps.Fate - c.Cost
         let hidden = List.contains Hidden card.States
         if remainingFate >= 0 && (not hidden) then (i, remainingFate) else (-1,0))
     |> List.filter (fun (i, _) -> i <> -1)
@@ -82,3 +83,19 @@ let getPlayableDynastyPositions playerState =
 let cleanPhaseFlags playerState = 
     let flags = playerState.Flags |> List.filter (fun f -> f.Lifetime <> Phase) 
     { playerState with Flags = flags }   
+
+let changeProvinceState province stateChange (ps:PlayerState) = 
+    if ps.StrongholdProvince.ProvinceCard.Id = province.ProvinceCard.Id then 
+        {ps with StrongholdProvince = stateChange ps.StrongholdProvince }
+    else 
+        let provinces = 
+            [for p in ps.Provinces do 
+                if p.ProvinceCard.Id = province.ProvinceCard.Id then 
+                    yield stateChange p 
+                else yield p]
+        {ps with Provinces = provinces}
+
+let revealProvince province = changeProvinceState province Card.revealProvince
+
+
+

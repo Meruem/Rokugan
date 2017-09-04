@@ -93,8 +93,10 @@ type Player = Player1 | Player2
 type ProvinceState = Hidden | Revealed | Broken
 
 type CardState = Bowed | Honored | Dishonored | Hidden
+type CardId = CardId of int
 
 type Card = {
+    Id : CardId
     Title : CardTitle
     Owner : Player
     States : CardState list
@@ -119,8 +121,9 @@ type Zone =
 
 type PlayerFlagEnum = Passed
 
-//defines when the flag is cleared
-type Lifetime = Round | Phase | Game
+//defines when the flag or trigger is cleared
+type Lifetime = Round | Phase | Game | Once
+type ConflictType = Military | Political
 
 type PlayerFlag =
   { Lifetime : Lifetime
@@ -140,10 +143,17 @@ type PlayerState = {
     StrongholdProvince : Province
     Provinces : Province list
     Home: Zone
-    Flags : PlayerFlag list }
+    Flags : PlayerFlag list
+    DeclaredConflicts : ConflictType option list }
 
 type GameEnd = Player1Won | Player2Won 
 type GamePhase = Dynasty | Draw | Conflict | Fate | Regroup | End of GameEnd 
+type RingState = Unclaimed | Contested | Claimed of Player
+
+type Ring = 
+  { Element : Element
+    State : RingState
+    Fate : int }
 
 type GameState = 
   { TurnNumber : int
@@ -153,6 +163,7 @@ type GameState =
     Triggers : GameTrigger list
     Player1State : PlayerState
     Player2State : PlayerState 
+    Rings : Ring list
     Actions : PlayerAction list }
 and GameTrigger = 
   { Name : string
@@ -164,6 +175,10 @@ and PlayerActionType =
     | PlayCharacter of CardTitle
     | ActivateAction
     | Choice of int * string
+    | DeclareAttack of ConflictType * Element
+    | ChooseAttacker of Card 
+    | ChooseDefender of Card
+    | ChooseProvince of Province
 and PlayerAction = 
   { Type : PlayerActionType
     Action : GameState -> GameState }

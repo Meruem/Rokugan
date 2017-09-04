@@ -22,7 +22,7 @@ let playDynastyCard position addFate gs =
         // add new dynasty card
         let dynastyInProvinces' = 
             state.DynastyInProvinces.Cards 
-            |> Utils.replaceListElement newCard position
+            |> Utils.replaceListElementi newCard position
         {state' with 
             Home = Zone home
             DynastyInProvinces = Zone dynastyInProvinces'
@@ -44,21 +44,21 @@ let collectFateFromStronghold gs =
 
 let add1fateIfPassedFirst gs =
     let otherPl = otherPlayer gs.ActivePlayer
-    if hasPassed (getPlayerState otherPl gs) then gs
+    if hasPassed (playerState otherPl gs) then gs
     else 
         let add1Fate (state:PlayerState) = {state with Fate = state.Fate + 1} 
         gs |> changeActivePlayerState add1Fate
 
 let rec addDynastyPhaseActions gs =
-    let playerState = GameState.activePlayerState gs
+    let ps = GameState.activePlayerState gs
     let actions = 
-        getPlayableDynastyPositions playerState
+        getPlayableDynastyPositions ps
         |> List.map (fun (pos, remainingFate) ->
             let nextAction fate = playDynastyCard pos fate >> GameState.switchActivePlayer >> addDynastyPhaseActions
             { 
                 Action = createChoiceActions nextAction "Add fate" 0 remainingFate  |> addChoiceActions
-                Type = PlayCharacter playerState.DynastyInProvinces.Cards.[pos].Title })
-    if PlayerState.hasPassed playerState then { gs with Actions = actions}
+                Type = PlayCharacter ps.DynastyInProvinces.Cards.[pos].Title })
+    if PlayerState.hasPassed ps then { gs with Actions = actions}
     else 
         let passAction = 
             { Type = PlayerActionType.Pass 

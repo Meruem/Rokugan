@@ -6,7 +6,7 @@ let chooseRandomPlayer () =
     let rnd = System.Random()
     if rnd.Next(2) = 0 then Player1 else Player2
 
-let replaceListElement newele pos lst =
+let replaceListElementi newele pos lst =
     let (_, lst') = 
         lst 
         |> List.fold (fun (i, acc) d -> 
@@ -14,4 +14,14 @@ let replaceListElement newele pos lst =
             (i+1, List.append acc [c])) (0, [])
     lst'
 
+let replaceListElement newele pred lst =
+    lst 
+    |> List.fold (fun acc d -> 
+        let c = if pred d then newele else d
+        List.append acc [c]) []
+
+let mutable lastId = 1
+let newId () = 
+    lastId <- lastId + 1
+    lastId
 

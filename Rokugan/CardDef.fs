@@ -16,4 +16,17 @@ let strongholdCards (cardList : CardDef list) =
     [for card in cardList do match card.Spec with | Stronghold c -> yield c | _ -> ()]    
 let provinceCards (cardList : CardDef list) =
     [for card in cardList do match card.Spec with | Province c -> yield c | _ -> ()]   
+
+let character cardDef = 
+    match cardDef.Spec with 
+    | CardSpec.Dynasty d ->
+        match d with 
+        | DynastyCardDef.Character c -> Some c
+        | _ -> None
+    | CardSpec.Conflict c ->
+        match c with
+        | ConflictCardDef.Character char -> Some char
+        | _ -> None
+    | _ -> None
+
     

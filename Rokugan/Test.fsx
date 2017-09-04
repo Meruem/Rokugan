@@ -51,6 +51,6 @@ let p2config =
 
 let gs = 
     initializeGameState p1config p2config
-    |> gotoDynastyPhase
+    |> startGame
 
 let gs2 = gs |> playAction 0 |> playAction 0

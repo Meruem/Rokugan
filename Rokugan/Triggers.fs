@@ -49,10 +49,15 @@ let addDynastyPassTrigger gotoNextPhase gs =
         Action =  gotoNextPhase }
     {gs with Triggers = trigger :: gs.Triggers}    
 
+let removeTrigger triggerName gs =
+    { gs with Triggers = gs.Triggers |> List.filter (fun t -> t.Name <> triggerName)}  
+
 let applyTriggers gs = 
     let triggers = gs.Triggers |> List.filter (fun t -> t.Condition gs)
+    let removeOnlyOnceTrigger gs = if triggers.[0].Lifetime = Once then gs |> removeTrigger triggers.[0].Name else gs
     if triggers.Length = 0 then gs
-    else triggers.[0].Action gs // not sure what to do with multiple triggers yet :(    
+    else 
+        gs |> removeOnlyOnceTrigger |> triggers.[0].Action // not sure what to do with multiple triggers yet :(    
 
 let cleanPhaseTriggers gs = 
     { gs with Triggers = gs.Triggers |> List.filter (fun t -> t.Lifetime <> Phase)}        
