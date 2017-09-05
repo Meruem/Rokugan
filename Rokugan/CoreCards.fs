@@ -60,7 +60,7 @@ let coreCards = [
 
     {
         Title = Title "Defend the Wall"
-        Spec = Province {
+        Spec = CardSpec.Province {
             Strength = 4
             Clan = Clan.Crab
             Element = Earth
@@ -69,7 +69,7 @@ let coreCards = [
 
     {
         Title = Title "Golden Plains Outpost"
-        Spec = Stronghold {
+        Spec = CardSpec.Stronghold {
             Clan = Clan.Unicorn
             BonusStrength = 0
             StartingHonor = 10

@@ -26,4 +26,4 @@ let getCharacterCard (title:CardTitle) =
 
 let getStrongholdCard title =
     let card = getCard title  
-    match card.Spec with | Stronghold s -> s | _ -> fail title
+    match card.Spec with | CardSpec.Stronghold s -> s | _ -> fail title

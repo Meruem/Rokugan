@@ -20,8 +20,10 @@ let replaceListElement newele pred lst =
         let c = if pred d then newele else d
         List.append acc [c]) []
 
+let listSplitBy pred lst =
+    List.foldBack (fun item (x,y) -> if pred item then (item::x,y) else (x, item::y)) lst ([],[])
+
 let mutable lastId = 1
 let newId () = 
     lastId <- lastId + 1
     lastId
-

@@ -37,12 +37,6 @@ let otherPlayerState gs = playerState (otherPlayer gs.ActivePlayer) gs
 
 let passActive = changeActivePlayerState pass
 
-let createChoiceActions nextAction desc min max =
-    [min..max]
-        |> List.map (fun i -> 
-            { Action = nextAction i 
-              Type = Choice (i, desc) })
-
 let addChoiceActions actionList gs =
     {gs with Actions = actionList}
 
@@ -53,3 +47,4 @@ let cleanPhaseFlags gs =
 
 let removeFateFromRing ring gs =
     { gs with Rings = gs.Rings |> Utils.replaceListElement { ring with Fate = 0 } (fun r -> r.Element = ring.Element) }
+

@@ -1,6 +1,7 @@
 module PlayerState
 
 open GameTypes
+open System.Security.Policy
 
 let otherPlayer player = if player = Player1 then Player2 else Player1
 let hasPlayerFlag flag playerState =
@@ -12,55 +13,62 @@ let hasPassed = hasPlayerFlag PlayerFlagEnum.Passed
 
 let pass ps = {ps with Flags = { Lifetime = Phase; Flag = Passed } :: ps.Flags}
 
-let zoneToDeck = function Zone l -> Deck l
-
 let addHonor honor (playerState:PlayerState) = 
     { playerState with Honor = playerState.Honor + honor}
 
-let recycleDynastyDiscard playerState =
-    { playerState with 
-        DynastyDiscard = Zone []
-        DynastyDeck = playerState.DynastyDiscard |> zoneToDeck |> Deck.shuffleDeck }
+let splitZoneAndOthers zone ps = 
+    ps.CardsInPlay |> Map.toList |> Utils.listSplitBy (fun (_,c) -> c.Zone = zone)
 
-let recycleConflictDiscard playerState =
-    { playerState with 
-        ConflictDiscard = Zone []
-        ConflictDeck = playerState.ConflictDiscard |> zoneToDeck |> Deck.shuffleDeck }
+let recycleDynastyDiscard ps =
+    let (discard, other) = splitZoneAndOthers DynastyDiscard ps
+    { ps with 
+        CardsInPlay = other |> Map.ofList
+        DynastyDeck = discard |> List.map (fun (_,c) -> {c with Zone = DynastyDeck}) |> Deck |> Deck.shuffleDeck }
+
+let recycleConflictDiscard ps =
+    let (discard, other) = splitZoneAndOthers ConflictDiscard ps
+    { ps with 
+        CardsInPlay = other |> Map.ofList
+        ConflictDeck = discard |> List.map (fun (_,c) -> {c with Zone = ConflictDeck}) |> Deck |> Deck.shuffleDeck }
 
 let rec drawCardFromDynastyDeck (playerState : PlayerState) = 
     match Deck.drawCardFromDeck playerState.DynastyDeck with
     | Some (card, rest) -> card, { playerState with DynastyDeck = rest }
     | None -> playerState |> addHonor -5 |> recycleDynastyDiscard |> drawCardFromDynastyDeck      
 
-let rec drawCardFromConflictDeck (playerState : PlayerState) = 
-    match Deck.drawCardFromDeck playerState.ConflictDeck with
-    | Some (card, rest) -> { playerState with ConflictDeck = rest; Hand = Zone (card :: playerState.Hand.Cards) }
-    | None -> playerState |> addHonor -5 |> recycleDynastyDiscard |> drawCardFromConflictDeck      
+let rec drawCardFromConflictDeck (ps : PlayerState) = 
+    match Deck.drawCardFromDeck ps.ConflictDeck with
+    | Some (card, rest) -> 
+        { ps with 
+            ConflictDeck = rest
+            CardsInPlay = ps.CardsInPlay |> Map.add card.Id {card with Zone = Hand} }
+    | None -> ps |> addHonor -5 |> recycleDynastyDiscard |> drawCardFromConflictDeck      
 
 let drawConflictCards n playerState = [1..n] |> List.fold (fun pstate i -> pstate |> drawCardFromConflictDeck) playerState
 
 let initializePlayerState (initialConfig:InitialPlayerConfig) =
-    let init card = Card.createCard card initialConfig.Player 
-    let conflictDeck = initialConfig.ConflictDeck |> List.map init |> Deck
+    let init zone title = Card.createCard title initialConfig.Player zone
+    let conflictDeck = initialConfig.ConflictDeck |> List.map (init ConflictDeck) |> Deck
     let hand, conflictDeck' = Deck.getCardsFromDeck 4 conflictDeck
-    let dynastyDeck = initialConfig.DynastyDeck |> List.map init |> Deck
+    let dynastyDeck = initialConfig.DynastyDeck |> List.map (init DynastyDeck) |> Deck
     let dynastyHand, dynastyDeck' = Deck.getCardsFromDeck 4 dynastyDeck
-    let initProvince title = Card.createProviceCard title initialConfig.Player
+    let initProvince i title = Card.createProviceCard title initialConfig.Player i
+    let initStrongholdProvince title = Card.createStrongholdProvinceCard title initialConfig.Player
+    let strongholdCard = Card.createStrongholdCard initialConfig.Stonghold initialConfig.Player
     let stronghold = CardRepository.getStrongholdCard initialConfig.Stonghold
     {
         Bid = None
-        DynastyDiscard = Zone []
-        ConflictDiscard = Zone []
-        Home = Zone []
         Honor = stronghold.StartingHonor
         Fate = 0
         ConflictDeck = conflictDeck'
         DynastyDeck = dynastyDeck'
-        Hand = hand
-        DynastyInProvinces = dynastyHand.Cards |> List.map (fun c -> {c with States = [Hidden]}) |> Zone
-        Stonghold = Card.createStrongholdCard initialConfig.Stonghold initialConfig.Player
-        StrongholdProvince =  initProvince initialConfig.StrongholdProvince
-        Provinces = initialConfig.Provinces |> List.map  initProvince
+        CardsInPlay = 
+          [ hand |> List.map (fun c -> {c with Zone = Hand })  
+            [strongholdCard] 
+            dynastyHand |> List.mapi (fun i c -> { c with Zone = DynastyInProvinces i})
+            initialConfig.Provinces |> List.mapi initProvince
+            [initStrongholdProvince initialConfig.StrongholdProvince]]
+            |> List.concat |> List.map (fun c -> c.Id,c) |> Map.ofList
         Flags = []
         DeclaredConflicts = []
     }   
@@ -68,34 +76,37 @@ let initializePlayerState (initialConfig:InitialPlayerConfig) =
 let addFateToPlayer fate (playerState:PlayerState) = 
     { playerState with Fate = playerState.Fate + fate }      
 
-let getPlayableDynastyPositions ps =
-    ps.DynastyInProvinces.Cards 
-    |> List.mapi (fun i card -> 
+let getPlayableDynastyPositions (ps:PlayerState) =
+    ps.DynastyInProvinces 
+    |> List.map (fun card -> 
         let cardDef = CardRepository.getDynastyCard card.Title
+        let nr = 
+            match card.Zone with
+            | DynastyInProvinces i ->  i
+            | _ -> -1
         let remainingFate = 
             match cardDef with 
             | Holding _ -> -1 
             | DynastyCardDef.Character c -> ps.Fate - c.Cost
-        let hidden = List.contains Hidden card.States
-        if remainingFate >= 0 && (not hidden) then (i, remainingFate) else (-1,0))
+        let hidden = card |> Card.isHidden
+        if remainingFate >= 0 && (not hidden) then (nr, remainingFate) else (-1,0))
     |> List.filter (fun (i, _) -> i <> -1)
  
 let cleanPhaseFlags playerState = 
     let flags = playerState.Flags |> List.filter (fun f -> f.Lifetime <> Phase) 
     { playerState with Flags = flags }   
 
-let changeProvinceState province stateChange (ps:PlayerState) = 
-    if ps.StrongholdProvince.ProvinceCard.Id = province.ProvinceCard.Id then 
-        {ps with StrongholdProvince = stateChange ps.StrongholdProvince }
-    else 
-        let provinces = 
-            [for p in ps.Provinces do 
-                if p.ProvinceCard.Id = province.ProvinceCard.Id then 
-                    yield stateChange p 
-                else yield p]
-        {ps with Provinces = provinces}
+let changeCardState card stateChange ps =
+    let cardsInPlay = ps.CardsInPlay |> Map.add card.Id (stateChange card)
+    {ps with CardsInPlay = cardsInPlay}
 
-let revealProvince province = changeProvinceState province Card.revealProvince
+let changeCardsState cards stateChange (ps:PlayerState) =
+    cards |> List.fold (fun agg c -> changeCardState c stateChange agg) ps 
 
+let revealProvince province = changeCardState province Card.revealProvince
 
+let addCardToPlay card zone ps = 
+    let card' = {card with Zone = zone}
+    { ps with CardsInPlay = ps.CardsInPlay |>  Map.add card.Id card' } 
 
+let addFate fate (ps:PlayerState) = { ps with Fate = ps.Fate + fate} 

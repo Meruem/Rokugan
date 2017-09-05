@@ -90,33 +90,35 @@ type CardDef = {
 
 type Player = Player1 | Player2
 
-type ProvinceState = Hidden | Revealed | Broken
-
-type CardState = Bowed | Honored | Dishonored | Hidden
+type CardState = Bowed | Honored | Dishonored | Hidden |Revealed | Broken
 type CardId = CardId of int
+
+type ZoneName = 
+    | Hand
+    | DynastyDiscard 
+    | ConflictDiscard 
+    | DynastyInProvinces of int
+    | Home 
+    | Conflict 
+    | Province of int
+    | Stronghold 
+    | StrongholdProvince 
+    | DynastyDeck 
+    | ConflictDeck
 
 type Card = {
     Id : CardId
     Title : CardTitle
     Owner : Player
     States : CardState list
-    Fate : int }
+    Fate : int 
+    Zone : ZoneName }
 
-type Province = {
-    ProvinceCard : Card
-    State : ProvinceState }
-
-type Stronghold = { StrongholdCard : Card }
 
 type Deck = 
     Deck of Card list
         member this.Cards = 
             let (Deck lst) = this
-            lst
-type Zone = 
-    Zone of Card list
-        member this.Cards = 
-            let (Zone lst) = this
             lst
 
 type PlayerFlagEnum = Passed
@@ -133,22 +135,38 @@ type PlayerState = {
     Bid : int option
     ConflictDeck : Deck
     DynastyDeck : Deck
-    DynastyDiscard : Zone
-    ConflictDiscard : Zone 
     Honor : int
     Fate : int
-    Hand : Zone
-    DynastyInProvinces : Zone
-    Stonghold : Stronghold
-    StrongholdProvince : Province
-    Provinces : Province list
-    Home: Zone
     Flags : PlayerFlag list
+    CardsInPlay : Map<CardId, Card>
     DeclaredConflicts : ConflictType option list }
+    with
+        member private this.ToValuesList = Map.toList >> List.map (fun (_,c) -> c)
+        member this.Home = 
+            this.CardsInPlay 
+            |> Map.filter (fun _ c -> c.Zone = Home)
+            |> this.ToValuesList
+        member this.DynastyDiscard = this.CardsInPlay |> Map.filter (fun _ c -> c.Zone = DynastyDiscard) |> this.ToValuesList
+        member this.ConflictDiscard = this.CardsInPlay |> Map.filter (fun _ c -> c.Zone = ConflictDiscard) |> this.ToValuesList
+        member this.Hand = this.CardsInPlay |> Map.filter (fun _ c -> c.Zone = Hand) |> this.ToValuesList
+        member this.DynastyInProvinces = 
+            this.CardsInPlay 
+            |> Map.filter (fun _ c -> match c.Zone with | DynastyInProvinces _ -> true | _ -> false )
+            |> this.ToValuesList
+        member this.Conflict = this.CardsInPlay |> Map.filter (fun _ c -> c.Zone = Conflict) |> this.ToValuesList
+        member this.Stronghold = this.CardsInPlay |> Map.pick (fun _ c -> if c.Zone = Stronghold then Some c else None)
+        member this.StrongholdProvince = this.CardsInPlay |> Map.pick (fun _ c -> if c.Zone = StrongholdProvince then Some c else None)
+        member this.Provinces = 
+            this.CardsInPlay 
+            |> Map.filter (fun _ c -> match c.Zone with | Province n -> true | _ -> false)
+            |> this.ToValuesList
+        member this.CardsInPlayList : Card list = this.CardsInPlay |> Map.toList |> List.map (fun (_, c) -> c)
+
 
 type GameEnd = Player1Won | Player2Won 
 type GamePhase = Dynasty | Draw | Conflict | Fate | Regroup | End of GameEnd 
 type RingState = Unclaimed | Contested | Claimed of Player
+type YesNo = Yes | No
 
 type Ring = 
   { Element : Element
@@ -157,14 +175,20 @@ type Ring =
 
 type GameState = 
   { TurnNumber : int
-    GamePhase : GamePhase
-    ActivePlayer : Player
     FirstPlayer : Player
     Triggers : GameTrigger list
     Player1State : PlayerState
     Player2State : PlayerState 
     Rings : Ring list
-    Actions : PlayerAction list }
+    GamePhase : GamePhase
+    Actions : PlayerAction list
+    ActivePlayer : Player }
+    with
+        member this.ActivePlayerState = 
+            match this.ActivePlayer with 
+            | Player1 -> this.Player1State
+            | Player2 -> this.Player2State  
+
 and GameTrigger = 
   { Name : string
     Lifetime : Lifetime
@@ -175,10 +199,12 @@ and PlayerActionType =
     | PlayCharacter of CardTitle
     | ActivateAction
     | Choice of int * string
+    | YesNoChoice of YesNo * string
     | DeclareAttack of ConflictType * Element
     | ChooseAttacker of Card 
     | ChooseDefender of Card
-    | ChooseProvince of Province
+    | ChooseProvince of Card
+    | ChooseCharacter of Card * string
 and PlayerAction = 
   { Type : PlayerActionType
     Action : GameState -> GameState }

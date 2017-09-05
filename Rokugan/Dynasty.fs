@@ -6,34 +6,29 @@ open GameState
 
 let revealAllDynastyCardsAtProvinces gs =
     let removeHiddenState = Card.removeCardState Hidden
-    let removeHiddenFromPlayerState pState =
-        { pState with DynastyInProvinces = pState.DynastyInProvinces.Cards |> List.map removeHiddenState |> Zone }
-    { gs with 
-        Player1State = removeHiddenFromPlayerState gs.Player1State
-        Player2State = removeHiddenFromPlayerState gs.Player2State }
+    let ps1 = gs.Player1State |> changeCardsState gs.Player1State.DynastyInProvinces removeHiddenState
+    let ps2 = gs.Player2State |> changeCardsState gs.Player2State.DynastyInProvinces removeHiddenState
+    {gs with Player1State = ps1; Player2State = ps2}
 
-let playDynastyCard position addFate gs =
-    let changeState state =
-        let card = state.DynastyInProvinces.Cards.[position]
-        let card' = { card with Fate = addFate}
-        let home = card' :: state.Home.Cards
+let playDynastyCard position additionalFate gs =
+    let changeState (state:PlayerState) =
+        let dynastyCard = 
+            state
+            |> Card.dynastyCardAtPosition position
+            |> Card.putAddtitionalFate additionalFate
         let newCard, state' = PlayerState.drawCardFromDynastyDeck state
-        let cardDef = CardRepository.getCharacterCard card.Title
-        // add new dynasty card
-        let dynastyInProvinces' = 
-            state.DynastyInProvinces.Cards 
-            |> Utils.replaceListElementi newCard position
-        {state' with 
-            Home = Zone home
-            DynastyInProvinces = Zone dynastyInProvinces'
-            Fate = state'.Fate - cardDef.Cost - addFate}
+        let cardDef = CardRepository.getCharacterCard dynastyCard.Title
+        state' 
+            |> addFate (-cardDef.Cost - additionalFate)
+            |> addCardToPlay dynastyCard Home
+            |> addCardToPlay newCard (DynastyInProvinces (Card.dynastyCardPosition dynastyCard))
     gs |> GameState.changeActivePlayerState changeState    
 
 let collectFateFromStronghold gs =
-    let stronghold (pState:PlayerState) = pState.Stonghold.StrongholdCard.Title |> CardRepository.getCard
-    let fate pState =
-        match (stronghold pState).Spec with 
-        | Stronghold s -> s.FatePerRound
+    let strongholdDef (ps:PlayerState) = ps.Stronghold.Title |> CardRepository.getCard
+    let fate ps =
+        match (strongholdDef ps).Spec with 
+        | CardSpec.Stronghold s -> s.FatePerRound
         | _ -> failwith "Stronghold card is not stronghold card"
 
     let p1Add = fate gs.Player1State
@@ -49,15 +44,15 @@ let add1fateIfPassedFirst gs =
         let add1Fate (state:PlayerState) = {state with Fate = state.Fate + 1} 
         gs |> changeActivePlayerState add1Fate
 
-let rec addDynastyPhaseActions gs =
-    let ps = GameState.activePlayerState gs
+let rec addDynastyPhaseActions (gs:GameState) =
+    let ps = gs.ActivePlayerState
     let actions = 
         getPlayableDynastyPositions ps
         |> List.map (fun (pos, remainingFate) ->
             let nextAction fate = playDynastyCard pos fate >> GameState.switchActivePlayer >> addDynastyPhaseActions
             { 
-                Action = createChoiceActions nextAction "Add fate" 0 remainingFate  |> addChoiceActions
-                Type = PlayCharacter ps.DynastyInProvinces.Cards.[pos].Title })
+                Action = Actions.createChoiceActions nextAction "Add fate" 0 remainingFate  |> addChoiceActions
+                Type = PlayCharacter (Card.dynastyCardAtPosition pos ps).Title })
     if PlayerState.hasPassed ps then { gs with Actions = actions}
     else 
         let passAction = 
@@ -65,5 +60,3 @@ let rec addDynastyPhaseActions gs =
               Action = passActive >> add1fateIfPassedFirst >> switchActivePlayer >> addDynastyPhaseActions } 
         let actions' = passAction :: actions
         { gs with Actions = actions'}     
-
-        

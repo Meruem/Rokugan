@@ -10,14 +10,29 @@ let availableConflicts ps =
 
 let availableRings gs = gs.Rings |> List.filter (fun r -> r.State = Unclaimed)
 
-let getCharactersForConflict cType ps = 
+let getCharactersForConflict cType alreadyInConflict (ps:PlayerState) = 
     let notBowed c = not (Card.isBowed c)
-    ps.Home.Cards |> List.filter (fun c -> notBowed c && Card.isCharWithValue cType c)
+    ps.Home 
+        |> List.filter (fun c -> notBowed c && Card.isCharWithValue cType c && not (List.contains c alreadyInConflict))
 
 let calculateTotalSkill cType chars = 
     chars |> List.sumBy (fun c -> match Card.charSkillValue cType c with | None -> 0 | Some s -> s)
 
-let resolveConflict cType ring (province:Province) attackers defenders getConflictPhaseActions gs = 
+let resolveRingEffect ring yesNo (gs:GameState) = 
+    match yesNo with 
+    | No -> gs
+    | Yes -> 
+        match ring.Element with
+        | Fire -> 
+            let honorWithFire char gs = gs
+            { gs with Actions = Actions.createChooseCharacterInPlayActions honorWithFire "Choose character to honor" gs}
+        | _ -> gs
+
+let askToResolveRingEffect ring gs = 
+    { gs with Actions = Actions.createYesNoActions (resolveRingEffect ring) "Resolve ring effect" }
+    
+
+let resolveConflict cType ring (province:Card) attackers defenders getConflictPhaseActions gs = 
     let totalAttack = attackers |> calculateTotalSkill cType
     let totalDefence = defenders |> calculateTotalSkill cType
     // resolve ring effect
@@ -25,38 +40,38 @@ let resolveConflict cType ring (province:Province) attackers defenders getConfli
     // bow combatants
     // break province
     // loose honor if undefended
-    gs |> switchActivePlayer |> getConflictPhaseActions
+    gs |> getConflictPhaseActions
 
-let rec chooseDefenders cType ring (province:Province) attackers defenders getConflictPhaseActions gs =
+let rec chooseDefenders cType ring (province:Card) attackers defenders getConflictPhaseActions (gs:GameState) =
     let defenderChosen defender = chooseDefenders cType ring province attackers (defender::defenders) getConflictPhaseActions
     let passAction = 
       { Type = Pass
         Action = resolveConflict cType ring province attackers defenders getConflictPhaseActions }
     let actions = 
-        getCharactersForConflict cType (activePlayerState gs) 
+        getCharactersForConflict cType defenders gs.ActivePlayerState 
         |> List.map (fun char -> 
             {Type = ChooseDefender char
              Action = defenderChosen char })
-    { gs with Actions = actions }
+    { gs with Actions = passAction :: actions }
 
-let rec chooseAttackers cType ring (province:Province) attackers getConflictPhaseActions gs = 
+let rec chooseAttackers cType ring (province:Card) attackers getConflictPhaseActions (gs:GameState) = 
     let attackerChosen attacker = chooseAttackers cType ring province (attacker::attackers) getConflictPhaseActions
     let passAction = 
       { Type = Pass
-        Action = chooseDefenders cType ring province attackers [] getConflictPhaseActions }
+        Action = switchActivePlayer >> chooseDefenders cType ring province attackers [] getConflictPhaseActions }
     let actions = 
-        getCharactersForConflict cType (activePlayerState gs) 
+        getCharactersForConflict cType attackers gs.ActivePlayerState 
         |> List.map (fun char -> 
             {Type = ChooseAttacker char
              Action = attackerChosen char })
-    { gs with Actions = actions }
+    { gs with Actions = passAction :: actions }
 
 let passConflict gs = 
     let pass ps = {ps with DeclaredConflicts = None :: ps.DeclaredConflicts}
     gs |> changeActivePlayerState pass |> switchActivePlayer 
 
 let attack cType ring gs =
-    let changePlState ps = 
+    let changePlState (ps:PlayerState) = 
       { ps with 
           Fate = ps.Fate + ring.Fate 
           DeclaredConflicts = Some cType :: ps.DeclaredConflicts }
@@ -67,7 +82,7 @@ let provinceChosen cType ring province gs =
 
 let chooseProvince cType ring getConflictPhaseActions gs = 
     let ps = gs |> otherPlayerState
-    let provinces = ps.Provinces |> List.filter (fun p -> p.State <> Broken)
+    let provinces = ps.Provinces |> List.filter (Card.isProvinceBroken >> not)
     let provinces' = if provinces.Length <= 1 then ps.StrongholdProvince :: provinces else provinces
     let actions = 
         provinces' 
@@ -77,8 +92,8 @@ let chooseProvince cType ring getConflictPhaseActions gs =
     { gs with Actions = actions }
 
 
-let rec getConflictPhaseActions gs =
-    let ps = GameState.activePlayerState gs
+let rec getConflictPhaseActions (gs:GameState) =
+    let ps = gs.ActivePlayerState
     let createDeclareConflictAction cType ring = 
       { Type = DeclareAttack (cType,ring.Element)
         Action = chooseProvince cType ring getConflictPhaseActions}

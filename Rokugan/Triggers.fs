@@ -7,8 +7,8 @@ let addWinConditionsTriggers gs =
     let pl2NoHonor gs = gs.Player2State.Honor <= 0
     let pl1over25honor gs = gs.Player1State.Honor >= 25
     let pl2over25honor gs = gs.Player2State.Honor >= 25
-    let pl1BrokenStronghold gs = gs.Player1State.StrongholdProvince.State = Broken    
-    let pl2BrokenStronghold gs = gs.Player2State.StrongholdProvince.State = Broken 
+    let pl1BrokenStronghold gs = gs.Player1State.StrongholdProvince |> Card.isProvinceBroken    
+    let pl2BrokenStronghold gs = gs.Player2State.StrongholdProvince |> Card.isProvinceBroken  
     let pl2Win gs = {gs with GamePhase = End Player2Won; Actions = [] }
     let pl1Win gs = {gs with GamePhase = End Player1Won; Actions = [] }
     let triggers = [

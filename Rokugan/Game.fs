@@ -4,25 +4,27 @@ open GameTypes
 
 open PlayerState
 open GameState
+open Conflict
 
-let gotoDrawPhase gotoNextPhase gs =
+let gotoDrawPhase gotoNextPhase (gs:GameState) =
     { gs with 
         GamePhase = Draw
         ActivePlayer = gs.FirstPlayer} |> Draw.getDrawPhaseActions gotoNextPhase 
-let gotoConflictPhase gs = 
+
+let gotoConflictPhase (gs:GameState) = 
     { gs with
         GamePhase = Conflict
         ActivePlayer = gs.FirstPlayer }
-    |> Conflict.getConflictPhaseActions
+    |> getConflictPhaseActions
 
-let gotoDynastyPhase gotoNextPhase gs = 
+let gotoDynastyPhase gotoNextPhase (gs:GameState) = 
     gs
     |> Dynasty.revealAllDynastyCardsAtProvinces
     |> Dynasty.collectFateFromStronghold
     |> Triggers.addDynastyPassTrigger gotoNextPhase
     |> Dynasty.addDynastyPhaseActions   
 
-let rec gotoNextPhase gs =
+let rec gotoNextPhase (gs:GameState) =
     let gs' = gs |> cleanPhaseFlags |> Triggers.cleanPhaseTriggers
     match gs.GamePhase with
     | Dynasty -> gs' |> gotoDrawPhase gotoNextPhase
@@ -54,6 +56,6 @@ let initializeGameState playerConfig1 playerConfig2 =
     |> Triggers.addWinConditionsTriggers
 
 let playAction n gs =
-    if n > gs.Actions.Length then gs
+    if n > gs.Actions.Length then (gs:GameState)
     else
         gs |> gs.Actions.[n].Action |> Triggers.applyTriggers    
