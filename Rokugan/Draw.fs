@@ -3,6 +3,7 @@ module Draw
 open GameTypes
 open PlayerState
 open GameState
+open Actions
 
 let applyBids pl1Bid pl2Bid gotoNextPhase gs =
     { gs with
@@ -21,14 +22,10 @@ let applyBids pl1Bid pl2Bid gotoNextPhase gs =
 
 let getDrawPhaseActions gotoNextPhase gs =
     let nextActionPl1 pl1Bid gs = 
-        { gs with 
-            Actions = Actions.createChoiceActions (fun i -> 
-                                                    applyBids pl1Bid i gotoNextPhase) "Player 2 bid" 1 5 } 
+        gs !=> choice (fun i -> applyBids pl1Bid i gotoNextPhase) "Player 2 bid" 1 5  
     let nextActionPl2 pl2Bid gs = 
-        { gs with 
-            Actions = Actions.createChoiceActions (fun i -> 
-                                                    applyBids i pl2Bid gotoNextPhase) "Player 1 bid" 1 5 } 
-    { gs with 
-        Actions = List.append 
-            (Actions.createChoiceActions nextActionPl1 "Player 1 bid" 1 5)
-            (Actions.createChoiceActions nextActionPl2 "Player 2 bid" 1 5) }        
+        gs !=> choice (fun i -> applyBids i pl2Bid gotoNextPhase) "Player 1 bid" 1 5  
+    gs !=>
+        List.append 
+            (choice nextActionPl1 "Player 1 bid" 1 5)
+            (choice nextActionPl2 "Player 2 bid" 1 5)

@@ -2,24 +2,21 @@ module Actions
 
 open GameTypes
 open GameState
+open PlayerState
 
-let createChoiceActions nextAction desc min max =
+let action actionType effect = { Type = actionType; Action = effect}
+
+let choice nextAction desc min max =
     [min..max]
-        |> List.map (fun i -> 
-            { Action = nextAction i 
-              Type = Choice (i, desc) })
+        |> List.map (fun i -> action (Choice (i, desc)) (nextAction i))
 
-let createYesNoActions nextAction desc =
-    [ {Action = nextAction Yes; Type = YesNoChoice (Yes, desc)}
-      {Action = nextAction No; Type = YesNoChoice (No, desc)}]
+let yesNo nextAction desc = 
+    [ action (YesNoChoice (Yes, desc)) (nextAction Yes)
+      action (YesNoChoice (No, desc)) (nextAction No) ]
 
-let playerCharctersInPlay ps =
-    ps.CardsInPlay 
-    |> Map.filter (fun id card -> Card.character card |> Option.isSome)
-    |> Map.toList
-    |> List.map (fun (id, char) -> char)
-
-let createChooseCharacterInPlayActions nextAction desc gs =
+let chooseCharacterInPlay nextAction desc gs =
     List.append (playerCharctersInPlay gs.Player1State) (playerCharctersInPlay gs.Player2State) 
     |> List.map (fun c -> 
         {Action = nextAction c; Type = ChooseCharacter (c, desc) })
+
+let pass = action Pass 

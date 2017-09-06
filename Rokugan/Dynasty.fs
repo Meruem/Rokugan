@@ -3,6 +3,7 @@ module Dynasty
 open GameTypes
 open PlayerState
 open GameState
+open Actions
 
 let revealAllDynastyCardsAtProvinces gs =
     let removeHiddenState = Card.removeCardState Hidden
@@ -46,17 +47,22 @@ let add1fateIfPassedFirst gs =
 
 let rec addDynastyPhaseActions (gs:GameState) =
     let ps = gs.ActivePlayerState
+    let chooseAddFate nextAction remainingFate gs = 
+        gs !=> choice nextAction "Add fate" 0 remainingFate
     let actions = 
         getPlayableDynastyPositions ps
         |> List.map (fun (pos, remainingFate) ->
-            let nextAction fate = playDynastyCard pos fate >> GameState.switchActivePlayer >> addDynastyPhaseActions
-            { 
-                Action = Actions.createChoiceActions nextAction "Add fate" 0 remainingFate  |> addChoiceActions
-                Type = PlayCharacter (Card.dynastyCardAtPosition pos ps).Title })
-    if PlayerState.hasPassed ps then { gs with Actions = actions}
+            let playCard fate = 
+                playDynastyCard pos fate 
+                >> GameState.switchActivePlayer 
+                >> addDynastyPhaseActions
+            action (PlayCharacter (Card.dynastyCardAtPosition pos ps).Title) 
+                     (chooseAddFate playCard remainingFate))
+    if PlayerState.hasPassed ps then gs !=> actions
     else 
         let passAction = 
-            { Type = PlayerActionType.Pass 
-              Action = passActive >> add1fateIfPassedFirst >> switchActivePlayer >> addDynastyPhaseActions } 
-        let actions' = passAction :: actions
-        { gs with Actions = actions'}     
+            pass (passActive 
+                >> add1fateIfPassedFirst 
+                >> switchActivePlayer 
+                >> addDynastyPhaseActions)
+        gs !=> [passAction] +=> actions     

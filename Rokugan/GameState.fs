@@ -37,8 +37,14 @@ let otherPlayerState gs = playerState (otherPlayer gs.ActivePlayer) gs
 
 let passActive = changeActivePlayerState pass
 
-let addChoiceActions actionList gs =
+let setActions actionList gs =
     {gs with Actions = actionList}
+
+let addActions actionList gs =
+    { gs with Actions = List.append gs.Actions actionList}
+
+let (!=>) gs actions = setActions actions gs
+let (+=>) gs actions = addActions actions gs
 
 let cleanPhaseFlags gs =
     { gs with 

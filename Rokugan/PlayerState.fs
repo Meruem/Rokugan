@@ -110,3 +110,10 @@ let addCardToPlay card zone ps =
     { ps with CardsInPlay = ps.CardsInPlay |>  Map.add card.Id card' } 
 
 let addFate fate (ps:PlayerState) = { ps with Fate = ps.Fate + fate} 
+
+let playerCharctersInPlay ps =
+    ps.CardsInPlay 
+    |> Map.filter (fun id card -> Card.character card |> Option.isSome)
+    |> Map.toList
+    |> List.map (fun (id, char) -> char)
+
