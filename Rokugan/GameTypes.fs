@@ -213,7 +213,6 @@ and PlayerAction =
     Action : GameState -> GameState }
 
 type InitialPlayerConfig = {
-    Player : Player
     ConflictDeck : CardTitle list
     DynastyDeck : CardTitle list
     Stonghold : CardTitle

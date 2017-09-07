@@ -1,7 +1,8 @@
 module CardRepository
+
 open CoreCards
 open GameTypes
-open System
+
 let allCards = coreCards
 let allCardsMap = [for card in allCards do yield card.Title, card] |> Map.ofList
 let fail title = failwithf "Unknown card %s" (string title)

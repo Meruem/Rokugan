@@ -36,7 +36,6 @@ let stronghold () = sampleStronghold coreCards
 
 let p1config = 
     {
-        Player = Player1
         ConflictDeck = randomConflictDeck ()
         DynastyDeck = randomDynastyDeck ()
         Stonghold = Title "Golden Plains Outpost"
@@ -45,7 +44,6 @@ let p1config =
     }
 let p2config = 
     {
-        Player = Player2
         ConflictDeck = randomConflictDeck ()
         DynastyDeck = randomDynastyDeck ()
         Stonghold = Title "Golden Plains Outpost"
@@ -54,7 +52,7 @@ let p2config =
     }    
 
 let gs = 
-    startGame p1config p2config
+    startGame p1config p2config (Utils.chooseRandomPlayer ())
 
 
 let gs2 = 

@@ -1,7 +1,6 @@
 module PlayerState
 
 open GameTypes
-open System.Security.Policy
 
 open System
 
@@ -51,15 +50,15 @@ let rec drawCardFromConflictDeck (ps : PlayerState) =
 
 let drawConflictCards n playerState = [1..n] |> List.fold (fun pstate i -> pstate |> drawCardFromConflictDeck) playerState
 
-let initializePlayerState (initialConfig:InitialPlayerConfig) =
-    let init zone title = Card.createCard title initialConfig.Player zone
+let initializePlayerState (initialConfig:InitialPlayerConfig) player =
+    let init zone title = Card.createCard title player zone
     let conflictDeck = initialConfig.ConflictDeck |> List.map (init ConflictDeck) |> Deck
     let hand, conflictDeck' = Deck.getCardsFromDeck 4 conflictDeck
     let dynastyDeck = initialConfig.DynastyDeck |> List.map (init DynastyDeck) |> Deck
     let dynastyHand, dynastyDeck' = Deck.getCardsFromDeck 4 dynastyDeck
-    let initProvince i title = Card.createProviceCard title initialConfig.Player i
-    let initStrongholdProvince title = Card.createStrongholdProvinceCard title initialConfig.Player
-    let strongholdCard = Card.createStrongholdCard initialConfig.Stonghold initialConfig.Player
+    let initProvince i title = Card.createProviceCard title player i
+    let initStrongholdProvince title = Card.createStrongholdProvinceCard title player
+    let strongholdCard = Card.createStrongholdCard initialConfig.Stonghold player
     let stronghold = CardRepository.getStrongholdCard initialConfig.Stonghold
     {
         Bid = None
@@ -118,12 +117,12 @@ let addFate fate (ps:PlayerState) = { ps with Fate = ps.Fate + fate}
 
 let charactersInPlay ps =
     ps.CardsInPlay 
-    |> Map.filter (fun id card -> Card.isCharacter card)
+    |> Map.filter (fun _ card -> Card.isCharacter card)
     |> Utils.toValuesList
 
 let cardsByCondition cond ps =
     ps.CardsInPlay
-    |> Map.filter (fun id card -> cond card)
+    |> Map.filter (fun _ card -> cond card)
     |> Utils.toValuesList  
 
 let dynastyCardAtPosition position (state:PlayerState) =

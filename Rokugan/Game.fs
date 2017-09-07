@@ -23,8 +23,7 @@ let createStartingRings =
     {Element = Earth; State = Unclaimed; Fate = 0}
     {Element = Void; State = Unclaimed; Fate = 0}] 
 
-let startGame playerConfig1 playerConfig2 = 
-    let firstPlayer = Utils.chooseRandomPlayer ()
+let startGame playerConfig1 playerConfig2 firstPlayer = 
     { 
         Rings = createStartingRings
         Triggers = []
@@ -33,8 +32,8 @@ let startGame playerConfig1 playerConfig2 =
         Actions = []
         GamePhase = Dynasty
         FirstPlayer = firstPlayer
-        Player1State = initializePlayerState playerConfig1
-        Player2State = initializePlayerState playerConfig2  }
+        Player1State = initializePlayerState playerConfig1 Player1
+        Player2State = initializePlayerState playerConfig2 Player2 }
     |> addSecondPlayer1Fate
     |> Triggers.addWinConditionsTriggers
     |> Dynasty.gotoDynastyPhase
