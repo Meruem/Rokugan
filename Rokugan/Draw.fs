@@ -28,3 +28,8 @@ let getDrawPhaseActions gotoNextPhase gs =
     gs 
         >!=> choicei "Player 1 bid" 1 5 nextActionPl1
         >+=> choicei "Player 2 bid" 1 5 nextActionPl2 
+
+let gotoDrawPhase gotoNextPhase (gs:GameState) =
+    { gs with 
+        GamePhase = Draw
+        ActivePlayer = gs.FirstPlayer} |> getDrawPhaseActions gotoNextPhase 

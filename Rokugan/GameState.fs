@@ -43,7 +43,10 @@ let setActions actionList gs =
 let addActions actionList gs =
     { gs with Actions = List.append gs.Actions actionList}
 
+// Set game state actions
 let (>!=>) gs actions = setActions actions gs
+
+// Add game state actions
 let (>+=>) gs actions = addActions actions gs
 
 let cleanPhaseFlags gs =
@@ -60,5 +63,7 @@ let changeCard change card (gs: GameState) =
 let changeCards change cards gs =
     cards |> List.fold (fun agg c -> changeCard change c agg) gs     
 
-let honor = changeCard Card.honorCard
-let dishonor = changeCard Card.dishonorCard
+let honor = changeCard Card.honor
+let dishonor = changeCard Card.dishonor
+
+let nextRound gs = {gs with TurnNumber = gs.TurnNumber + 1}

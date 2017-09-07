@@ -16,7 +16,7 @@ let playDynastyCard position additionalFate gs =
         let dynastyCard = 
             state
             |> dynastyCardAtPosition position
-            |> Card.putAddtitionalFate additionalFate
+            |> Card.putAdditionalFate additionalFate
         let newCard, state' = PlayerState.drawCardFromDynastyDeck state
         let cardDef = CardRepository.getCharacterCard dynastyCard.Title
         state' 
@@ -60,8 +60,16 @@ let rec addDynastyPhaseActions (gs:GameState) =
     if PlayerState.hasPassed ps then gs >!=> actions
     else 
         let passAction = 
-            pass (passActive 
+            pass gs.ActivePlayer (passActive 
                 >> add1fateIfPassedFirst 
                 >> switchActivePlayer 
                 >> addDynastyPhaseActions)
         gs >!=> [passAction] >+=> actions     
+
+let gotoDynastyPhase (gs:GameState) = 
+    { gs with
+        GamePhase = Dynasty
+        ActivePlayer = gs.FirstPlayer }
+    |> revealAllDynastyCardsAtProvinces
+    |> collectFateFromStronghold
+    |> addDynastyPhaseActions   

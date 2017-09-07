@@ -27,3 +27,5 @@ let mutable lastId = 1
 let newId () = 
     lastId <- lastId + 1
     lastId
+
+let toValuesList m = m |> Map.toList |> List.map (fun (k, v) -> v)

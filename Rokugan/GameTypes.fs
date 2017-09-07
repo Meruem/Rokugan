@@ -162,7 +162,6 @@ type PlayerState = {
             |> this.ToValuesList
         member this.CardsInPlayList : Card list = this.CardsInPlay |> Map.toList |> List.map (fun (_, c) -> c)
 
-
 type GameEnd = Player1Won | Player2Won 
 type GamePhase = Dynasty | Draw | Conflict | Fate | Regroup | End of GameEnd 
 type RingState = Unclaimed | Contested | Claimed of Player
@@ -196,7 +195,7 @@ and GameTrigger =
     Condition : GameState -> bool
     Action : GameState -> GameState}
 and PlayerActionType = 
-    | Pass
+    | Pass of Player
     | PlayCharacter of CardTitle
     | ActivateAction
     | Choicei of int * string
@@ -208,6 +207,7 @@ and PlayerActionType =
     | ChooseProvince of Card
     | ChooseCharacter of Card * string
     | ChooseCard of Card * string
+    | ChooseDynastyToDiscard of Card
 and PlayerAction = 
   { Type : PlayerActionType
     Action : GameState -> GameState }

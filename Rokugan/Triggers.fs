@@ -41,10 +41,10 @@ let addWinConditionsTriggers gs =
 let addDynastyPassTrigger gotoNextPhase gs =
     let pl1Pass gs = gs.Player1State |> PlayerState.hasPlayerFlag Passed
     let pl2Pass gs = gs.Player2State |> PlayerState.hasPlayerFlag Passed
-    let bothPlPass gs = pl1Pass gs && pl2Pass gs
+    let bothPlPass gs = pl1Pass gs && pl2Pass gs && gs.GamePhase = Dynasty
     let trigger = 
-      { Name = "Pass trigger"
-        Lifetime = Phase
+      { Name = "Dynasty pass trigger"
+        Lifetime = Game
         Condition = bothPlPass
         Action =  gotoNextPhase }
     {gs with Triggers = trigger :: gs.Triggers}    

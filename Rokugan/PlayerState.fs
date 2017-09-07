@@ -115,22 +115,17 @@ let addFate fate (ps:PlayerState) = { ps with Fate = ps.Fate + fate}
 
 let charactersInPlay ps =
     ps.CardsInPlay 
-    |> Map.filter (fun id card -> Card.character card |> Option.isSome)
-    |> Map.toList
-    |> List.map (fun (id, char) -> char)
+    |> Map.filter (fun id card -> Card.isCharacter card)
+    |> Utils.toValuesList
 
 let cardsByCondition cond ps =
     ps.CardsInPlay
     |> Map.filter (fun id card -> cond card)
-    |> Map.toList
-    |> List.map (fun (id, char) -> char)
+    |> Utils.toValuesList  
 
 let dynastyCardAtPosition position (state:PlayerState) =
     state.DynastyInProvinces 
     |> List.find (fun c -> match c.Zone with | DynastyInProvinces n -> n = position | _ -> false)
-
-let honorCard = changePlayerCard Card.honorCard
-let dishonorCard = changePlayerCard Card.dishonorCard
 
 let discardCard = changePlayerCard Card.discardConflict
 

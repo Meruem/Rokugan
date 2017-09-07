@@ -52,8 +52,8 @@ let p2config =
     }    
 
 let gs = 
-    initializeGameState p1config p2config
-    |> startGame
+    startGame p1config p2config
+
 
 let gs2 = 
     gs

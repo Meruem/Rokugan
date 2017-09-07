@@ -99,25 +99,29 @@ let private resolveConflict state next gs =
     let looseHonorIfUndefended gs =
         if state.Defenders.Length = 0 then gs |> changeOtherPlayerState (addHonor -1)
         else gs
-        |> next
 
     let bowCombatants gs =
         gs 
         |> changeCards Card.bow (List.append state.Attackers state.Defenders)
-        |> looseHonorIfUndefended        
-    
+   
     let breakProvince gs = 
         let provDef = CardRepository.getProvinceCard state.Province.Title
         if totalAttack >= totalDefence + provDef.Strength then gs |> changeCard Card.breakProvince state.Province
         else gs 
         |> bowCombatants
 
-    if totalAttack >= totalDefence then askToResolveRingEffect state.Ring breakProvince gs else breakProvince gs
+    let afterRings = 
+        breakProvince 
+        >> bowCombatants 
+        >> looseHonorIfUndefended 
+        >> switchActivePlayer 
+        >> next
+    if totalAttack >= totalDefence then askToResolveRingEffect state.Ring afterRings gs else afterRings gs
  
 
 let rec private chooseDefenders state next (gs:GameState) =
     let defenderChosen defender = chooseDefenders {state with Defenders = defender :: state.Defenders} next
-    let passAction = pass (switchActivePlayer >> resolveConflict state next)
+    let passAction = pass gs.ActivePlayer (switchActivePlayer >> resolveConflict state next)
     let actions = 
         getCharactersForConflict state.Type state.Defenders gs.ActivePlayerState 
         |> List.map (fun char -> action (ChooseDefender char) (defenderChosen char))
@@ -125,7 +129,7 @@ let rec private chooseDefenders state next (gs:GameState) =
 
 let rec private chooseAttackers state next (gs:GameState) = 
     let attackerChosen attacker = chooseAttackers {state with Attackers = attacker :: state.Attackers } next
-    let passAction = pass (switchActivePlayer >> chooseDefenders state next)
+    let passAction = pass gs.ActivePlayer (switchActivePlayer >> chooseDefenders state next)
     let actions = 
         getCharactersForConflict state.Type state.Attackers gs.ActivePlayerState 
         |> List.map (fun char -> action (ChooseAttacker char)(attackerChosen char))
@@ -171,9 +175,14 @@ let rec addConflictActions (gs:GameState) =
         declareAttack 
             cType ring.Element
             (chooseProvince cType ring addConflictActions)
-    let passAction = pass (passConflict >> addConflictActions)
+    let passAction = pass gs.ActivePlayer (passConflict >> addConflictActions)
     let actions = 
         [for ct in (availableConflicts ps) do
             for ring in (availableRings gs) do yield createDeclareConflictAction ct ring] 
     gs >!=> [passAction] >+=> actions
   
+let gotoConflictPhase (gs:GameState) = 
+    { gs with
+        GamePhase = Conflict
+        ActivePlayer = gs.FirstPlayer }
+    |> addConflictActions

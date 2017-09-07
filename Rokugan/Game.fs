@@ -4,34 +4,17 @@ open GameTypes
 
 open PlayerState
 open GameState
-open Conflict
 
-let gotoDrawPhase gotoNextPhase (gs:GameState) =
-    { gs with 
-        GamePhase = Draw
-        ActivePlayer = gs.FirstPlayer} |> Draw.getDrawPhaseActions gotoNextPhase 
-
-let gotoConflictPhase (gs:GameState) = 
-    { gs with
-        GamePhase = Conflict
-        ActivePlayer = gs.FirstPlayer }
-    |> addConflictActions
-
-let gotoDynastyPhase gotoNextPhase (gs:GameState) = 
-    gs
-    |> Dynasty.revealAllDynastyCardsAtProvinces
-    |> Dynasty.collectFateFromStronghold
-    |> Triggers.addDynastyPassTrigger gotoNextPhase
-    |> Dynasty.addDynastyPhaseActions   
 
 let rec gotoNextPhase (gs:GameState) =
     let gs' = gs |> cleanPhaseFlags |> Triggers.cleanPhaseTriggers
     match gs.GamePhase with
-    | Dynasty -> gs' |> gotoDrawPhase gotoNextPhase
-    | Draw -> gs' |> gotoConflictPhase 
+    | Dynasty -> gs' |> Draw.gotoDrawPhase gotoNextPhase
+    | Draw -> gs' |> Conflict.gotoConflictPhase 
+    | Conflict -> gs' |> Fate.gotoFatePhase gotoNextPhase
+    | Fate -> gs' |> Regroup.gotoRegroupPhase gotoNextPhase
+    | Regroup -> gs' |> nextRound |> Dynasty.gotoDynastyPhase
     | _ -> gs'
-
-let startGame = gotoDynastyPhase gotoNextPhase
 
 let createStartingRings = 
   [ {Element = Fire; State = Unclaimed; Fate = 0}
@@ -40,7 +23,7 @@ let createStartingRings =
     {Element = Earth; State = Unclaimed; Fate = 0}
     {Element = Void; State = Unclaimed; Fate = 0}] 
 
-let initializeGameState playerConfig1 playerConfig2 = 
+let startGame playerConfig1 playerConfig2 = 
     let firstPlayer = Utils.chooseRandomPlayer ()
     { 
         Rings = createStartingRings
@@ -54,6 +37,8 @@ let initializeGameState playerConfig1 playerConfig2 =
         Player2State = initializePlayerState playerConfig2  }
     |> addSecondPlayer1Fate
     |> Triggers.addWinConditionsTriggers
+    |> Dynasty.gotoDynastyPhase
+    |> Triggers.addDynastyPassTrigger gotoNextPhase
 
 let playAction n gs =
     if n > gs.Actions.Length then (gs:GameState)

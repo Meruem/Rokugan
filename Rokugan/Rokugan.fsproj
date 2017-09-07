@@ -54,9 +54,10 @@
     <Compile Include="Dynasty.fs" />
     <Compile Include="Draw.fs" />
     <Compile Include="Conflict.fs" />
+    <Compile Include="Fate.fs" />
+    <Compile Include="Regroup.fs" />
     <Compile Include="Game.fs" />
     <Compile Include="Rokugan.fs" />
-
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <Choose>
