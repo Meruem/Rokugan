@@ -2,6 +2,22 @@ module Triggers
 
 open GameTypes
 
+let addTrigger trigger gs =
+  {gs with Triggers = trigger :: gs.Triggers} 
+
+let removeTrigger triggerName gs =
+    { gs with Triggers = gs.Triggers |> List.filter (fun t -> t.Name <> triggerName)}  
+
+let applyTriggers gs = 
+    let triggers = gs.Triggers |> List.filter (fun t -> t.Condition gs)
+    let removeOnlyOnceTrigger gs = if triggers.[0].Lifetime = Once then gs |> removeTrigger triggers.[0].Name else gs
+    if triggers.Length = 0 then gs
+    else 
+        gs |> removeOnlyOnceTrigger |> triggers.[0].Action // not sure what to do with multiple triggers yet :(    
+
+let cleanPhaseTriggers gs = 
+    { gs with Triggers = gs.Triggers |> List.filter (fun t -> t.Lifetime <> Phase)}    
+
 let addWinConditionsTriggers gs =
     let pl1NoHonor gs = gs.Player1State.Honor <= 0
     let pl2NoHonor gs = gs.Player2State.Honor <= 0
@@ -47,17 +63,14 @@ let addDynastyPassTrigger gotoNextPhase gs =
         Lifetime = Game
         Condition = bothPlPass
         Action =  gotoNextPhase }
-    {gs with Triggers = trigger :: gs.Triggers}    
+    addTrigger trigger gs
 
-let removeTrigger triggerName gs =
-    { gs with Triggers = gs.Triggers |> List.filter (fun t -> t.Name <> triggerName)}  
-
-let applyTriggers gs = 
-    let triggers = gs.Triggers |> List.filter (fun t -> t.Condition gs)
-    let removeOnlyOnceTrigger gs = if triggers.[0].Lifetime = Once then gs |> removeTrigger triggers.[0].Name else gs
-    if triggers.Length = 0 then gs
-    else 
-        gs |> removeOnlyOnceTrigger |> triggers.[0].Action // not sure what to do with multiple triggers yet :(    
-
-let cleanPhaseTriggers gs = 
-    { gs with Triggers = gs.Triggers |> List.filter (fun t -> t.Lifetime <> Phase)}        
+let addConflictEndTrigger next gs =
+    let declaredConflicts gs = 
+      gs.Player1State.DeclaredConflicts.Length + gs.Player2State.DeclaredConflicts.Length >= 4
+    gs 
+    |> addTrigger 
+      { Name = "Conflict end trigger"
+        Lifetime = Game
+        Condition = declaredConflicts
+        Action = next}

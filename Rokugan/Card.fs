@@ -91,4 +91,6 @@ let ready = removeCardState Bowed
 let breakProvince = addCardState Broken
 let putAdditionalFate fate (card:Card) = {card with Fate = fate}
 
+let move zone card = {card with Zone = zone}
+
   

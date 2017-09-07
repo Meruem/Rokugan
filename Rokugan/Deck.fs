@@ -14,5 +14,5 @@ let shuffleDeck (deck:Deck) =
 
 let getCardsFromDeck n (deck:Deck) = 
     let (Deck lst) = deck
-    let hand, rest = List.splitAt 4 lst
+    let hand, rest = List.splitAt n lst
     hand, (Deck rest)    

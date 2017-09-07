@@ -33,10 +33,13 @@ let recycleConflictDiscard ps =
         CardsInPlay = other |> Map.ofList
         ConflictDeck = discard |> List.map (fun (_,c) -> {c with Zone = ConflictDeck}) |> Deck |> Deck.shuffleDeck }
 
-let rec drawCardFromDynastyDeck (playerState : PlayerState) = 
-    match Deck.drawCardFromDeck playerState.DynastyDeck with
-    | Some (card, rest) -> card, { playerState with DynastyDeck = rest }
-    | None -> playerState |> addHonor -5 |> recycleDynastyDiscard |> drawCardFromDynastyDeck      
+let rec drawCardFromDynastyDeck position (ps : PlayerState) = 
+    match Deck.drawCardFromDeck ps.DynastyDeck with
+    | Some (card, rest) -> 
+        { ps with 
+            DynastyDeck = rest 
+            CardsInPlay = ps.CardsInPlay |> Map.add card.Id {card with Zone = DynastyInProvinces position} }
+    | None -> ps |> addHonor -5 |> recycleDynastyDiscard |> drawCardFromDynastyDeck position     
 
 let rec drawCardFromConflictDeck (ps : PlayerState) = 
     match Deck.drawCardFromDeck ps.ConflictDeck with
@@ -133,3 +136,4 @@ let discardRandomConflictCard (ps:PlayerState) =
     let rnd = Random ()
     if ps.Hand.Length = 0 then ps
     else ps |> discardCard ps.Hand.[rnd.Next(ps.Hand.Length)]
+

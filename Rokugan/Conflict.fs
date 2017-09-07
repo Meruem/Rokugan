@@ -27,74 +27,36 @@ let getCharactersForConflict cType alreadyInConflict (ps:PlayerState) =
         |> List.filter (fun c -> notBowed c && Card.isCharWithValue cType c && not (List.contains c alreadyInConflict))
 
 let calculateTotalSkill cType chars = 
-    chars |> List.sumBy (fun c -> match Card.charSkillValue cType c with | None -> 0 | Some s -> s)
+    chars |> List.sumBy (fun c -> if Card.isBowed c then 0 else match Card.charSkillValue cType c with | None -> 0 | Some s -> s)
 
-let resolveFireRing next gs =
-    let honorWithFire next char (gs:GameState) = 
-        let dishonorWithFire next char gs =
-            gs |> dishonor char |> next
-        gs 
-        |> honor char 
-        >!=> chooseCharacterInPlay "Choose character to dishonor" (dishonorWithFire next) gs
-    gs >!=> chooseCharacterInPlay "Choose character to honor" (honorWithFire next) gs
-
-let resolveAirRing next gs = 
-    let plus2Honor = "+2 Honor"
-    let take1Honor = "Take 1 honor"
-    let effectChosen effect gs = 
-        if effect = plus2Honor then 
-            gs 
-            |> changeActivePlayerState (addHonor 2)
-        else 
-            gs
-            |> changeActivePlayerState (addHonor 1)
-            |> changeOtherPlayerState (addHonor -1)
-        |> next
-    gs >!=> choice "Air ring effect" [plus2Honor; take1Honor] effectChosen
-
-let resolveEarthRing next gs =
-    gs 
-    |> changeActivePlayerState drawCardFromConflictDeck
-    |> changeOtherPlayerState discardRandomConflictCard
-    |> next
-
-let resolveVoidRing next gs =
-    let remove1fate card (gs:GameState) = 
-        gs 
-        |> changeCard (fun card -> {card with Fate = card.Fate - 1}) card
-        |> next
-    gs >!=> chooseCharacter Card.hasFate "Remove 1 fate from character" remove1fate gs
-    
-
-let resolveWaterRing next gs =
-    let bow = "Bow character without fate"
-    let ready = "Ready character"
-    let bowChar char gs = gs |> changeCard Card.bow char |> next
-    let readyChar char gs = gs |> changeCard Card.ready char |> next
-    let effectChosen effect gs =
-        if effect = bow then
-            gs >!=> chooseCharacter (Card.hasFate >> not) "Bow character" bowChar gs
-        else 
-            gs >!=> chooseCharacterInPlay "Ready character" readyChar gs
-    gs >!=> choice "Water ring effect" [bow; ready] effectChosen 
 
 let resolveRingEffect ring next yesNo (gs:GameState) = 
     match yesNo with 
     | No -> gs
     | Yes -> 
         match ring.Element with
-        | Element.Fire -> gs |> resolveFireRing next
-        | Element.Air -> gs |> resolveAirRing next
-        | Element.Earth -> gs |> resolveEarthRing next
-        | Element.Void -> gs |> resolveVoidRing next
-        | Element.Water -> gs |> resolveWaterRing next
+        | Element.Fire -> gs |> Ring.resolveFireRing next
+        | Element.Air -> gs |> Ring.resolveAirRing next
+        | Element.Earth -> gs |> Ring.resolveEarthRing next
+        | Element.Void -> gs |> Ring.resolveVoidRing next
+        | Element.Water -> gs |> Ring.resolveWaterRing next
 
-let askToResolveRingEffect ring next gs = gs >!=> yesNo "Resolve ring effect" (resolveRingEffect ring next)
+let askToResolveRingEffect ring next gs = 
+    gs >!=> yesNo "Resolve ring effect" (resolveRingEffect ring next)
     
 
 let private resolveConflict state next gs = 
     let totalAttack = state.Attackers |> calculateTotalSkill state.Type
     let totalDefence = state.Defenders |> calculateTotalSkill state.Type
+    let attackerWon = totalAttack >= totalDefence && totalAttack > 0
+    let defenderWon = totalDefence > totalAttack || totalAttack = 0 
+
+    let claimRing gs =
+        if attackerWon then 
+            gs |> Ring.claimRing state.Ring state.Attacker
+        else if totalDefence > 0 then
+            gs |> Ring.claimRing state.Ring state.Defender
+            else gs |> Ring.returnRing state.Ring
 
     let looseHonorIfUndefended gs =
         if state.Defenders.Length = 0 then gs |> changeOtherPlayerState (addHonor -1)
@@ -108,15 +70,15 @@ let private resolveConflict state next gs =
         let provDef = CardRepository.getProvinceCard state.Province.Title
         if totalAttack >= totalDefence + provDef.Strength then gs |> changeCard Card.breakProvince state.Province
         else gs 
-        |> bowCombatants
 
     let afterRings = 
-        breakProvince 
+        claimRing
+        >> breakProvince 
         >> bowCombatants 
         >> looseHonorIfUndefended 
         >> switchActivePlayer 
         >> next
-    if totalAttack >= totalDefence then askToResolveRingEffect state.Ring afterRings gs else afterRings gs
+    if attackerWon then askToResolveRingEffect state.Ring afterRings gs else afterRings gs
  
 
 let rec private chooseDefenders state next (gs:GameState) =
@@ -186,3 +148,9 @@ let gotoConflictPhase (gs:GameState) =
         GamePhase = Conflict
         ActivePlayer = gs.FirstPlayer }
     |> addConflictActions
+
+let cleanDeclaredConflicts gs =
+    let clearConflict ps = {ps with DeclaredConflicts = []}
+    gs 
+    |> changePlayerState Player1 clearConflict
+    |> changePlayerState Player2 clearConflict

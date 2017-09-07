@@ -17,12 +17,12 @@ let playDynastyCard position additionalFate gs =
             state
             |> dynastyCardAtPosition position
             |> Card.putAdditionalFate additionalFate
-        let newCard, state' = PlayerState.drawCardFromDynastyDeck state
+        let pos = Card.dynastyCardPosition dynastyCard
+        let state' = PlayerState.drawCardFromDynastyDeck pos state
         let cardDef = CardRepository.getCharacterCard dynastyCard.Title
         state' 
             |> addFate (-cardDef.Cost - additionalFate)
             |> addCardToPlay dynastyCard Home
-            |> addCardToPlay newCard (DynastyInProvinces (Card.dynastyCardPosition dynastyCard))
     gs |> GameState.changeActivePlayerState changeState    
 
 let collectFateFromStronghold gs =

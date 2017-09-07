@@ -7,7 +7,7 @@ open GameState
 
 
 let rec gotoNextPhase (gs:GameState) =
-    let gs' = gs |> cleanPhaseFlags |> Triggers.cleanPhaseTriggers
+    let gs' = gs |> cleanPhaseFlags |> Triggers.cleanPhaseTriggers |> Conflict.cleanDeclaredConflicts
     match gs.GamePhase with
     | Dynasty -> gs' |> Draw.gotoDrawPhase gotoNextPhase
     | Draw -> gs' |> Conflict.gotoConflictPhase 
@@ -39,6 +39,7 @@ let startGame playerConfig1 playerConfig2 =
     |> Triggers.addWinConditionsTriggers
     |> Dynasty.gotoDynastyPhase
     |> Triggers.addDynastyPassTrigger gotoNextPhase
+    |> Triggers.addConflictEndTrigger gotoNextPhase
 
 let playAction n gs =
     if n > gs.Actions.Length then (gs:GameState)

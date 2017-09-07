@@ -16,6 +16,8 @@
 #load @"Dynasty.fs"
 #load @"Draw.fs"
 #load @"Conflict.fs"
+#load @"Fate.fs"
+#load @"Regroup.fs"
 #load @"Game.fs"
 
 
@@ -64,11 +66,11 @@ let gs2 =
 
 let testBiding = 
     gs2.Player1State.Bid = Some 2 
-    && gs.Player2State.Bid = Some 5 
-    && gs.Player1State.Honor = 13
-    && gs.Player2State.Honor = 7
-    && gs.Player1State.Hand.Length = 6
-    && gs.Player2State.Hand.Length = 9
+    && gs2.Player2State.Bid = Some 5 
+    && gs2.Player1State.Honor = 13
+    && gs2.Player2State.Honor = 7
+    && gs2.Player1State.Hand.Length = 6
+    && gs2.Player2State.Hand.Length = 9
 
 let gs3 = 
     gs

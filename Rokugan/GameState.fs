@@ -67,3 +67,9 @@ let honor = changeCard Card.honor
 let dishonor = changeCard Card.dishonor
 
 let nextRound gs = {gs with TurnNumber = gs.TurnNumber + 1}
+
+let drawDynasty position player gs = 
+    let ps' = drawCardFromDynastyDeck position (playerState player gs)
+    gs |> changePlayerState player (fun ps -> ps')
+
+    
