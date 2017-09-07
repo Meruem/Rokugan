@@ -110,7 +110,7 @@ type Card = {
     Id : CardId
     Title : CardTitle
     Owner : Player
-    States : CardState list
+    States : CardState Set
     Fate : int 
     Zone : ZoneName }
 
@@ -188,7 +188,8 @@ type GameState =
             match this.ActivePlayer with 
             | Player1 -> this.Player1State
             | Player2 -> this.Player2State  
-
+        member this.Cards = 
+            List.append this.Player1State.CardsInPlayList this.Player2State.CardsInPlayList
 and GameTrigger = 
   { Name : string
     Lifetime : Lifetime
@@ -198,13 +199,15 @@ and PlayerActionType =
     | Pass
     | PlayCharacter of CardTitle
     | ActivateAction
-    | Choice of int * string
+    | Choicei of int * string
+    | Choice of string * string
     | YesNoChoice of YesNo * string
     | DeclareAttack of ConflictType * Element
     | ChooseAttacker of Card 
     | ChooseDefender of Card
     | ChooseProvince of Card
     | ChooseCharacter of Card * string
+    | ChooseCard of Card * string
 and PlayerAction = 
   { Type : PlayerActionType
     Action : GameState -> GameState }

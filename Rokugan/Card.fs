@@ -6,7 +6,7 @@ let createCard title player zone =
   { Id = CardId (Utils.newId ())
     Title = title
     Owner = player
-    States = []
+    States = Set.empty
     Fate = 0 
     Zone = zone}
 
@@ -15,13 +15,14 @@ let createStrongholdProvinceCard title player = createCard title player Strongho
 let createStrongholdCard title player = createCard title player Stronghold
 
 let removeCardState state (card:Card) =
-     { card with States = card.States |> List.filter (fun s -> s <> state) }
+     { card with States = card.States |> Set.remove state }
 
-let addCardState state card = {card with States = state :: card.States }
+let addCardState state card = {card with States = card.States |> Set.add state }
 
-let hasState state card = card.States |> List.contains state
+let hasState state card = card.States |> Set.contains state
 
 let isBowed = hasState Bowed
+let isReady = isBowed >> not
 
 let isHidden = hasState Hidden
 
@@ -38,7 +39,7 @@ let isCharWithValue cType card =
         | Military -> Option.isSome char.MilitarySkill
         | Political -> Option.isSome char.PoliticalSkill
 
-let revealProvince province = { province with States = CardState.Revealed :: province.States}
+let revealProvince = addCardState CardState.Revealed
 
 let charSkillValue cType card =
     let cardDef = CardRepository.getCard card.Title
@@ -67,9 +68,13 @@ let dynastyCardPosition card =
     | DynastyInProvinces n -> n
     | _ -> failwith "Card is not a dynasty card in provice"
 
-let dynastyCardAtPosition position (state:PlayerState) =
-    state.DynastyInProvinces 
-    |> List.find (fun c -> match c.Zone with | DynastyInProvinces n -> n = position | _ -> false)
-
 let isProvinceBroken = hasState Broken 
+
+let discardConflict card = {card with Zone = ConflictDiscard}
+
+let hasFate (card:Card) = card.Fate > 0
+
+let bow = addCardState Bowed
+let ready = removeCardState Bowed
+let breakProvince = addCardState Broken
  

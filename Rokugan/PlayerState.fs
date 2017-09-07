@@ -3,6 +3,8 @@ module PlayerState
 open GameTypes
 open System.Security.Policy
 
+open System
+
 let otherPlayer player = if player = Player1 then Player2 else Player1
 let hasPlayerFlag flag playerState =
     playerState.Flags |> List.exists (fun ps -> ps.Flag = flag)
@@ -96,14 +98,14 @@ let cleanPhaseFlags playerState =
     let flags = playerState.Flags |> List.filter (fun f -> f.Lifetime <> Phase) 
     { playerState with Flags = flags }   
 
-let changeCardState card stateChange ps =
+let changePlayerCard stateChange card ps =
     let cardsInPlay = ps.CardsInPlay |> Map.add card.Id (stateChange card)
     {ps with CardsInPlay = cardsInPlay}
 
-let changeCardsState cards stateChange (ps:PlayerState) =
-    cards |> List.fold (fun agg c -> changeCardState c stateChange agg) ps 
+let changePlayerCards cards stateChange (ps:PlayerState) =
+    cards |> List.fold (fun agg c -> changePlayerCard stateChange c agg) ps     
 
-let revealProvince province = changeCardState province Card.revealProvince
+let revealProvince province = changePlayerCard Card.revealProvince province
 
 let addCardToPlay card zone ps = 
     let card' = {card with Zone = zone}
@@ -111,9 +113,28 @@ let addCardToPlay card zone ps =
 
 let addFate fate (ps:PlayerState) = { ps with Fate = ps.Fate + fate} 
 
-let playerCharctersInPlay ps =
+let charactersInPlay ps =
     ps.CardsInPlay 
     |> Map.filter (fun id card -> Card.character card |> Option.isSome)
     |> Map.toList
     |> List.map (fun (id, char) -> char)
 
+let cardsByCondition cond ps =
+    ps.CardsInPlay
+    |> Map.filter (fun id card -> cond card)
+    |> Map.toList
+    |> List.map (fun (id, char) -> char)
+
+let dynastyCardAtPosition position (state:PlayerState) =
+    state.DynastyInProvinces 
+    |> List.find (fun c -> match c.Zone with | DynastyInProvinces n -> n = position | _ -> false)
+
+let honorCard = changePlayerCard Card.honorCard
+let dishonorCard = changePlayerCard Card.dishonorCard
+
+let discardCard = changePlayerCard Card.discardConflict
+
+let discardRandomConflictCard (ps:PlayerState) =
+    let rnd = Random ()
+    if ps.Hand.Length = 0 then ps
+    else ps |> discardCard ps.Hand.[rnd.Next(ps.Hand.Length)]

@@ -22,10 +22,9 @@ let applyBids pl1Bid pl2Bid gotoNextPhase gs =
 
 let getDrawPhaseActions gotoNextPhase gs =
     let nextActionPl1 pl1Bid gs = 
-        gs !=> choice (fun i -> applyBids pl1Bid i gotoNextPhase) "Player 2 bid" 1 5  
+        gs >!=> choicei  "Player 2 bid" 1 5 (fun i -> applyBids pl1Bid i gotoNextPhase) 
     let nextActionPl2 pl2Bid gs = 
-        gs !=> choice (fun i -> applyBids i pl2Bid gotoNextPhase) "Player 1 bid" 1 5  
-    gs !=>
-        List.append 
-            (choice nextActionPl1 "Player 1 bid" 1 5)
-            (choice nextActionPl2 "Player 2 bid" 1 5)
+        gs >!=> choicei  "Player 1 bid" 1 5 (fun i -> applyBids i pl2Bid gotoNextPhase)
+    gs 
+        >!=> choicei "Player 1 bid" 1 5 nextActionPl1
+        >+=> choicei "Player 2 bid" 1 5 nextActionPl2 

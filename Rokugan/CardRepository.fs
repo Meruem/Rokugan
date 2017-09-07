@@ -15,6 +15,12 @@ let getDynastyCard (title:CardTitle) =
     | CardSpec.Dynasty d -> d
     | _ -> fail title
 
+let getProvinceCard (title:CardTitle) =
+    let card = getCard title
+    match card.Spec with 
+    | CardSpec.Province d -> d
+    | _ -> fail title
+
 let getCharacterCard (title:CardTitle) =
     let card = getCard title
     match card.Spec with 

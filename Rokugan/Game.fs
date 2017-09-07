@@ -15,7 +15,7 @@ let gotoConflictPhase (gs:GameState) =
     { gs with
         GamePhase = Conflict
         ActivePlayer = gs.FirstPlayer }
-    |> getConflictPhaseActions
+    |> addConflictActions
 
 let gotoDynastyPhase gotoNextPhase (gs:GameState) = 
     gs

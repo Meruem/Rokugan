@@ -43,8 +43,8 @@ let setActions actionList gs =
 let addActions actionList gs =
     { gs with Actions = List.append gs.Actions actionList}
 
-let (!=>) gs actions = setActions actions gs
-let (+=>) gs actions = addActions actions gs
+let (>!=>) gs actions = setActions actions gs
+let (>+=>) gs actions = addActions actions gs
 
 let cleanPhaseFlags gs =
     { gs with 
@@ -54,3 +54,11 @@ let cleanPhaseFlags gs =
 let removeFateFromRing ring gs =
     { gs with Rings = gs.Rings |> Utils.replaceListElement { ring with Fate = 0 } (fun r -> r.Element = ring.Element) }
 
+let changeCard change card (gs: GameState) =
+    changePlayerState card.Owner (fun ps -> ps |> changePlayerCard change card) gs
+
+let changeCards change cards gs =
+    cards |> List.fold (fun agg c -> changeCard change c agg) gs     
+
+let honor = changeCard Card.honorCard
+let dishonor = changeCard Card.dishonorCard
