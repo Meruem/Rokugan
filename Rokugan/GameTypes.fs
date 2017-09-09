@@ -172,6 +172,7 @@ type Ring =
     State : RingState
     Fate : int }
 
+
 type GameState = 
   { TurnNumber : int
     FirstPlayer : Player
@@ -193,7 +194,7 @@ and GameTrigger =
   { Name : string
     Lifetime : Lifetime
     Condition : GameState -> bool
-    Action : GameState -> GameState}
+    Action : GameStateMod}
 and PlayerActionType = 
     | Pass of Player
     | PlayCharacter of CardTitle
@@ -210,8 +211,8 @@ and PlayerActionType =
     | ChooseDynastyToDiscard of Card
 and PlayerAction = 
   { Type : PlayerActionType
-    Action : GameState -> GameState }
-
+    Action : GameStateMod }
+and GameStateMod = GameState -> GameState
 type InitialPlayerConfig = {
     ConflictDeck : CardTitle list
     DynastyDeck : CardTitle list
