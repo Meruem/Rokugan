@@ -1,18 +1,23 @@
 #I __SOURCE_DIRECTORY__
 #I ".."
+#I "../CardSets"
 
 #load @"GameTypes.fs"
+#load @"fsiHelpers.fsx"
+#load @"CardRepositoryClass.fs"
 #load @"Utils.fs"
 #load @"CardDef.fs"
 #load @"SampleDeck.fs"
 #load @"CoreCards.fs"
 #load @"CardRepository.fs"
+#load @"TestCards.fs"
 #load @"Card.fs"
 #load @"Deck.fs"
 #load @"PlayerState.fs"
 #load @"GameState.fs"
 #load @"Actions.fs"
 #load @"Triggers.fs"
+#load @"Ring.fs"
 #load @"Dynasty.fs"
 #load @"Draw.fs"
 #load @"Conflict.fs"
@@ -21,24 +26,25 @@
 #load @"Game.fs"
 
 
-
 open GameTypes
 open SampleDeck
 open CardDef
-open CoreCards
 open GameState
 open Game
+open CardRepository
 
-let randomConflictDeck () = sampleConflictDeck 10 coreCards
-let randomDynastyDeck () = sampleDynastyDeck 10 coreCards
-let main :: provinces = sampleProvinces 5 coreCards
-let stronghold () = sampleStronghold coreCards
+do repository.AddCards TestCards.testCards  // do this for selecting card sets 
+//#load "GameRepository.fs" // by simply loading this, all core cards are added
 
+let randomConflictDeck () = sampleConflictDeck 10 (repository.AllCards ())
+let randomDynastyDeck () = sampleDynastyDeck 10 (repository.AllCards ())
+let main :: provinces = sampleProvinces 5 (repository.AllCards ())
+let stronghold () = sampleStronghold (repository.AllCards ())
 let p1config = 
     {
         ConflictDeck = randomConflictDeck ()
         DynastyDeck = randomDynastyDeck ()
-        Stonghold = Title "Golden Plains Outpost"
+        Stonghold = stronghold ()
         StrongholdProvince = main
         Provinces = provinces
     }
@@ -46,7 +52,7 @@ let p2config =
     {
         ConflictDeck = randomConflictDeck ()
         DynastyDeck = randomDynastyDeck ()
-        Stonghold = Title "Golden Plains Outpost"
+        Stonghold = stronghold ()
         StrongholdProvince = main
         Provinces = provinces
     }    
@@ -70,21 +76,21 @@ let testBiding =
     && gs2.Player1State.Hand.Length = 6
     && gs2.Player2State.Hand.Length = 9
 
-let gs3 = 
-    gs
-    |> playAction 1 // 1st char
-    |> playAction 1 // add 1 fate
-    |> playAction 1 // 1st char
-    |> playAction 1 // add 1 fate
-    |> playAction 1 // 2nd char
-    |> playAction 0 // no fate
-    |> playAction 0 // pass
-    |> playAction 0 // pass
-    |> playAction 1 // bid 2
-    |> playAction 1 // bid 2
-    |> playAction 1 // conflict
+// let gs3 = 
+//     gs
+//     |> playAction 1 // 1st char
+//     |> playAction 1 // add 1 fate
+//     |> playAction 1 // 1st char
+//     |> playAction 1 // add 1 fate
+//     |> playAction 1 // 2nd char
+//     |> playAction 0 // no fate
+//     |> playAction 0 // pass
+//     |> playAction 0 // pass
+//     |> playAction 1 // bid 2
+//     |> playAction 1 // bid 2
+//     |> playAction 1 // conflict
 
-let mutable gsa = gs3
+let mutable gsa = gs
 
 gsa <- gsa |> playAction 0; gsa;;
 

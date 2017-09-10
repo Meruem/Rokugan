@@ -1,7 +1,7 @@
 module PlayerState
 
 open GameTypes
-
+open CardRepository
 open System
 
 let otherPlayer player = if player = Player1 then Player2 else Player1
@@ -59,7 +59,7 @@ let initializePlayerState (initialConfig:InitialPlayerConfig) player =
     let initProvince i title = Card.createProviceCard title player i
     let initStrongholdProvince title = Card.createStrongholdProvinceCard title player
     let strongholdCard = Card.createStrongholdCard initialConfig.Stonghold player
-    let stronghold = CardRepository.getStrongholdCard initialConfig.Stonghold
+    let stronghold = repository.GetStrongholdCard initialConfig.Stonghold
     {
         Bid = None
         Honor = stronghold.StartingHonor
@@ -83,7 +83,7 @@ let addFateToPlayer fate (playerState:PlayerState) =
 let getPlayableDynastyPositions (ps:PlayerState) =
     ps.DynastyInProvinces 
     |> List.map (fun card -> 
-        let cardDef = CardRepository.getDynastyCard card.Title
+        let cardDef = repository.GetDynastyCard card.Title
         let nr = 
             match card.Zone with
             | DynastyInProvinces i ->  i

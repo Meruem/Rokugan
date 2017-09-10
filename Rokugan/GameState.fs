@@ -82,4 +82,4 @@ let drawDynasty position player gs =
     let ps' = drawCardFromDynastyDeck position (playerState player gs)
     gs |> changePlayerState player (fun _ -> ps')
 
-    
+let changePhase phase gs = {gs with GamePhase = phase; ActivePlayer = gs.FirstPlayer}     

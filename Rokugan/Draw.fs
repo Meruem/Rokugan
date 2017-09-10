@@ -22,14 +22,14 @@ let applyBids pl1Bid pl2Bid gotoNextPhase gs =
 
 let getDrawPhaseActions gotoNextPhase gs =
     let nextActionPl1 pl1Bid gs = 
-        gs >!=> choicei  "Player 2 bid" 1 5 (fun i -> applyBids pl1Bid i gotoNextPhase) 
+        gs >!=> choicei Player2 "Player 2 bid" 1 5 (fun i -> applyBids pl1Bid i gotoNextPhase) 
     let nextActionPl2 pl2Bid gs = 
-        gs >!=> choicei  "Player 1 bid" 1 5 (fun i -> applyBids i pl2Bid gotoNextPhase)
+        gs >!=> choicei Player1 "Player 1 bid" 1 5 (fun i -> applyBids i pl2Bid gotoNextPhase)
     gs 
-        >!=> choicei "Player 1 bid" 1 5 nextActionPl1
-        >+=> choicei "Player 2 bid" 1 5 nextActionPl2 
+        >!=> choicei Player1 "Player 1 bid" 1 5 nextActionPl1
+        >+=> choicei Player2 "Player 2 bid" 1 5 nextActionPl2 
 
 let gotoDrawPhase gotoNextPhase (gs:GameState) =
-    { gs with 
-        GamePhase = Draw
-        ActivePlayer = gs.FirstPlayer} |> getDrawPhaseActions gotoNextPhase 
+    gs 
+    |> changePhase Draw
+    |> getDrawPhaseActions gotoNextPhase 

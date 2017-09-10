@@ -91,6 +91,8 @@ type CardDef = {
 type Player = Player1 | Player2
 
 type CardState = Bowed | Honored | Dishonored | Hidden |Revealed | Broken
+
+//[<StructuredFormatDisplayAttribute("{CardId}")>]
 type CardId = CardId of int
 
 type ZoneName = 
@@ -106,6 +108,7 @@ type ZoneName =
     | DynastyDeck 
     | ConflictDeck
 
+[<StructuredFormatDisplayAttribute("Card {Id} [{Title}] in {Zone} (+{Fate})")>]
 type Card = {
     Id : CardId
     Title : CardTitle
@@ -113,7 +116,6 @@ type Card = {
     States : CardState Set
     Fate : int 
     Zone : ZoneName }
-
 
 type Deck = 
     Deck of Card list
@@ -167,6 +169,7 @@ type GamePhase = Dynasty | Draw | Conflict | Fate | Regroup | End of GameEnd
 type RingState = Unclaimed | Contested | Claimed of Player
 type YesNo = Yes | No
 
+[<StructuredFormatDisplay("{Element}/{State}/({Fate})")>]
 type Ring = 
   { Element : Element
     State : RingState
@@ -190,13 +193,15 @@ type GameState =
             | Player2 -> this.Player2State  
         member this.Cards = 
             List.append this.Player1State.CardsInPlayList this.Player2State.CardsInPlayList
-and GameTrigger = 
+and
+    [<StructuredFormatDisplayAttribute("Trigger: {Name}, {Lifetime}")>]
+    GameTrigger = 
   { Name : string
     Lifetime : Lifetime
     Condition : GameState -> bool
     Action : GameStateMod}
 and PlayerActionType = 
-    | Pass of Player
+    | Pass
     | PlayCharacter of CardTitle
     | ActivateAction
     | Choicei of int * string
@@ -209,8 +214,11 @@ and PlayerActionType =
     | ChooseCharacter of Card * string
     | ChooseCard of Card * string
     | ChooseDynastyToDiscard of Card
-and PlayerAction = 
+and 
+    [<StructuredFormatDisplayAttribute("Action ({Player}): {Type}")>]
+    PlayerAction = 
   { Type : PlayerActionType
+    Player : Player
     Action : GameStateMod }
 and GameStateMod = GameState -> GameState
 type InitialPlayerConfig = {

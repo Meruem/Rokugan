@@ -1,19 +1,20 @@
 module Card
 
 open GameTypes
+open CardRepository
 
 let (|Dynasty|_|) card =
-    match (CardRepository.getCard card.Title).Spec with
+    match (repository.GetCard card.Title).Spec with
     | CardSpec.Dynasty _ -> Some card
     | _ -> None
 
 let (|Conflict|_|) card =
-    match (CardRepository.getCard card.Title).Spec with
+    match (repository.GetCard card.Title).Spec with
     | CardSpec.Conflict _ -> Some card
     | _ -> None
 
 let (|Character|_|) card = 
-    match CardRepository.getCard card.Title with
+    match repository.GetCard card.Title with
     | CardDef.Character c -> Some card
     | _ -> None 
 
@@ -41,7 +42,7 @@ let isReady = isBowed >> not
 let isHidden = hasState Hidden
 
 let charSkillValue cType card =
-    let cardDef = CardRepository.getCard card.Title
+    let cardDef = repository.GetCard card.Title
     match  cardDef with
     | CardDef.Character char ->  
         match cType with

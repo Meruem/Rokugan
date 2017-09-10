@@ -13,16 +13,16 @@ let claimRing ring player = changeRing ring.Element (fun r -> {r with State = Cl
 let contestRing ring = changeRing ring.Element (fun r -> { r with State = Contested})
 let returnRing ring = changeRing ring.Element (fun r -> { r with State = Unclaimed })
 
-let resolveFireRing next gs =
+let resolveFireRing attacker next gs =
     let honorWithFire next char (gs:GameState) = 
         let dishonorWithFire next char gs =
             gs |> dishonor char |> next
         gs 
         |> honor char 
-        >!=> chooseCharacterInPlay "Choose character to dishonor" (dishonorWithFire next) gs
-    gs >!=> chooseCharacterInPlay "Choose character to honor" (honorWithFire next) gs
+        >!=> chooseCharacterInPlay attacker "Choose character to dishonor" (dishonorWithFire next) gs
+    gs >!=> chooseCharacterInPlay attacker "Choose character to honor" (honorWithFire next) gs
 
-let resolveAirRing next gs = 
+let resolveAirRing attacker next gs = 
     let plus2Honor = "+2 Honor"
     let take1Honor = "Take 1 honor"
     let effectChosen effect gs = 
@@ -34,30 +34,30 @@ let resolveAirRing next gs =
             |> changeActivePlayerState (addHonor 1)
             |> changeOtherPlayerState (addHonor -1)
         |> next
-    gs >!=> choice "Air ring effect" [plus2Honor; take1Honor] effectChosen
+    gs >!=> choice attacker "Air ring effect" [plus2Honor; take1Honor] effectChosen
 
-let resolveEarthRing next gs =
+let resolveEarthRing attacker next gs =
     gs 
-    |> changeActivePlayerState drawCardFromConflictDeck
-    |> changeOtherPlayerState discardRandomConflictCard
+    |> changePlayerState attacker drawCardFromConflictDeck
+    |> changePlayerState (otherPlayer attacker) discardRandomConflictCard
     |> next
 
-let resolveVoidRing next gs =
+let resolveVoidRing attacker next gs =
     let remove1fate card (gs:GameState) = 
         gs 
         |> changeCard (fun card -> {card with Fate = card.Fate - 1}) card
         |> next
-    gs >!=> chooseCharacter Card.hasFate "Remove 1 fate from character" remove1fate gs
+    gs >!=> chooseCharacter attacker Card.hasFate "Remove 1 fate from character" remove1fate gs
     
 
-let resolveWaterRing next gs =
+let resolveWaterRing attacker next gs =
     let bow = "Bow character without fate"
     let ready = "Ready character"
     let bowChar char gs = gs |> changeCard Card.bow char |> next
     let readyChar char gs = gs |> changeCard Card.ready char |> next
     let effectChosen effect gs =
         if effect = bow then
-            gs >!=> chooseCharacter (Card.hasFate >> not) "Bow character" bowChar gs
+            gs >!=> chooseCharacter attacker (Card.hasFate >> not) "Bow character" bowChar gs
         else 
-            gs >!=> chooseCharacterInPlay "Ready character" readyChar gs
-    gs >!=> choice "Water ring effect" [bow; ready] effectChosen 
+            gs >!=> chooseCharacterInPlay attacker "Ready character" readyChar gs
+    gs >!=> choice attacker "Water ring effect" [bow; ready] effectChosen 

@@ -14,7 +14,6 @@ let fatePhase gotoNextPhase (gs:GameState) =
     gs |> changeCards remove1FateorDiscard chars |> gotoNextPhase
 
 let gotoFatePhase gotoNextPhase gs =
-    { gs with
-        GamePhase = Fate
-        ActivePlayer = gs.FirstPlayer }
+    gs
+    |> changePhase Fate
     |> fatePhase gotoNextPhase

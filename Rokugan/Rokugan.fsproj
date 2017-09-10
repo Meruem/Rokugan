@@ -40,10 +40,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GameTypes.fs" />
+    <Compile Include="CardRepositoryClass.fs" />
     <Compile Include="Utils.fs" />
     <Compile Include="CardDef.fs" />
-    <Compile Include="CoreCards.fs" />
     <Compile Include="CardRepository.fs" />
+    <Compile Include="CardSets/CoreCards.fs" />
+    <Compile Include="CardSets/TestCards.fs" />
+    <Compile Include="GameRepository.fs" />
     <Compile Include="SampleDeck.fs" />
     <Compile Include="Card.fs" />
     <Compile Include="Deck.fs" />

@@ -4,6 +4,7 @@ open GameTypes
 open PlayerState
 open GameState
 open Actions
+open CardRepository
 
 let revealAllDynastyCardsAtProvinces gs =
     let removeHiddenState = Card.removeCardState Hidden
@@ -19,14 +20,14 @@ let playDynastyCard position additionalFate gs =
             |> Card.putAdditionalFate additionalFate
         let pos = Card.dynastyCardPosition dynastyCard
         let state' = PlayerState.drawCardFromDynastyDeck pos state
-        let cardDef = CardRepository.getCharacterCard dynastyCard.Title
+        let cardDef = repository.GetCharacterCard dynastyCard.Title
         state' 
             |> addFate (-cardDef.Cost - additionalFate)
             |> addCardToPlay dynastyCard Home
     gs |> GameState.changeActivePlayerState changeState    
 
 let collectFateFromStronghold gs =
-    let strongholdDef (ps:PlayerState) = ps.Stronghold.Title |> CardRepository.getCard
+    let strongholdDef (ps:PlayerState) = ps.Stronghold.Title |> repository.GetCard
     let fate ps =
         match (strongholdDef ps).Spec with 
         | CardSpec.Stronghold s -> s.FatePerRound
@@ -48,7 +49,7 @@ let add1fateIfPassedFirst gs =
 let rec addDynastyPhaseActions (gs:GameState) =
     let ps = gs.ActivePlayerState
     let chooseAddFate nextAction remainingFate gs = 
-        gs >!=> choicei "Add fate" 0 remainingFate nextAction
+        gs >!=> choicei gs.ActivePlayer "Add fate" 0 remainingFate nextAction
     let actions = 
         getPlayableDynastyPositions ps
         |> List.map (fun (pos, remainingFate) ->
@@ -56,7 +57,7 @@ let rec addDynastyPhaseActions (gs:GameState) =
                 playDynastyCard pos fate 
                 >> GameState.switchActivePlayer 
                 >> addDynastyPhaseActions
-            playCharacter ((dynastyCardAtPosition pos ps).Title) (chooseAddFate playCard remainingFate) )
+            playCharacter gs.ActivePlayer ((dynastyCardAtPosition pos ps).Title) (chooseAddFate playCard remainingFate) )
     if PlayerState.hasPassed ps then gs >!=> actions
     else 
         let passAction = 
@@ -67,9 +68,8 @@ let rec addDynastyPhaseActions (gs:GameState) =
         gs >!=> [passAction] >+=> actions     
 
 let gotoDynastyPhase (gs:GameState) = 
-    { gs with
-        GamePhase = Dynasty
-        ActivePlayer = gs.FirstPlayer }
+    gs
+    |> changePhase Dynasty
     |> revealAllDynastyCardsAtProvinces
     |> collectFateFromStronghold
     |> addDynastyPhaseActions   

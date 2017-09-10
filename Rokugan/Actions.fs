@@ -4,41 +4,44 @@ open GameTypes
 open GameState
 open PlayerState
 
-let action actionType effect = { Type = actionType; Action = effect}
+let action player actionType effect = { Type = actionType; Player = player; Action = effect}
 
 // creates multiple choice action from min to max
-let choicei desc min max next =
+let choicei player desc min max next =
     [min..max]
-        |> List.map (fun i -> action (Choicei (i, desc)) (next i))
+        |> List.map (fun i -> action player (Choicei (i, desc)) (next i))
 
-let choice desc xs next = 
-    xs |> List.map (fun s -> action (Choice (s, desc)) (next s))
+let choice player desc xs next = 
+    xs |> List.map (fun s -> action player (Choice (s, desc)) (next s))
 
-let yesNo desc next = 
-    [ action (YesNoChoice (Yes, desc)) (next Yes)
-      action (YesNoChoice (No, desc)) (next No) ]
+let yesNo player desc next = 
+    [ action player (YesNoChoice (Yes, desc)) (next Yes)
+      action player (YesNoChoice (No, desc)) (next No) ]
 
-let private chooseCharacterAction desc next card = action (ChooseCharacter (card, desc)) (next card)
-let private chooseCardAction desc next card = action (ChooseCard (card, desc)) (next card)
+let private chooseCharacterAction player desc next card = action player (ChooseCharacter (card, desc)) (next card)
+let private chooseCardAction player desc next card = action player (ChooseCard (card, desc)) (next card)
 
-let chooseDynastyToDiscard next card = action (ChooseDynastyToDiscard card) (next card)
+let chooseDynastyToDiscard player next card = action player (ChooseDynastyToDiscard card) (next card)
 
-let chooseCharacterInPlay desc next gs =
+let chooseCharacterInPlay player desc next gs =
     List.append (charactersInPlay gs.Player1State) (charactersInPlay gs.Player2State) 
-    |> List.map (chooseCharacterAction desc next)
+    |> List.map (chooseCharacterAction player desc next)
 
-let chooseCard condition desc next (gs:GameState) =
+let chooseCard player condition desc next (gs:GameState) =
     gs.Cards 
     |> List.filter condition
-    |> List.map (chooseCardAction desc next)
+    |> List.map (chooseCardAction player desc next)
 
-let chooseCharacter condition desc next (gs:GameState) =
+let chooseCharacter player condition desc next (gs:GameState) =
     gs.Cards 
     |> List.filter (fun c -> condition c && Card.isCharacter c)
-    |> List.map (chooseCharacterAction desc next)
+    |> List.map (chooseCharacterAction player desc next)
 
-let pass player = action (Pass player) 
+let pass player = action player Pass
 
+// gets list of actions for both players for each dynasty card to be chosen
+// each action has continuation pointing again at this function
+// after both players bassed "next" function is called with parameter list of all chosen cards 
 let rec chooseDynastyInProvince next (gs:GameState) =
     let rec chooseDynastyInProvinceRec next chosen passed (gs:GameState) =
         let pl1Passed = List.contains Player1 passed
@@ -53,16 +56,15 @@ let rec chooseDynastyInProvince next (gs:GameState) =
         let actions (state:PlayerState) =
             state.DynastyInProvinces
             |> List.filter (fun c -> not (Card.isHidden c) && not (chosen |> List.contains c))
-            |> List.map  (chooseDynastyToDiscard chooseCard)
+            |> List.map  (fun c -> chooseDynastyToDiscard c.Owner chooseCard c)
         if pl1Passed then [] else [passPl1]
             @ if pl2Passed then [] else [passPl2]
             @ if pl1Passed then [] else actions gs.Player1State
             @ if pl2Passed then [] else actions gs.Player2State
     chooseDynastyInProvinceRec next [] [] gs
 
-let playCharacter title = action (PlayCharacter title)
+let playCharacter player title = action player (PlayCharacter title)
 
-let chooseProvince province = action (ChooseProvince province) 
+let chooseProvince player province = action player (ChooseProvince province) 
 
-
-let declareAttack ctype element = action (DeclareAttack (ctype,element))
+let declareAttack player ctype element = action player (DeclareAttack (ctype,element))
