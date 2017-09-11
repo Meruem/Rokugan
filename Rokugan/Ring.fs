@@ -5,6 +5,7 @@ open GameState
 open PlayerState
 open Actions
 
+let createRing element = {Element = element; State = Unclaimed; Fate = 0}
 let changeRing ringElement change gs =
     let rings' = [ for ring in gs.Rings do if ring.Element = ringElement then yield (change ring) else yield ring ]
     {gs with Rings = rings'}

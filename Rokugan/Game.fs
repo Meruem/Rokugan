@@ -17,11 +17,11 @@ let rec gotoNextPhase (gs:GameState) =
     | _ -> gs'
 
 let createStartingRings = 
-  [ {Element = Fire; State = Unclaimed; Fate = 0}
-    {Element = Element.Water; State = Unclaimed; Fate = 0}
-    {Element = Air; State = Unclaimed; Fate = 0}
-    {Element = Earth; State = Unclaimed; Fate = 0}
-    {Element = Void; State = Unclaimed; Fate = 0}] 
+  [ Ring.createRing Element.Fire
+    Ring.createRing Element.Water
+    Ring.createRing Element.Air
+    Ring.createRing Element.Earth
+    Ring.createRing Element.Void ]
 
 let startGame playerConfig1 playerConfig2 firstPlayer = 
     { 
@@ -36,9 +36,9 @@ let startGame playerConfig1 playerConfig2 firstPlayer =
         Player2State = initializePlayerState playerConfig2 Player2 }
     |> addSecondPlayer1Fate
     |> Triggers.addWinConditionsTriggers
-    |> Dynasty.gotoDynastyPhase
     |> Triggers.addDynastyPassTrigger gotoNextPhase
     |> Triggers.addConflictEndTrigger gotoNextPhase
+    |> Dynasty.gotoDynastyPhase
 
 let playAction n gs =
     if n > gs.Actions.Length then (gs:GameState)

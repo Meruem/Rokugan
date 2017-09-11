@@ -1,7 +1,6 @@
 module Triggers
 
 open GameTypes
-
 let addTrigger trigger gs =
   {gs with Triggers = trigger :: gs.Triggers} 
 
