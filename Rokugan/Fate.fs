@@ -13,7 +13,7 @@ let fatePhase gotoNextPhase (gs:GameState) =
         |> List.filter (fun c -> Card.isCharacter c && c.Zone = Home)
     gs |> changeCards remove1FateorDiscard chars |> gotoNextPhase
 
-let gotoFatePhase gotoNextPhase gs =
-    gs
-    |> changePhase Fate
-    |> fatePhase gotoNextPhase
+// let gotoFatePhase gotoNextPhase gs =
+//     gs
+//     |> changePhase Fate
+//     |> fatePhase gotoNextPhase

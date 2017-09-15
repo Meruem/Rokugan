@@ -9,6 +9,7 @@ let hasPlayerFlag flag playerState =
     playerState.Flags |> List.exists (fun ps -> ps.Flag = flag)
 
 let changeBid bid playerState = { playerState with Bid = Some bid }
+let cleanBid ps = { ps with Bid = None }
 
 let hasPassed = hasPlayerFlag PlayerFlagEnum.Passed
 
@@ -35,9 +36,10 @@ let recycleConflictDiscard ps =
 let rec drawCardFromDynastyDeck position (ps : PlayerState) = 
     match Deck.drawCardFromDeck ps.DynastyDeck with
     | Some (card, rest) -> 
+        let card2 = card |> Card.addCardState Hidden
         { ps with 
             DynastyDeck = rest 
-            CardsInPlay = ps.CardsInPlay |> Map.add card.Id {card with Zone = DynastyInProvinces position} }
+            CardsInPlay = ps.CardsInPlay |> Map.add card2.Id {card2 with Zone = DynastyInProvinces position} }
     | None -> ps |> addHonor -5 |> recycleDynastyDiscard |> drawCardFromDynastyDeck position     
 
 let rec drawCardFromConflictDeck (ps : PlayerState) = 
@@ -100,7 +102,8 @@ let cleanPhaseFlags playerState =
     let flags = playerState.Flags |> List.filter (fun f -> f.Lifetime <> Phase) 
     { playerState with Flags = flags }   
 
-let changePlayerCard stateChange card ps =
+let changePlayerCard stateChange cardId ps =
+    let card = ps.CardsInPlay.Item cardId
     let cardsInPlay = ps.CardsInPlay |> Map.add card.Id (stateChange card)
     {ps with CardsInPlay = cardsInPlay}
 
@@ -110,8 +113,8 @@ let changePlayerCards cards stateChange (ps:PlayerState) =
 let revealProvince province = changePlayerCard Card.revealProvince province
 
 let addCardToPlay card zone ps = 
-    let card' = {card with Zone = zone}
-    { ps with CardsInPlay = ps.CardsInPlay |>  Map.add card.Id card' } 
+    let card2 = {card with Zone = zone}
+    { ps with CardsInPlay = ps.CardsInPlay |> Map.add card2.Id card2 } 
 
 let addFate fate (ps:PlayerState) = { ps with Fate = ps.Fate + fate} 
 
@@ -134,5 +137,5 @@ let discardCard = changePlayerCard Card.discardConflict
 let discardRandomConflictCard (ps:PlayerState) =
     let rnd = Random ()
     if ps.Hand.Length = 0 then ps
-    else ps |> discardCard ps.Hand.[rnd.Next(ps.Hand.Length)]
+    else ps |> discardCard ps.Hand.[rnd.Next(ps.Hand.Length)].Id
 

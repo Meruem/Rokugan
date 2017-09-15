@@ -61,12 +61,12 @@ let dynastyCardPosition card =
     | _ -> failwith "Card is not a dynasty card in provice"
 
 // ----------- State changes --------------
-let removeCardState state (card:Card) =
-     { card with States = card.States |> Set.remove state }
+
+let removeCardState state card = {card with States = card.States |> Set.remove state }
 
 let addCardState state card = {card with States = card.States |> Set.add state }
 
-let revealProvince = addCardState CardState.Revealed
+let revealProvince = removeCardState CardState.Hidden
 
 let honor card = 
     if hasState Dishonored card then removeCardState Dishonored card
@@ -91,7 +91,7 @@ let bow = addCardState Bowed
 let ready = removeCardState Bowed
 let breakProvince = addCardState Broken
 let putAdditionalFate fate (card:Card) = {card with Fate = fate}
-
 let move zone card = {card with Zone = zone}
 
+let addFateOnCard fate (card:Card) = {card with Fate = max (card.Fate + fate) 0}
   

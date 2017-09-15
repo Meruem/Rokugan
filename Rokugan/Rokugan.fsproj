@@ -32,37 +32,6 @@
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>$(Platform)</PlatformTarget>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="mscorlib" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="GameTypes.fs" />
-    <Compile Include="CardRepositoryClass.fs" />
-    <Compile Include="Utils.fs" />
-    <Compile Include="CardDef.fs" />
-    <Compile Include="CardRepository.fs" />
-    <Compile Include="CardSets/CoreCards.fs" />
-    <Compile Include="CardSets/TestCards.fs" />
-    <Compile Include="GameRepository.fs" />
-    <Compile Include="SampleDeck.fs" />
-    <Compile Include="Card.fs" />
-    <Compile Include="Deck.fs" />
-    <Compile Include="PlayerState.fs" />
-    <Compile Include="Triggers.fs" />
-    <Compile Include="GameState.fs" />
-    <Compile Include="Actions.fs" />
-    <Compile Include="Ring.fs" />
-    <Compile Include="Dynasty.fs" />
-    <Compile Include="Draw.fs" />
-    <Compile Include="Conflict.fs" />
-    <Compile Include="Fate.fs" />
-    <Compile Include="Regroup.fs" />
-    <Compile Include="Game.fs" />
-    <Compile Include="Rokugan.fs" />
-  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <Choose>
     <When Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets')">
@@ -1393,4 +1362,38 @@
   </Choose>
   <Import Project="..\packages\NETStandard.Library\build\NETStandard.Library.targets" Condition="Exists('..\packages\NETStandard.Library\build\NETStandard.Library.targets')" Label="Paket" />
   <Import Project="..\packages\NETStandard.Library\build\$(__paket__NETStandard_Library_targets).targets" Condition="Exists('..\packages\NETStandard.Library\build\$(__paket__NETStandard_Library_targets).targets')" Label="Paket" />
+  <ItemGroup>
+    <Compile Include="GameTypes.fs" />
+    <Compile Include="CardRepositoryClass.fs" />
+    <Compile Include="Utils.fs" />
+    <Compile Include="CardDef.fs" />
+    <Compile Include="CardRepository.fs" />
+    <Compile Include="CardSets/CoreCards.fs" />
+    <Compile Include="CardSets/TestCards.fs" />
+    <Compile Include="GameRepository.fs" />
+    <Compile Include="SampleDeck.fs" />
+    <Compile Include="Card.fs" />
+    <Compile Include="Deck.fs" />
+    <Compile Include="Command.fs" />
+    <Compile Include="GameEngine.fs" />
+    <Compile Include="PlayerState.fs" />
+    <Compile Include="Triggers.fs" />
+    <Compile Include="GameState.fs" />
+    <Compile Include="Actions.fs" />
+    <Compile Include="Ring.fs" />
+    <Compile Include="Dynasty.fs" />
+    <Compile Include="Draw.fs" />
+    <Compile Include="Conflict.fs" />
+    <Compile Include="Fate.fs" />
+    <Compile Include="Regroup.fs" />
+    <Compile Include="Game.fs" />
+    <Compile Include="Rokugan.fs" />
+    <None Include="Tests\Test1.fsx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+  </ItemGroup>
 </Project>

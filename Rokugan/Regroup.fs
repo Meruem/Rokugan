@@ -15,20 +15,20 @@ let returnRings (gs:GameState) =
     {gs with
         Rings = gs.Rings |> List.map (fun r -> {r with State = Unclaimed})}
 
-let gotoRegroupPhase gotoNextPhase (gs:GameState) =
-    let drawAndDiscardCards cards gs = 
-        let drawAndDiscardCard card (gs:GameState) =
-            match card.Zone with 
-            | DynastyInProvinces pos -> drawDynasty pos card.Owner gs
-            | _ -> gs
-            |> changeCard Card.discard card
-        cards |> List.fold (fun acc c -> drawAndDiscardCard c acc) gs
-        |> gotoNextPhase
-    let gs' =
-        gs 
-        |> changePhase Regroup
-        |> readyAllCards
-        |> addFateToRings
-        |> returnRings
-    gs' >!=> (Actions.chooseDynastyInProvince (drawAndDiscardCards) gs')
+// let gotoRegroupPhase gotoNextPhase (gs:GameState) =
+//     let drawAndDiscardCards cards gs = 
+//         let drawAndDiscardCard card (gs:GameState) =
+//             match card.Zone with 
+//             | DynastyInProvinces pos -> drawDynasty pos card.Owner gs
+//             | _ -> gs
+//             |> changeCard Card.discard card
+//         cards |> List.fold (fun acc c -> drawAndDiscardCard c acc) gs
+//         |> gotoNextPhase
+//     let gs' =
+//         gs 
+//         |> changePhase Regroup
+//         |> readyAllCards
+//         |> addFateToRings
+//         |> returnRings
+//     gs' >!=> (Actions.chooseDynastyInProvince (drawAndDiscardCards) gs')
 

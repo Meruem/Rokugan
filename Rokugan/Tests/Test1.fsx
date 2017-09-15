@@ -13,6 +13,7 @@
 #load @"TestCards.fs"
 #load @"Card.fs"
 #load @"Deck.fs"
+#load @"Command.fs"
 #load @"PlayerState.fs"
 #load @"GameState.fs"
 #load @"Actions.fs"
@@ -69,12 +70,12 @@ let gs2 =
     |> playAction 4 // bid 5 for pl2
 
 let testBiding = 
-    gs2.Player1State.Bid = Some 2 
-    && gs2.Player2State.Bid = Some 5 
-    && gs2.Player1State.Honor = 13
-    && gs2.Player2State.Honor = 7
-    && gs2.Player1State.Hand.Length = 6
-    && gs2.Player2State.Hand.Length = 9
+    gs2.State.Player1State.Bid = Some 2 
+    && gs2.State.Player2State.Bid = Some 5 
+    && gs2.State.Player1State.Honor = 13
+    && gs2.State.Player2State.Honor = 7
+    && gs2.State.Player1State.Hand.Length = 6
+    && gs2.State.Player2State.Hand.Length = 9
 
 // let gs3 = 
 //     gs
@@ -94,3 +95,6 @@ let mutable gsa = gs
 
 gsa <- gsa |> playAction 0; gsa;;
 
+
+let map = Map.empty |> Map.add 1 "neco" |> Map.add 1 "nic"
+let i = map.Item 1

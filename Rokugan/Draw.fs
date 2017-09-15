@@ -5,31 +5,25 @@ open PlayerState
 open GameState
 open Actions
 
-let applyBids pl1Bid pl2Bid gotoNextPhase gs =
-    { gs with
-        Actions = []
-        Player1State = 
-            gs.Player1State 
-            |> changeBid pl1Bid 
-            |> addHonor (pl2Bid - pl1Bid) 
-            |> drawConflictCards pl1Bid
-        Player2State = 
-            gs.Player2State 
-            |> changeBid pl2Bid 
-            |> addHonor (pl1Bid - pl2Bid) 
-            |> drawConflictCards pl2Bid}
-    |> gotoNextPhase
+let applyBids gs =
+    let pl1Bid = match gs.Player1State.Bid with | Some x -> x | None -> 0
+    let pl2Bid =  match gs.Player2State.Bid with | Some x -> x | None -> 0
+    [AddHonor (Player1, (pl2Bid - pl1Bid)) 
+     AddHonor (Player2, (pl1Bid - pl2Bid))
+     DrawConflictCard (Player1, pl1Bid)
+     DrawConflictCard (Player2, pl2Bid) ]
 
-let getDrawPhaseActions gotoNextPhase gs =
-    let nextActionPl1 pl1Bid gs = 
-        gs >!=> choicei Player2 "Player 2 bid" 1 5 (fun i -> applyBids pl1Bid i gotoNextPhase) 
-    let nextActionPl2 pl2Bid gs = 
-        gs >!=> choicei Player1 "Player 1 bid" 1 5 (fun i -> applyBids i pl2Bid gotoNextPhase)
-    gs 
-        >!=> choicei Player1 "Player 1 bid" 1 5 nextActionPl1
-        >+=> choicei Player2 "Player 2 bid" 1 5 nextActionPl2 
+let rec drawPhaseActions (gotoNextPhase:Transform) gs =
+    let pl1NoBid = gs.Player1State.Bid = None
+    let pl2NoBid = gs.Player2State.Bid = None
+    let noBid = pl1NoBid && pl2NoBid 
+    let nextActions = 
+        if noBid then drawPhaseActions gotoNextPhase
+        else gotoNextPhase.NextActions
+    let nextCommands = if noBid then [] else (applyBids gs) @ gotoNextPhase.Commands
+    let l1 = if pl1NoBid then choicei Player1 "Player 1 bid" 1 5 (fun i -> {Commands = [Bid (Player1, i)] @ nextCommands; NextActions = nextActions}) else []
+    let l2 = if pl2NoBid then choicei Player2 "Player 2 bid" 1 5 (fun i -> {Commands = [Bid (Player2, i)] @ nextCommands; NextActions = nextActions}) else []
+    l1 @ l2
 
-let gotoDrawPhase gotoNextPhase (gs:GameState) =
-    gs 
-    |> changePhase Draw
-    |> getDrawPhaseActions gotoNextPhase 
+let gotoDrawPhase (gs:GameState) =
+    [ChangePhase Draw; CleanBids]

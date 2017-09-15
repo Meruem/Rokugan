@@ -1,3 +1,4 @@
+[<AutoOpen>]
 module Utils
 
 open GameTypes
@@ -29,3 +30,5 @@ let newId () =
     lastId
 
 let toValuesList m = m |> Map.toList |> List.map (fun (k, v) -> v)
+
+let (@+) commands transform = { Commands = commands @ transform.Commands; NextActions = transform.NextActions}

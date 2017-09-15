@@ -7,24 +7,9 @@ open Actions
 open CardRepository
 
 let revealAllDynastyCardsAtProvinces gs =
-    let removeHiddenState = Card.removeCardState Hidden
-    let ps1 = gs.Player1State |> changePlayerCards gs.Player1State.DynastyInProvinces removeHiddenState
-    let ps2 = gs.Player2State |> changePlayerCards gs.Player2State.DynastyInProvinces removeHiddenState
-    {gs with Player1State = ps1; Player2State = ps2}
-
-let playDynastyCard position additionalFate gs =
-    let changeState (state:PlayerState) =
-        let dynastyCard = 
-            state
-            |> dynastyCardAtPosition position
-            |> Card.putAdditionalFate additionalFate
-        let pos = Card.dynastyCardPosition dynastyCard
-        let state' = PlayerState.drawCardFromDynastyDeck pos state
-        let cardDef = repository.GetCharacterCard dynastyCard.Title
-        state' 
-            |> addFate (-cardDef.Cost - additionalFate)
-            |> addCardToPlay dynastyCard Home
-    gs |> GameState.changeActivePlayerState changeState    
+    List.append gs.Player1State.DynastyInProvinces gs.Player2State.DynastyInProvinces
+    |> List.map (Command.removeCardState Hidden) 
+    |> List.choose id
 
 let collectFateFromStronghold gs =
     let strongholdDef (ps:PlayerState) = ps.Stronghold.Title |> repository.GetCard
@@ -35,41 +20,72 @@ let collectFateFromStronghold gs =
 
     let p1Add = fate gs.Player1State
     let p2Add = fate gs.Player2State
-    { gs with 
-        Player1State = (PlayerState.addFateToPlayer p1Add gs.Player1State)    
-        Player2State = (PlayerState.addFateToPlayer p2Add gs.Player2State)  }        
+    [AddFate (Player1, p1Add); AddFate (Player2, p2Add)]
 
-let add1fateIfPassedFirst gs =
+let add1fateIfPassedFirstMsg gs =
     let otherPl = otherPlayer gs.ActivePlayer
-    if hasPassed (playerState otherPl gs) then gs
+    if hasPassed (playerState otherPl gs) then []
     else 
-        let add1Fate (state:PlayerState) = {state with Fate = state.Fate + 1} 
-        gs |> changeActivePlayerState add1Fate
+        [AddFate (gs.ActivePlayer, 1)]
 
-let rec addDynastyPhaseActions (gs:GameState) =
+let playDynastyMod card pos addFate player = 
+    [ PlayDynasty card
+      AddFateOnCard (card, addFate)
+      AddFate (player, -addFate)
+      DrawDynastyCard (player, pos)
+      SwitchActivePlayer ]
+
+let rec dynastyPhaseActions (nextPhase: GameState -> Transform) (gs:GameState) =
     let ps = gs.ActivePlayerState
-    let chooseAddFate nextAction remainingFate gs = 
-        gs >!=> choicei gs.ActivePlayer "Add fate" 0 remainingFate nextAction
     let actions = 
         getPlayableDynastyPositions ps
         |> List.map (fun (pos, remainingFate) ->
-            let playCard fate = 
-                playDynastyCard pos fate 
-                >> GameState.switchActivePlayer 
-                >> addDynastyPhaseActions
-            playCharacter gs.ActivePlayer ((dynastyCardAtPosition pos ps).Title) (chooseAddFate playCard remainingFate) )
-    if PlayerState.hasPassed ps then gs >!=> actions
-    else 
-        let passAction = 
-            pass gs.ActivePlayer (passActive 
-                >> add1fateIfPassedFirst 
-                >> switchActivePlayer 
-                >> addDynastyPhaseActions)
-        gs >!=> [passAction] >+=> actions     
+            let card = dynastyCardAtPosition pos ps
+            let playCard = 
+                fun fate -> 
+                   { Commands = playDynastyMod card pos fate gs.ActivePlayer
+                     NextActions = dynastyPhaseActions nextPhase }
+            { Type = PlayCharacter card
+              Player = gs.ActivePlayer
+              Commands = []
+              NextActions = fun gs -> choicei gs.ActivePlayer "Add fate" 0 remainingFate playCard})
+    let commands =
+        [DynastyPass gs.ActivePlayer] 
+        @ (add1fateIfPassedFirstMsg gs) 
+        @ [SwitchActivePlayer]
+    let passAction = 
+        if hasPlayerPassed (gs.OtherPlayer) gs then 
+            let next = nextPhase gs
+            { Type = Pass
+              Player = gs.ActivePlayer
+              Commands = commands @ next.Commands
+              NextActions = next.NextActions}
+        else
+            { Type = Pass
+              Player = gs.ActivePlayer
+              Commands = commands
+              NextActions = dynastyPhaseActions nextPhase}
+    passAction :: actions     
+
 
 let gotoDynastyPhase (gs:GameState) = 
-    gs
-    |> changePhase Dynasty
-    |> revealAllDynastyCardsAtProvinces
-    |> collectFateFromStronghold
-    |> addDynastyPhaseActions   
+    [ChangePhase Dynasty]
+    @ revealAllDynastyCardsAtProvinces gs  
+    @ collectFateFromStronghold gs
+
+// ------------------------ Message handlers ------------------------
+
+let onDynastyPass player gs =
+    gs |> changePlayerState player PlayerState.pass
+
+let onPlayDynastyCard card gs =
+    let changeState (state:PlayerState) =
+        let pos = Card.dynastyCardPosition card
+        let state' = PlayerState.drawCardFromDynastyDeck pos state
+        let cardDef = repository.GetCharacterCard card.Title
+        state' 
+            |> addFate (-cardDef.Cost)
+            |> addCardToPlay card Home
+    gs |> GameState.changePlayerState card.Owner changeState    
+
+let onDrawDynastyCard player pos gs = gs |> changePlayerState player (PlayerState.drawCardFromDynastyDeck pos)

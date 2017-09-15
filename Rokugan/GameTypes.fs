@@ -90,7 +90,7 @@ type CardDef = {
 
 type Player = Player1 | Player2
 
-type CardState = Bowed | Honored | Dishonored | Hidden |Revealed | Broken
+type CardState = Bowed | Honored | Dishonored | Hidden | Broken
 
 //[<StructuredFormatDisplayAttribute("{CardId}")>]
 type CardId = CardId of int
@@ -175,17 +175,52 @@ type Ring =
     State : RingState
     Fate : int }
 
+type Command = 
+    | ChangePhase of GamePhase
+    | RemoveCardState of CardState * Card
+    | AddFate of Player * int
+    | DynastyPass of Player
+    | SwitchActivePlayer 
+    | PlayDynasty of Card 
+    | AddFateOnCard of Card * int
+    | DrawDynastyCard of Player * int  // Card position
+    | Bid of Player * int
+    | CleanBids
+    | AddHonor of Player * int
+    | DrawConflictCard of Player * int  // player, number of cards
+    | PassConflict of Player
+    | DeclareConflict of Player * ConflictType * Ring * Card // attacker, (military/political), ring, province
+    | RevealProvince of Card
+    | DeclareAttacker of Card
+    | DeclareDefender of Card
+    | ConflictStarted
+    | CollectFateFromRing of Player * Ring
+    | DiscardRandomConflict of Player
+    | Bow of Card
+    | Ready of Card
+    | Honor of Card
+    | Dishonor of Card
+    | BreakProvince of Card
+
+type AttackState =
+  { Type : ConflictType
+    Attacker : Player
+    Ring : Ring
+    Province : Card
+    Attackers : Card list
+    Defenders : Card list }
+    with
+        member this.Defender = match this.Attacker with | Player1 -> Player2 | Player2 -> Player1   
 
 type GameState = 
   { TurnNumber : int
     FirstPlayer : Player
-    Triggers : GameTrigger list
     Player1State : PlayerState
     Player2State : PlayerState 
     Rings : Ring list
     GamePhase : GamePhase
-    Actions : PlayerAction list
-    ActivePlayer : Player }
+    ActivePlayer : Player
+    AttackState : AttackState option }
     with
         member this.ActivePlayerState = 
             match this.ActivePlayer with 
@@ -193,34 +228,54 @@ type GameState =
             | Player2 -> this.Player2State  
         member this.Cards = 
             List.append this.Player1State.CardsInPlayList this.Player2State.CardsInPlayList
-and
-    [<StructuredFormatDisplayAttribute("Trigger: {Name}, {Lifetime}")>]
-    GameTrigger = 
-  { Name : string
-    Lifetime : Lifetime
-    Condition : GameState -> bool
-    Action : GameStateMod}
-and PlayerActionType = 
+        member this.OtherPlayer =
+            match this.ActivePlayer with 
+            | Player1 -> Player2
+            | Player2 -> Player1
+
+type PlayerActionType = 
     | Pass
-    | PlayCharacter of CardTitle
+    | PlayCharacter of Card
     | ActivateAction
     | Choicei of int * string
     | Choice of string * string
     | YesNoChoice of YesNo * string
-    | DeclareAttack of ConflictType * Element
+    | DeclareAttack of ConflictType * Ring * Card 
     | ChooseAttacker of Card 
     | ChooseDefender of Card
     | ChooseProvince of Card
     | ChooseCharacter of Card * string
     | ChooseCard of Card * string
     | ChooseDynastyToDiscard of Card
-and 
-    [<StructuredFormatDisplayAttribute("Action ({Player}): {Type}")>]
-    PlayerAction = 
+
+[<StructuredFormatDisplayAttribute("Action ({Player}): {Type}")>]
+type PlayerAction = 
   { Type : PlayerActionType
     Player : Player
-    Action : GameStateMod }
-and GameStateMod = GameState -> GameState
+    Commands : Command list
+    NextActions : GameState -> PlayerAction list }
+
+[<StructuredFormatDisplayAttribute("Trigger: {Name}")>]
+type GameTrigger = 
+  { Name : string
+    //Lifetime : Lifetime
+    Condition : GameState -> bool
+    Commands : Command list
+    NextActions : GameState -> PlayerAction list}
+
+type GameStateMod = GameState -> GameState
+
+type Transform = 
+  { Commands : Command list 
+    NextActions : GameState -> PlayerAction list }
+
+type GameModel =
+  { State: GameState
+    Actions : PlayerAction list 
+    Continuations : Transform list
+    Triggers : Map<string, GameTrigger list>
+    Log : Command list }
+
 type InitialPlayerConfig = {
     ConflictDeck : CardTitle list
     DynastyDeck : CardTitle list
