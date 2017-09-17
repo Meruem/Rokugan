@@ -122,3 +122,5 @@ let onCardReady = changeCard Card.ready
 let onCardHonor = changeCard Card.honor
 let onCardDishonor = changeCard Card.dishonor
 let onBreakProvince = changeCard Card.breakProvince
+
+let onDiscardCardFromPlay = changeCard (Card.move DynastyDiscard) 

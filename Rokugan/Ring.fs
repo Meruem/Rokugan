@@ -14,6 +14,8 @@ let claimRing ring player = changeRing ring.Element (fun r -> {r with State = Cl
 let contestRing ring = changeRing ring.Element (fun r -> { r with State = Contested})
 let returnRing ring = changeRing ring.Element (fun r -> { r with State = Unclaimed })
 
+let isUnclaimed (ring:Ring) = ring.State = Unclaimed
+
 let resolveFireRing attacker next =
     let honor = "Honor character"
     let dishonor = "Dishonor character"
@@ -74,3 +76,10 @@ let resolveWaterRing attacker next =
               NextActions = chooseCharacterInPlay attacker "Ready character" readyChar }
     { Commands = []
       NextActions =  fun _ -> choice attacker "Water ring effect" [bow; ready] effectChosen }
+
+let addFate amount (ring:Ring) = {ring with Fate = ring.Fate + amount}
+
+let onAddFateOnRing ring amount = changeRing ring.Element (addFate amount)
+let onClaimRing = claimRing
+let onContestRing = contestRing
+let onReturnRing = returnRing

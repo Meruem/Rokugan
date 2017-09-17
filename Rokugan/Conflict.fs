@@ -23,7 +23,8 @@ let getCharactersForConflict cType alreadyInConflict (ps:PlayerState) =
         |> List.filter (fun c -> notBowed c && Card.isCharWithValue cType c && not (List.contains c alreadyInConflict))
 
 let calculateTotalSkill cType chars = 
-    chars |> List.sumBy (fun c -> if Card.isBowed c then 0 else match Card.charSkillValue cType c with | None -> 0 | Some s -> s)
+    chars 
+    |> List.sumBy (fun c -> if Card.isBowed c then 0 else match Card.charSkillValue cType c with | None -> 0 | Some s -> s)
 
 let resolveRingEffect cont (gs:GameState) yesNo =
     let state = attackState gs
@@ -66,10 +67,14 @@ let getConflictResolveActions getConflictActions gs =
           NextActions = getConflictActions}
     let trans = resolveRingEffect cont gs
     if attackerWon then 
-        { Commands = [SwitchActivePlayer]
+        { Commands = 
+            [SwitchActivePlayer
+             ClaimRing (state.Attacker, state.Ring)]
           NextActions = fun _ -> yesNo state.Attacker "Resolve ring effect" trans }
-    else  
-        [SwitchActivePlayer] @+ cont
+    else 
+        ([SwitchActivePlayer]
+        @ if defenderWon then [ClaimRing (state.Defender, state.Ring)] else [ReturnRing state.Ring])
+        @+ cont
 
 
 let rec private chooseDefenders getConflictActions (gs:GameState) =
@@ -102,7 +107,8 @@ let rec private chooseAttackers getConflictActions (gs:GameState) =
                 gs.ActivePlayer
                 { Commands =
                     [SwitchActivePlayer
-                     ConflictStarted]
+                     ConflictStarted
+                     ContestRing state.Ring]
                   NextActions = chooseDefenders getConflictActions }
     let actions = 
         getCharactersForConflict state.Type state.Attackers gs.ActivePlayerState 
@@ -121,7 +127,7 @@ let availableProvinces player gs =
 
 let revealProvince card = if Card.isHidden card then [RevealProvince card] else []
 
-let rec conflictActions (nextPhase:Transform) (gs:GameState) =
+let rec conflictActions (continuation:GameState->Transform) (gs:GameState) =
     let ps = gs.ActivePlayerState
     let createDeclareConflictAction ct ring prov = 
         declareAttack 
@@ -129,16 +135,22 @@ let rec conflictActions (nextPhase:Transform) (gs:GameState) =
             { Commands =
                 ([DeclareConflict (gs.ActivePlayer, ct, ring, prov) ]
                 @ revealProvince prov)
-              NextActions = chooseAttackers (conflictActions nextPhase) }
-    let passAction = pass gs.ActivePlayer { Commands = (passConflict gs); NextActions = conflictActions nextPhase }
+              NextActions = chooseAttackers (conflictActions continuation) }
+    let passAction = 
+        let cnt = 
+            if gs.OtherPlayerState.DeclaredConflicts.Length = 2 then 
+                passConflict gs @+ continuation gs
+            else { Commands = (passConflict gs); NextActions = conflictActions continuation }           
+        pass gs.ActivePlayer cnt
     let actions = 
         [for ct in (availableConflicts ps) do
             for ring in (availableRings gs) do 
                 for prov in (availableProvinces gs.OtherPlayer gs) do yield createDeclareConflictAction ct ring prov] 
     [passAction] @ actions
   
-let gotoConflictPhase =
-    [ChangePhase Conflict]
+let gotoConflictPhase nextPhase gs =
+    { Commands = [ChangePhase Conflict]
+      NextActions = conflictActions nextPhase }
 
 let onPassConflict player gs = 
     let pass ps = {ps with DeclaredConflicts = None :: ps.DeclaredConflicts}

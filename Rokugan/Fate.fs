@@ -4,16 +4,10 @@ open GameTypes
 open GameState
 
 let remove1FateorDiscard (card:Card) = 
-    if card.Fate > 0 then Card.putAdditionalFate -1 card
-    else Card.discard card
+    if card.Fate > 0 then (AddFateOnCard (card, -1))
+    else (DiscardFromPlay card)
 
-let fatePhase gotoNextPhase (gs:GameState) =
-    let chars = 
-        gs.Cards 
-        |> List.filter (fun c -> Card.isCharacter c && c.Zone = Home)
-    gs |> changeCards remove1FateorDiscard chars |> gotoNextPhase
-
-// let gotoFatePhase gotoNextPhase gs =
-//     gs
-//     |> changePhase Fate
-//     |> fatePhase gotoNextPhase
+let gotoFatePhase gotoNextPhase (gs:GameState) =
+    ([ChangePhase Fate]
+    @ (gs.Cards |> List.filter (fun c -> Card.isCharacter c && c.Zone = Home) |> List.map remove1FateorDiscard))
+        @+ (gotoNextPhase gs)   

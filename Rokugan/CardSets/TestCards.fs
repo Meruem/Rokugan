@@ -2,9 +2,8 @@ module TestCards
 
 open GameTypes
 
-let testCards = [
-    {
-        Title = Title "Generic 1/1" 
+let ``Generic 1/1`` = 
+    {   Title = Title "Generic 1/1" 
         Spec = CardSpec.Dynasty (DynastyCardDef.Character {
             Cost = 1
             Clan = Clan.Lion
@@ -16,8 +15,8 @@ let testCards = [
             Ability = Ability "none" })
     }
 
-    {
-        Title = Title "Generic 2/2" 
+let ``Generic 2/2`` =
+     {  Title = Title "Generic 2/2" 
         Spec = CardSpec.Dynasty (DynastyCardDef.Character {
             Cost = 2
             Clan = Clan.Lion
@@ -29,6 +28,7 @@ let testCards = [
             Ability = Ability "none" })
     }
         
+let ``Holding`` =
     {
         Title = Title "Holding" 
         Spec = CardSpec.Dynasty (DynastyCardDef.Holding {
@@ -39,6 +39,7 @@ let testCards = [
             Ability = Ability "none"})
     }
 
+let ``Event`` =
     {
         Title = Title "Event"
         Spec = CardSpec.Conflict (ConflictCardDef.Event {
@@ -47,6 +48,7 @@ let testCards = [
             Ability = Ability "none" })
     }
 
+let ``Attachment`` =
     {
         Title = Title "Attachment"
         Spec = CardSpec.Conflict (ConflictCardDef.Attachment {
@@ -58,6 +60,7 @@ let testCards = [
             Ability = Ability "none"})
     }
 
+let ``Province str 4``=
     {
         Title = Title "Province str 4"
         Spec = CardSpec.Province {
@@ -67,6 +70,7 @@ let testCards = [
             Ability = Ability "none" }
     }
 
+let ``Stronghold`` =
     {
         Title = Title "Stronghold"
         Spec = CardSpec.Stronghold {
@@ -77,4 +81,12 @@ let testCards = [
             Influence = 10
             Ability = Ability "none" }
     }
-]
+
+let testCards = 
+  [ ``Generic 1/1``
+    ``Generic 2/2``
+    ``Holding``
+    ``Event``
+    ``Attachment``
+    ``Province str 4``
+    ``Stronghold``]

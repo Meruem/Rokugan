@@ -1,7 +1,7 @@
 module MyWebApi.Program
 
-open Suave
-open Suave.Successful
+//open Suave
+//open Suave.Successful
 open GameTypes
 open SampleDeck
 open CardDef
@@ -51,6 +51,6 @@ let main argv =
         | _ -> ()
 
         if line <> "" then readlines () else false
-    readlines ()
+    readlines () |> ignore
     //startWebServer defaultConfig (OK "Hello World!")
     0

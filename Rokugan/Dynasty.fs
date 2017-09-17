@@ -68,10 +68,12 @@ let rec dynastyPhaseActions (nextPhase: GameState -> Transform) (gs:GameState) =
     passAction :: actions     
 
 
-let gotoDynastyPhase (gs:GameState) = 
-    [ChangePhase Dynasty]
-    @ revealAllDynastyCardsAtProvinces gs  
-    @ collectFateFromStronghold gs
+let gotoDynastyPhase nextPhase (gs:GameState) = 
+    { Commands = 
+        [ChangePhase Dynasty]
+        @ revealAllDynastyCardsAtProvinces gs  
+        @ collectFateFromStronghold gs
+      NextActions = dynastyPhaseActions nextPhase }
 
 // ------------------------ Message handlers ------------------------
 
@@ -85,7 +87,7 @@ let onPlayDynastyCard card gs =
         let cardDef = repository.GetCharacterCard card.Title
         state' 
             |> addFate (-cardDef.Cost)
-            |> addCardToPlay card Home
+            |> changeZone Home card
     gs |> GameState.changePlayerState card.Owner changeState    
 
 let onDrawDynastyCard player pos gs = gs |> changePlayerState player (PlayerState.drawCardFromDynastyDeck pos)

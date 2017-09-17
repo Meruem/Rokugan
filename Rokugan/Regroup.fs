@@ -4,31 +4,36 @@ open GameTypes
 open GameState
 open PlayerState
 
-let readyAllCards (gs:GameState) = gs |> changeCards Card.ready gs.Cards
+let readyAllCards (gs:GameState) = 
+    gs.Cards 
+    |> List.filter Card.isBowed 
+    |> List.map Ready
+    
 let addFateToRings (gs:GameState) = 
-    {gs with 
-        Rings = 
-            gs.Rings 
-            |> List.map (fun r -> if r.State = Unclaimed then {r with Fate = r.Fate + 1} else r)}
+    gs.Rings 
+    |> List.filter Ring.isUnclaimed
+    |> List.map (fun r -> AddFateOnRing (r,1))
 
 let returnRings (gs:GameState) =
-    {gs with
-        Rings = gs.Rings |> List.map (fun r -> {r with State = Unclaimed})}
+    gs.Rings 
+    |> List.filter Ring.isUnclaimed 
+    |> List.map ReturnRing
 
-// let gotoRegroupPhase gotoNextPhase (gs:GameState) =
-//     let drawAndDiscardCards cards gs = 
-//         let drawAndDiscardCard card (gs:GameState) =
-//             match card.Zone with 
-//             | DynastyInProvinces pos -> drawDynasty pos card.Owner gs
-//             | _ -> gs
-//             |> changeCard Card.discard card
-//         cards |> List.fold (fun acc c -> drawAndDiscardCard c acc) gs
-//         |> gotoNextPhase
-//     let gs' =
-//         gs 
-//         |> changePhase Regroup
-//         |> readyAllCards
-//         |> addFateToRings
-//         |> returnRings
-//     gs' >!=> (Actions.chooseDynastyInProvince (drawAndDiscardCards) gs')
+let gotoRegroupPhase gotoNextPhase (gs:GameState) =
+    let drawAndDiscardCards cards = 
+        let drawAndDiscardCard card =
+            match card.Zone with 
+            | DynastyInProvinces pos -> [DrawDynastyCard (card.Owner,pos)]
+            | _ -> []
+            @ [DiscardFromPlay card] 
+        (cards |> List.collect drawAndDiscardCard)
+        @+ gotoNextPhase gs
+        
+    let cmds =
+        [ChangePhase Regroup]
+        @ (readyAllCards gs)
+        @ (addFateToRings gs)
+        @ (returnRings gs)
+    let actions = Actions.chooseDynastyInProvince (drawAndDiscardCards)
+    { Commands = cmds; NextActions = actions.NextActions}
 

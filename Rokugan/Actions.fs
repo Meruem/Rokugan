@@ -44,29 +44,31 @@ let chooseCharacter player condition desc getTransform (gs:GameState) =
 
 let pass player = action player Pass
 
-// gets list of actions for both players for each dynasty card to be chosen
-// each action has continuation pointing again at this function
-// after both players bassed "next" function is called with parameter list of all chosen cards 
-// let rec chooseDynastyInProvince next (gs:GameState) =
-//     let rec chooseDynastyInProvinceRec next chosen passed (gs:GameState) =
-//         let pl1Passed = List.contains Player1 passed
-//         let pl2Passed = List.contains Player2 passed
-//         let passPl1 = 
-//             if pl2Passed then pass Player1 (next chosen)
-//             else pass Player1 (setActions (chooseDynastyInProvinceRec next chosen (Player1::passed) gs))
-//         let passPl2 = 
-//             if pl1Passed then pass Player2 (next chosen)
-//             else pass Player2 (setActions (chooseDynastyInProvinceRec next chosen (Player2::passed) gs))
-//         let chooseCard card gs = gs >!=> chooseDynastyInProvinceRec next (card::chosen) passed gs
-//         let actions (state:PlayerState) =
-//             state.DynastyInProvinces
-//             |> List.filter (fun c -> not (Card.isHidden c) && not (chosen |> List.contains c))
-//             |> List.map  (fun c -> chooseDynastyToDiscard c.Owner chooseCard c)
-//         if pl1Passed then [] else [passPl1]
-//             @ if pl2Passed then [] else [passPl2]
-//             @ if pl1Passed then [] else actions gs.Player1State
-//             @ if pl2Passed then [] else actions gs.Player2State
-//     chooseDynastyInProvinceRec next [] [] gs
+//gets list of actions for both players for each dynasty card to be chosen
+//each action has continuation pointing again at this function
+//after both players bassed "next" function is called with parameter list of all chosen cards 
+let rec chooseDynastyInProvince next =
+    let rec chooseDynastyInProvinceRec next chosen passed  =
+        let pl1Passed = List.contains Player1 passed
+        let pl2Passed = List.contains Player2 passed
+        let passPl1 = 
+            if pl2Passed then pass Player1 (next chosen)
+            else pass Player1 (chooseDynastyInProvinceRec next chosen (Player1::passed))
+        let passPl2 = 
+            if pl1Passed then pass Player2 (next chosen)
+            else pass Player2 (chooseDynastyInProvinceRec next chosen (Player2::passed) )
+        let chooseCard card = chooseDynastyInProvinceRec next (card::chosen) passed
+        let actions (state:PlayerState) =
+            state.DynastyInProvinces
+            |> List.filter (fun c -> not (Card.isHidden c) && not (chosen |> List.contains c))
+            |> List.map  (fun c -> chooseDynastyToDiscard c.Owner chooseCard c)
+        { Commands = []
+          NextActions = fun gs ->
+            if pl1Passed then [] else [passPl1]
+                @ if pl2Passed then [] else [passPl2]
+                @ if pl1Passed then [] else actions gs.Player1State
+                @ if pl2Passed then [] else actions gs.Player2State }
+    chooseDynastyInProvinceRec next [] [] 
 
 let playCharacter player title = action player (PlayCharacter title)
 

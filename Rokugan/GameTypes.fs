@@ -201,6 +201,12 @@ type Command =
     | Honor of Card
     | Dishonor of Card
     | BreakProvince of Card
+    | DiscardFromPlay of Card
+    | AddFateOnRing of Ring * int 
+    | ContestRing of Ring
+    | ClaimRing of Player * Ring
+    | ReturnRing of Ring
+    | ApplyBids
 
 type AttackState =
   { Type : ConflictType
@@ -226,6 +232,10 @@ type GameState =
             match this.ActivePlayer with 
             | Player1 -> this.Player1State
             | Player2 -> this.Player2State  
+        member this.OtherPlayerState = 
+            match this.ActivePlayer with 
+            | Player1 -> this.Player2State
+            | Player2 -> this.Player1State              
         member this.Cards = 
             List.append this.Player1State.CardsInPlayList this.Player2State.CardsInPlayList
         member this.OtherPlayer =
@@ -247,6 +257,7 @@ type PlayerActionType =
     | ChooseCharacter of Card * string
     | ChooseCard of Card * string
     | ChooseDynastyToDiscard of Card
+    | Test
 
 [<StructuredFormatDisplayAttribute("Action ({Player}): {Type}")>]
 type PlayerAction = 
@@ -255,19 +266,19 @@ type PlayerAction =
     Commands : Command list
     NextActions : GameState -> PlayerAction list }
 
+type Transform = 
+  { Commands : Command list 
+    NextActions : GameState -> PlayerAction list }
+
 [<StructuredFormatDisplayAttribute("Trigger: {Name}")>]
 type GameTrigger = 
   { Name : string
     //Lifetime : Lifetime
     Condition : GameState -> bool
-    Commands : Command list
-    NextActions : GameState -> PlayerAction list}
+    Transform : Transform}
 
 type GameStateMod = GameState -> GameState
 
-type Transform = 
-  { Commands : Command list 
-    NextActions : GameState -> PlayerAction list }
 
 type GameModel =
   { State: GameState
