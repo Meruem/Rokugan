@@ -53,23 +53,5 @@ open GameTypes
 //         Action = pl2Win }]
 //     { gs with Triggers = List.append triggers gs.Triggers}
 
-// let addDynastyPassTrigger gotoNextPhase gs =
-//     let pl1Pass gs = gs.Player1State |> PlayerState.hasPlayerFlag Passed
-//     let pl2Pass gs = gs.Player2State |> PlayerState.hasPlayerFlag Passed
-//     let bothPlPass gs = pl1Pass gs && pl2Pass gs && gs.GamePhase = Dynasty
-//     let trigger = 
-//       { Name = "Dynasty pass trigger"
-//         Lifetime = Game
-//         Condition = bothPlPass
-//         Action =  gotoNextPhase }
-//     addTrigger trigger gs
 
-// let addConflictEndTrigger next gs =
-//     let declaredConflicts gs = 
-//       gs.Player1State.DeclaredConflicts.Length + gs.Player2State.DeclaredConflicts.Length >= 4
-//     gs 
-//     |> addTrigger 
-//       { Name = "Conflict end trigger"
-//         Lifetime = Game
-//         Condition = declaredConflicts
-//         Action = next}
+

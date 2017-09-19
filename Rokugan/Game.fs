@@ -48,6 +48,7 @@ let updateState command gm =
             | ContestRing ring -> send <| onContestRing ring
             | ClaimRing (player, ring) -> send <| onClaimRing ring player
             | ReturnRing ring -> send <| onReturnRing ring
+            | NextRound -> send <| onNextRound
     ({ gm with Log = command :: gm.Log; State = gs2 }, newcommands)
 
 
@@ -57,18 +58,18 @@ let rec update transform (gm:GameModel) =
     match commands with 
     | cmd :: xs -> 
         let (gm2, moreCommands) = updateState cmd gm   
+        let nextTransform = { Commands = xs @ moreCommands; NextActions = nextActions }
         let triggers = gm.Triggers.TryFind (cmd.ToString())
         match triggers with
         | None -> 
-            update { Commands = xs @ moreCommands; NextActions = nextActions } gm2
+            update nextTransform gm2
         | Some trgs -> 
-            let cnt = {Commands = xs; NextActions = nextActions}  // continuation for current context
             match trgs with
-            | [] -> failwith "wtf"
+            | [] -> failwith "list should always contain min 1 item"
             | first :: rest -> 
                 let cnt2 = rest |> List.map (fun trg -> trg.Transform) // other triggers
-                let cnt = cnt2 @ [cnt] @ gm.Continuations // push other triggers first, then current context and then remaining continuations
-                update first.Transform  {gm2 with Continuations = cnt} 
+                let cnt3 = cnt2 @ [nextTransform] @ gm.Continuations // push other triggers first, then current context and then remaining continuations
+                update first.Transform  {gm2 with Continuations = cnt3} 
     | [] -> 
         let actions = nextActions gm.State
         if actions.Length = 0 then // when no action is left, pop the continuation stack and resolve commands

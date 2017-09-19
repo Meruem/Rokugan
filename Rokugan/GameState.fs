@@ -35,20 +35,13 @@ let changeCards change cards gs =
     cards |> List.fold (fun agg c -> changeCard change c agg) gs     
 
 
-// ------------- Actions operations -------------
-let setActions actionList gs =
-    {gs with Actions = actionList}
+// -------------- Transform helpers ------------------
 
-let addActions actionList gs =
-    { gs with Actions = List.append gs.Actions actionList}
+let transform commands actions = {Commands = commands; NextActions = actions}
 
-// Set game state actions
-let (>!=>) gs actions = setActions actions gs
+let newActionsOnly = transform []
 
-// Add game state actions
-let (>+=>) gs actions = addActions actions gs
-
-// -------------- Game state queries
+// -------------- Game state queries ------------------
 
 let hasPlayerPassed player gs =
     match player with
@@ -93,6 +86,8 @@ let cleanDeclaredConflicts (gs:GameState) =
     |> changePlayerState Player1 clearConflict
     |> changePlayerState Player2 clearConflict
 
+// --------------------------- message handlers ------------------------------
+
 let onChangePhase phase gs = 
     {gs with GamePhase = phase; ActivePlayer = gs.FirstPlayer}     
     |> cleanPhaseFlags |> cleanDeclaredConflicts
@@ -124,3 +119,5 @@ let onCardDishonor = changeCard Card.dishonor
 let onBreakProvince = changeCard Card.breakProvince
 
 let onDiscardCardFromPlay = changeCard (Card.move DynastyDiscard) 
+
+let onNextRound = nextRound

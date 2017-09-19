@@ -70,7 +70,7 @@ let rec chooseDynastyInProvince next =
                 @ if pl2Passed then [] else actions gs.Player2State }
     chooseDynastyInProvinceRec next [] [] 
 
-let playCharacter player title = action player (PlayCharacter title)
+let playCharacter player card = action player (PlayCharacter card)
 
 let chooseProvince player province = action player (ChooseProvince province) 
 

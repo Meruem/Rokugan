@@ -12,7 +12,7 @@ let readyAllCards (gs:GameState) =
 let addFateToRings (gs:GameState) = 
     gs.Rings 
     |> List.filter Ring.isUnclaimed
-    |> List.map (fun r -> AddFateOnRing (r,1))
+    |> List.map (fun ring -> AddFateOnRing (ring,1))
 
 let returnRings (gs:GameState) =
     gs.Rings 
@@ -34,6 +34,7 @@ let gotoRegroupPhase gotoNextPhase (gs:GameState) =
         @ (readyAllCards gs)
         @ (addFateToRings gs)
         @ (returnRings gs)
+        @ [NextRound]
     let actions = Actions.chooseDynastyInProvince (drawAndDiscardCards)
-    { Commands = cmds; NextActions = actions.NextActions}
+    transform cmds actions.NextActions
 

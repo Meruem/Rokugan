@@ -43,37 +43,34 @@ let rec dynastyPhaseActions (nextPhase: GameState -> Transform) (gs:GameState) =
             let card = dynastyCardAtPosition pos ps
             let playCard = 
                 fun fate -> 
-                   { Commands = playDynastyMod card pos fate gs.ActivePlayer
-                     NextActions = dynastyPhaseActions nextPhase }
-            { Type = PlayCharacter card
-              Player = gs.ActivePlayer
-              Commands = []
-              NextActions = fun gs -> choicei gs.ActivePlayer "Add fate" 0 remainingFate playCard})
+                    transform
+                        (playDynastyMod card pos fate gs.ActivePlayer)
+                        (dynastyPhaseActions nextPhase)
+            playCharacter 
+                gs.ActivePlayer 
+                card 
+                (newActionsOnly <| fun gs -> choicei gs.ActivePlayer "Add fate" 0 remainingFate playCard))
     let commands =
         [DynastyPass gs.ActivePlayer] 
         @ (add1fateIfPassedFirstMsg gs) 
         @ [SwitchActivePlayer]
     let passAction = 
-        if hasPlayerPassed (gs.OtherPlayer) gs then 
-            let next = nextPhase gs
-            { Type = Pass
-              Player = gs.ActivePlayer
-              Commands = commands @ next.Commands
-              NextActions = next.NextActions}
-        else
-            { Type = Pass
-              Player = gs.ActivePlayer
-              Commands = commands
-              NextActions = dynastyPhaseActions nextPhase}
+        pass 
+            gs.ActivePlayer 
+            (if hasPlayerPassed (gs.OtherPlayer) gs then 
+                let next = nextPhase gs
+                (transform (commands @ next.Commands) next.NextActions)
+            else
+                (transform commands (dynastyPhaseActions nextPhase)))
     passAction :: actions     
 
 
 let gotoDynastyPhase nextPhase (gs:GameState) = 
-    { Commands = 
-        [ChangePhase Dynasty]
+    transform 
+        ([ChangePhase Dynasty]
         @ revealAllDynastyCardsAtProvinces gs  
-        @ collectFateFromStronghold gs
-      NextActions = dynastyPhaseActions nextPhase }
+        @ collectFateFromStronghold gs)
+        (dynastyPhaseActions nextPhase)
 
 // ------------------------ Message handlers ------------------------
 

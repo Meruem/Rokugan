@@ -207,6 +207,7 @@ type Command =
     | ClaimRing of Player * Ring
     | ReturnRing of Ring
     | ApplyBids
+    | NextRound
 
 type AttackState =
   { Type : ConflictType
