@@ -7,9 +7,9 @@
 #load @"CardRepositoryClass.fs"
 #load @"Utils.fs"
 #load @"CardDef.fs"
-#load @"SampleDeck.fs"
 #load @"CoreCards.fs"
 #load @"CardRepository.fs"
+#load @"SampleDeck.fs"
 #load @"TestCards.fs"
 #load @"Card.fs"
 #load @"Deck.fs"
@@ -27,6 +27,7 @@
 #load @"Game.fs"
 #load @"TestUtils.fs"
 
+#r "System.Runtime.Serialization.Json"
 
 open GameTypes
 open SampleDeck
@@ -37,7 +38,7 @@ open CardRepository
 open TestUtils
 
 do repository.AddCards TestCards.testCards  // do this for selecting card sets 
-//#load "GameRepository.fs" // by simply loading this, all core cards are added
+// do repository.AddCards CoreCards.coreCards // core cards
 
 let allCards = repository.AllCards ()
 let gs = 

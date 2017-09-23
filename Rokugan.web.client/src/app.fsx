@@ -1,7 +1,8 @@
-#r "../node_modules/fable-core/Fable.Core.dll"
-#r "../node_modules/fable-elmish/Fable.Elmish.dll"
-#r "../node_modules/fable-elmish-react/Fable.Elmish.React.dll"
-#r "../node_modules/fable-react/Fable.React.dll"
+#I "../node_modules"
+#r "fable-core/Fable.Core.dll"
+#r "fable-elmish/Fable.Elmish.dll"
+#r "fable-elmish-react/Fable.Elmish.React.dll"
+#r "fable-react/Fable.React.dll"
 
 open Fable.Core
 open Fable.React

@@ -1,11 +1,32 @@
 [<AutoOpen>]
 module Utils
 
-open GameTypes
+open Microsoft.FSharp.Reflection
+open Chiron
 
-let chooseRandomPlayer () = 
-    let rnd = System.Random()
-    if rnd.Next(2) = 0 then Player1 else Player2
+let toString (x:'a) = 
+    match FSharpValue.GetUnionFields(x, typeof<'a>) with
+    | case, _ -> case.Name
+
+let tryFromString<'a> (s:string) =
+    match FSharpType.GetUnionCases typeof<'a> |> Array.filter (fun case -> case.Name = s) with
+    |[|case|] -> Some(FSharpValue.MakeUnion(case,[||]) :?> 'a)
+    |_ -> None
+
+let fromString<'a> (s:string) = 
+    match tryFromString<'a> s with
+    | Some x -> x
+    | None -> failwithf "unable to convert string %s to type %s" s ((typeof<'a>).ToString())
+
+
+let duToJson<'t> (du:'t) =
+    String (toString du)
+
+let duFromJson<'t> (json: Json) =
+    match json with
+    | String s -> fromString<'t> s
+    | _ -> failwithf "unable to parse discrinated union %s from json" ((typeof<'t>).ToString())
+
 
 let replaceListElementi newele pos lst =
     let (_, lst') = 
@@ -31,4 +52,3 @@ let newId () =
 
 let toValuesList m = m |> Map.toList |> List.map (fun (k, v) -> v)
 
-let (@+) commands transform = { Commands = commands @ transform.Commands; NextActions = transform.NextActions}

@@ -4,14 +4,14 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Utils.fs" />
     <Compile Include="GameTypes.fs" />
     <Compile Include="CardRepositoryClass.fs" />
-    <Compile Include="Utils.fs" />
+    <Compile Include="GameUtils.fs" />
     <Compile Include="CardDef.fs" />
     <Compile Include="CardRepository.fs" />
     <Compile Include="CardSets/CoreCards.fs" />
     <Compile Include="CardSets/TestCards.fs" />
-    <Compile Include="GameRepository.fs" />
     <Compile Include="SampleDeck.fs" />
     <Compile Include="Card.fs" />
     <Compile Include="Deck.fs" />
@@ -32,4 +32,8 @@
     <None Include="Tests/Test1.fsx" />
     <Compile Include="Rokugan.fs" />
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="..\packages\Chiron\lib\portable-net45+netcore45+wpa81+wp8+MonoAndroid1+MonoTouch1\Chiron.dll" />
+  </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

@@ -36,3 +36,31 @@ let sampleProvinces num (defList : CardDef list) =
         |> sampleDeck num
         |> List.map getTitle
 
+let samplePlayerConfigs () = 
+    let randomConflictDeck () = sampleConflictDeck 10 (CardRepository.repository.AllCards ())
+    let randomDynastyDeck () = sampleDynastyDeck 10 (CardRepository.repository.AllCards ())
+    let allProvinces = sampleProvinces 5 (CardRepository.repository.AllCards ())
+    
+    let main, provinces = 
+        match allProvinces with
+        | x :: xs -> x,xs
+        | [] -> failwith "not enaugh provinces defined"
+    let stronghold () = sampleStronghold (CardRepository.repository.AllCards ())
+    let p1config = 
+        {
+            ConflictDeck = randomConflictDeck ()
+            DynastyDeck = randomDynastyDeck ()
+            Stonghold = stronghold ()
+            StrongholdProvince = main
+            Provinces = provinces
+        }
+    let p2config = 
+        {
+            ConflictDeck = randomConflictDeck ()
+            DynastyDeck = randomDynastyDeck ()
+            Stonghold = stronghold ()
+            StrongholdProvince = main
+            Provinces = provinces
+        }    
+    p1config, p2config
+

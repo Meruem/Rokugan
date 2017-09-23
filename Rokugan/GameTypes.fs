@@ -1,5 +1,7 @@
 namespace GameTypes
 
+open Chiron
+
 type CardTitle = Title of string
 
 type Clan = 
@@ -89,6 +91,12 @@ type CardDef = {
     Spec : CardSpec }
 
 type Player = Player1 | Player2
+    // with 
+    //     static member ToJson (pl : Player) = json {
+    //         do! Json.write "player" (toString pl)}
+    //     static member FromJson (_:Player) = json {
+    //         let! pl = Json.read "player"
+    //         return fromString<Player> pl }
 
 type CardState = Bowed | Honored | Dishonored | Hidden | Broken
 
@@ -116,6 +124,11 @@ type Card = {
     States : CardState Set
     Fate : int 
     Zone : ZoneName }
+    with 
+        static member ToJson (c:Card) = json {
+            let CardId x = c.Id
+            do! Json.write "Id" (CardId c.Id)
+        }
 
 type Deck = 
     Deck of Card list
@@ -243,6 +256,15 @@ type GameState =
             match this.ActivePlayer with 
             | Player1 -> Player2
             | Player2 -> Player1
+        static member ToJson (gs:GameState) = json {
+            do! Json.write "TurnNumber" gs.TurnNumber
+            do! Json.writeWith duToJson "FirstPlayer" gs.FirstPlayer
+            do! Json.writeWith duToJson "ActivePlayer" gs.ActivePlayer
+            do! Json.writeWith duToJson "GamePhase" gs.GamePhase
+            do! match gs.AttackState with
+                | None ->  Json.write "AttackState" "none" 
+                | Some st -> Json.write "AttackState" st)  }
+          
 
 type PlayerActionType = 
     | Pass
