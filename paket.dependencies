@@ -1,4 +1,4 @@
 source https://www.nuget.org/api/v2
-nuget Chiron
 nuget FAKE
+nuget Newtonsoft.Json
 nuget Suave

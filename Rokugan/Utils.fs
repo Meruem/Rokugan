@@ -2,7 +2,6 @@
 module Utils
 
 open Microsoft.FSharp.Reflection
-open Chiron
 
 let toString (x:'a) = 
     match FSharpValue.GetUnionFields(x, typeof<'a>) with
@@ -17,16 +16,6 @@ let fromString<'a> (s:string) =
     match tryFromString<'a> s with
     | Some x -> x
     | None -> failwithf "unable to convert string %s to type %s" s ((typeof<'a>).ToString())
-
-
-let duToJson<'t> (du:'t) =
-    String (toString du)
-
-let duFromJson<'t> (json: Json) =
-    match json with
-    | String s -> fromString<'t> s
-    | _ -> failwithf "unable to parse discrinated union %s from json" ((typeof<'t>).ToString())
-
 
 let replaceListElementi newele pos lst =
     let (_, lst') = 

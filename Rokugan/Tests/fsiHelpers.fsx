@@ -1,11 +1,12 @@
 open GameTypes
 
 let titleStr (Title title) = title 
-let idStr (CardId id) = id
+//let idStr (CardId id) = id
+let idStr id = id
 let cardStr c = sprintf "Card %i [%s] in %A (+%i)" (idStr c.Id) (titleStr c.Title) c.Zone c.Fate
 
 fsi.AddPrintTransformer (titleStr >> box)
-fsi.AddPrintTransformer (idStr >> box)
+//fsi.AddPrintTransformer (idStr >> box)
 //fsi.AddPrintTransformer (fun (a:PlayerAction) -> box (sprintf "Action(%A): %A" a.Player a.Type))
 //fsi.AddPrinter (fun (t:GameTrigger) -> sprintf "Trigger %s [%A]" t.Name t.Lifetime)
 

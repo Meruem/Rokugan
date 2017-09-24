@@ -20,7 +20,7 @@ let (|Character|_|) card =
 
 // ----------- Card creation ------------
 let createCard title player zone =
-  { Id = CardId (Utils.newId ())
+  { Id = (Utils.newId ())
     Title = title
     Owner = player
     States = Set.empty

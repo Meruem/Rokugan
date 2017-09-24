@@ -1,11 +1,19 @@
 #I __SOURCE_DIRECTORY__
 #I ".."
 #I "../CardSets"
+#I "../../packages"
 
+#r "System.Runtime.Serialization"
+#r "System.Runtime.Serialization.Json"
+
+//#r "Newtonsoft.Json/lib/netstandard1.3/Newtonsoft.Json.dll"
+#r "Newtonsoft.Json/lib/net45/Newtonsoft.Json.dll"
+
+#load @"Utils.fs"
 #load @"GameTypes.fs"
+#load @"GameUtils.fs"
 #load @"fsiHelpers.fsx"
 #load @"CardRepositoryClass.fs"
-#load @"Utils.fs"
 #load @"CardDef.fs"
 #load @"CoreCards.fs"
 #load @"CardRepository.fs"
@@ -27,7 +35,6 @@
 #load @"Game.fs"
 #load @"TestUtils.fs"
 
-#r "System.Runtime.Serialization.Json"
 
 open GameTypes
 open SampleDeck
@@ -36,14 +43,19 @@ open GameState
 open Game
 open CardRepository
 open TestUtils
+open Newtonsoft.Json
 
 do repository.AddCards TestCards.testCards  // do this for selecting card sets 
 // do repository.AddCards CoreCards.coreCards // core cards
 
+
+
 let allCards = repository.AllCards ()
 let gs = 
-    startGameTest allCards (Utils.chooseRandomPlayer ())
+    startGameTest allCards (GameUtils.chooseRandomPlayer ())
 
+let a = JsonConvert.SerializeObject (gs.State)
+let b = JsonConvert.DeserializeObject<GameState> a 
 
 let gs2 = 
     gs
@@ -81,3 +93,11 @@ gsa <- gsa |> playAction 0; gsa;;
 
 let map = Map.empty |> Map.add 1 "neco" |> Map.add 1 "nic"
 let i = map.Item 1
+
+// let tst =  Province 3 |> Json.serializeWith zoneNameToJson |> Json.format
+// let ds = tst |> Json.parse |> zoneNameFromJson
+// let ds2 = 
+//     match ds with
+//     | Value (z : ZoneName), _ -> z
+//     | Error e, _ -> failwith ":("
+

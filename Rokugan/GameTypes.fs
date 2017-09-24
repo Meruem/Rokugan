@@ -1,6 +1,6 @@
 namespace GameTypes
 
-open Chiron
+open Newtonsoft.Json
 
 type CardTitle = Title of string
 
@@ -100,8 +100,6 @@ type Player = Player1 | Player2
 
 type CardState = Bowed | Honored | Dishonored | Hidden | Broken
 
-//[<StructuredFormatDisplayAttribute("{CardId}")>]
-type CardId = CardId of int
 
 type ZoneName = 
     | Hand
@@ -118,17 +116,12 @@ type ZoneName =
 
 [<StructuredFormatDisplayAttribute("Card {Id} [{Title}] in {Zone} (+{Fate})")>]
 type Card = {
-    Id : CardId
+    Id : int
     Title : CardTitle
     Owner : Player
     States : CardState Set
     Fate : int 
     Zone : ZoneName }
-    with 
-        static member ToJson (c:Card) = json {
-            let CardId x = c.Id
-            do! Json.write "Id" (CardId c.Id)
-        }
 
 type Deck = 
     Deck of Card list
@@ -153,28 +146,40 @@ type PlayerState = {
     Honor : int
     Fate : int
     Flags : PlayerFlag list
-    CardsInPlay : Map<CardId, Card>
+    [<JsonIgnore>]
+    CardsInPlay : Map<int, Card>
     DeclaredConflicts : ConflictType option list }
     with
+        [<JsonIgnore>]
         member private this.ToValuesList = Map.toList >> List.map (fun (_,c) -> c)
+        [<JsonIgnore>]
         member this.Home = 
             this.CardsInPlay 
             |> Map.filter (fun _ c -> c.Zone = Home)
             |> this.ToValuesList
+        [<JsonIgnore>]
         member this.DynastyDiscard = this.CardsInPlay |> Map.filter (fun _ c -> c.Zone = DynastyDiscard) |> this.ToValuesList
+        [<JsonIgnore>]
         member this.ConflictDiscard = this.CardsInPlay |> Map.filter (fun _ c -> c.Zone = ConflictDiscard) |> this.ToValuesList
+        [<JsonIgnore>]
         member this.Hand = this.CardsInPlay |> Map.filter (fun _ c -> c.Zone = Hand) |> this.ToValuesList
+        [<JsonIgnore>]
         member this.DynastyInProvinces = 
             this.CardsInPlay 
             |> Map.filter (fun _ c -> match c.Zone with | DynastyInProvinces _ -> true | _ -> false )
             |> this.ToValuesList
+        [<JsonIgnore>]
         member this.Conflict = this.CardsInPlay |> Map.filter (fun _ c -> c.Zone = Conflict) |> this.ToValuesList
+        [<JsonIgnore>]
         member this.Stronghold = this.CardsInPlay |> Map.pick (fun _ c -> if c.Zone = Stronghold then Some c else None)
+        [<JsonIgnore>]
         member this.StrongholdProvince = this.CardsInPlay |> Map.pick (fun _ c -> if c.Zone = StrongholdProvince then Some c else None)
+        [<JsonIgnore>]
         member this.Provinces = 
             this.CardsInPlay 
             |> Map.filter (fun _ c -> match c.Zone with | Province n -> true | _ -> false)
             |> this.ToValuesList
+        [<JsonIgnore>]
         member this.CardsInPlayList : Card list = this.CardsInPlay |> Map.toList |> List.map (fun (_, c) -> c)
 
 type GameEnd = Player1Won | Player2Won 
@@ -242,29 +247,25 @@ type GameState =
     ActivePlayer : Player
     AttackState : AttackState option }
     with
+        [<JsonIgnore>]
         member this.ActivePlayerState = 
             match this.ActivePlayer with 
             | Player1 -> this.Player1State
             | Player2 -> this.Player2State  
+        [<JsonIgnore>]
         member this.OtherPlayerState = 
             match this.ActivePlayer with 
             | Player1 -> this.Player2State
             | Player2 -> this.Player1State              
+        [<JsonIgnore>]
         member this.Cards = 
             List.append this.Player1State.CardsInPlayList this.Player2State.CardsInPlayList
+        [<JsonIgnore>]
         member this.OtherPlayer =
             match this.ActivePlayer with 
             | Player1 -> Player2
             | Player2 -> Player1
-        static member ToJson (gs:GameState) = json {
-            do! Json.write "TurnNumber" gs.TurnNumber
-            do! Json.writeWith duToJson "FirstPlayer" gs.FirstPlayer
-            do! Json.writeWith duToJson "ActivePlayer" gs.ActivePlayer
-            do! Json.writeWith duToJson "GamePhase" gs.GamePhase
-            do! match gs.AttackState with
-                | None ->  Json.write "AttackState" "none" 
-                | Some st -> Json.write "AttackState" st)  }
-          
+         
 
 type PlayerActionType = 
     | Pass

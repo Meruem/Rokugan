@@ -1,4 +1,4 @@
-module Rokugan
+module Rokugan.Progrem
 
 open GameTypes
 open SampleDeck
@@ -6,8 +6,11 @@ open CardDef
 open GameState
 open Game
 open CardRepository
-open GameRepository
 open System
+open JsonSerializers
+
+open Newtonsoft.Json
+
 
 let (|Int|_|) str =
    match System.Int32.TryParse(str) with
@@ -19,8 +22,9 @@ let main argv =
     do CardRepository.repository.AddCards CoreCards.coreCards 
     let p1config,p2config = samplePlayerConfigs ()
 
+
     let mutable gs = 
-        startGame p1config p2config (Utils.chooseRandomPlayer ())
+        startGame p1config p2config (GameUtils.chooseRandomPlayer ())
 
     let rec readlines () = 
         printfn "%A" gs

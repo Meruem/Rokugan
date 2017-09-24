@@ -13,5 +13,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="C:\Projects\Rokugan\packages\Suave\lib\netstandard1.6\Suave.dll" />
+    <Reference Include="..\packages\Newtonsoft.Json\lib\netstandard1.3\Newtonsoft.Json.dll" />
   </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />  
 </Project>

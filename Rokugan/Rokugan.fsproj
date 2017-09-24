@@ -6,6 +6,7 @@
   <ItemGroup>
     <Compile Include="Utils.fs" />
     <Compile Include="GameTypes.fs" />
+    <Compile Include="JsonSerializers.fs" />
     <Compile Include="CardRepositoryClass.fs" />
     <Compile Include="GameUtils.fs" />
     <Compile Include="CardDef.fs" />
@@ -33,7 +34,7 @@
     <Compile Include="Rokugan.fs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="..\packages\Chiron\lib\portable-net45+netcore45+wpa81+wp8+MonoAndroid1+MonoTouch1\Chiron.dll" />
+    <Reference Include="..\packages\Newtonsoft.Json\lib\netstandard1.3\Newtonsoft.Json.dll" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
