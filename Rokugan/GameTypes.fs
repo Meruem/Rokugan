@@ -287,12 +287,11 @@ type PlayerActionType =
 type PlayerAction = 
   { Type : PlayerActionType
     Player : Player
-    Commands : Command list
-    NextActions : GameState -> PlayerAction list }
-
-type Transform = 
+    OnExecute : Transform }
+and Transform = 
   { Commands : Command list 
-    NextActions : GameState -> PlayerAction list }
+    NextActions : (GameState -> PlayerAction list) option
+    Continuation : (Unit -> Transform) list}
 
 [<StructuredFormatDisplayAttribute("Trigger: {Name}")>]
 type GameTrigger = 
@@ -307,7 +306,7 @@ type GameStateMod = GameState -> GameState
 type GameModel =
   { State: GameState
     Actions : PlayerAction list 
-    Continuations : Transform list
+    Continuations : (Unit -> Transform) list
     Triggers : Map<string, GameTrigger list>
     Log : Command list }
 

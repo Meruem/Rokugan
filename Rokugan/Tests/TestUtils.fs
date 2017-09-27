@@ -5,13 +5,6 @@ open SampleDeck
 open CardRepositoryClass
 open Game
 
-let rec zeroAction () = 
-  { Type = Test
-    Player = Player1
-    Commands = []
-    NextActions = fun _ -> [zeroAction ()]}
-let idTrans = { Commands = []; NextActions = fun _ -> [zeroAction ()]}
-
 let startGameTest allCards startPlayer =
     let randomConflictDeck () = sampleConflictDeck 10 allCards
     let randomDynastyDeck () = sampleDynastyDeck 10 allCards

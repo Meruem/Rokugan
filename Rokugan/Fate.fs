@@ -8,6 +8,7 @@ let remove1FateorDiscard (card:Card) =
     else (DiscardFromPlay card)
 
 let gotoFatePhase gotoNextPhase (gs:GameState) =
-    ([ChangePhase Fate]
-    @ (gs.Cards |> List.filter (fun c -> Card.isCharacter c && c.Zone = Home) |> List.map remove1FateorDiscard))
-        @+ (gotoNextPhase gs)   
+    changes 
+        ([ChangePhase Fate]
+        @ (gs.Cards |> List.filter (fun c -> Card.isCharacter c && c.Zone = Home) |> List.map remove1FateorDiscard))
+    >+!> gotoNextPhase

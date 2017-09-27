@@ -3,6 +3,8 @@ module Utils
 
 open Microsoft.FSharp.Reflection
 
+let (!@) lst1 lst2 = lst1 @ (lst2 |> List.choose id)
+
 let toString (x:'a) = 
     match FSharpValue.GetUnionFields(x, typeof<'a>) with
     | case, _ -> case.Name

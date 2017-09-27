@@ -3,6 +3,7 @@ module Regroup
 open GameTypes
 open GameState
 open PlayerState
+open Actions 
 
 let readyAllCards (gs:GameState) = 
     gs.Cards 
@@ -26,15 +27,14 @@ let gotoRegroupPhase gotoNextPhase (gs:GameState) =
             | DynastyInProvinces pos -> [DrawDynastyCard (card.Owner,pos)]
             | _ -> []
             @ [DiscardFromPlay card] 
-        (cards |> List.collect drawAndDiscardCard)
-        @+ gotoNextPhase gs
+        changes (cards |> List.collect drawAndDiscardCard)
         
-    let cmds =
-        [ChangePhase Regroup]
+    changes
+        ([ChangePhase Regroup]
         @ (readyAllCards gs)
         @ (addFateToRings gs)
         @ (returnRings gs)
-        @ [NextRound]
-    let actions = Actions.chooseDynastyInProvince (drawAndDiscardCards)
-    transform cmds actions.NextActions
+        @ [NextRound])
+    >+> chooseDynastyInProvince drawAndDiscardCards
+    >+!> gotoNextPhase
 

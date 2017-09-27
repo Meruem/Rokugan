@@ -35,7 +35,7 @@ let playDynastyMod card pos addFate player =
       DrawDynastyCard (player, pos)
       SwitchActivePlayer ]
 
-let rec dynastyPhaseActions (nextPhase: GameState -> Transform) (gs:GameState) =
+let rec dynastyPhaseActions (gs:GameState) =
     let ps = gs.ActivePlayerState
     let actions = 
         getPlayableDynastyPositions ps
@@ -43,13 +43,12 @@ let rec dynastyPhaseActions (nextPhase: GameState -> Transform) (gs:GameState) =
             let card = dynastyCardAtPosition pos ps
             let playCard = 
                 fun fate -> 
-                    transform
-                        (playDynastyMod card pos fate gs.ActivePlayer)
-                        (dynastyPhaseActions nextPhase)
+                        changes (playDynastyMod card pos fate gs.ActivePlayer)
+                        >+> playerActions dynastyPhaseActions 
             playCharacter 
                 gs.ActivePlayer 
                 card 
-                (newActionsOnly <| fun gs -> choicei gs.ActivePlayer "Add fate" 0 remainingFate playCard))
+                (playerActions <| fun gs -> choicei gs.ActivePlayer "Add fate" 0 remainingFate playCard))
     let commands =
         [DynastyPass gs.ActivePlayer] 
         @ (add1fateIfPassedFirstMsg gs) 
@@ -58,19 +57,21 @@ let rec dynastyPhaseActions (nextPhase: GameState -> Transform) (gs:GameState) =
         pass 
             gs.ActivePlayer 
             (if hasPlayerPassed (gs.OtherPlayer) gs then 
-                let next = nextPhase gs
-                (transform (commands @ next.Commands) next.NextActions)
+                changes commands
             else
-                (transform commands (dynastyPhaseActions nextPhase)))
+                changes commands
+                >+> playerActions dynastyPhaseActions)
     passAction :: actions     
 
 
 let gotoDynastyPhase nextPhase (gs:GameState) = 
-    transform 
+    changes 
         ([ChangePhase Dynasty]
         @ revealAllDynastyCardsAtProvinces gs  
         @ collectFateFromStronghold gs)
-        (dynastyPhaseActions nextPhase)
+    >+> playerActions     
+        dynastyPhaseActions
+    >+!> nextPhase
 
 // ------------------------ Message handlers ------------------------
 

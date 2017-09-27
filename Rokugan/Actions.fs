@@ -5,24 +5,6 @@ open GameTypes
 open GameState
 open PlayerState
 
-let (!@) lst1 lst2 = List.append lst1 (lst2 |> List.choose id)
-
-let action player actionType transform = { Type = actionType; Player = player; Commands = transform.Commands; NextActions = transform.NextActions}
-
-// creates multiple choice action from min to max
-let choicei player desc min max getTransform =
-    [min..max]
-        |> List.map (fun i -> action player (Choicei (i, desc)) (getTransform i))
-
-let choice player desc xs getTransform = 
-    xs |> List.map (fun s -> action player (Choice (s, desc)) (getTransform s))
-
-let yesNo player desc getTransform = 
-    let yesCont = getTransform Yes
-    let noCont = getTransform No
-    [ action player (YesNoChoice (Yes, desc)) (getTransform Yes)
-      action player (YesNoChoice (No, desc)) (getTransform No)]
-
 let private chooseCharacterAction player desc next card = action player (ChooseCharacter (card, desc)) (next card)
 let private chooseCardAction player desc next card = action player (ChooseCard (card, desc)) (next card)
 
@@ -51,10 +33,10 @@ let rec chooseDynastyInProvince next =
     let rec chooseDynastyInProvinceRec next chosen passed  =
         let pl1Passed = List.contains Player1 passed
         let pl2Passed = List.contains Player2 passed
-        let passPl1 = 
+        let passPl1 () = 
             if pl2Passed then pass Player1 (next chosen)
             else pass Player1 (chooseDynastyInProvinceRec next chosen (Player1::passed))
-        let passPl2 = 
+        let passPl2 () = 
             if pl1Passed then pass Player2 (next chosen)
             else pass Player2 (chooseDynastyInProvinceRec next chosen (Player2::passed) )
         let chooseCard card = chooseDynastyInProvinceRec next (card::chosen) passed
@@ -62,12 +44,12 @@ let rec chooseDynastyInProvince next =
             state.DynastyInProvinces
             |> List.filter (fun c -> not (Card.isHidden c) && not (chosen |> List.contains c))
             |> List.map  (fun c -> chooseDynastyToDiscard c.Owner chooseCard c)
-        { Commands = []
-          NextActions = fun gs ->
-            if pl1Passed then [] else [passPl1]
-                @ if pl2Passed then [] else [passPl2]
-                @ if pl1Passed then [] else actions gs.Player1State
-                @ if pl2Passed then [] else actions gs.Player2State }
+        playerActions
+            (fun gs ->
+                if pl1Passed then [] else [passPl1 ()]
+                    @ if pl2Passed then [] else [passPl2 ()]
+                    @ if pl1Passed then [] else actions gs.Player1State
+                    @ if pl2Passed then [] else actions gs.Player2State)
     chooseDynastyInProvinceRec next [] [] 
 
 let playCharacter player card = action player (PlayCharacter card)

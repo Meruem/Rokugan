@@ -16,68 +16,59 @@ let returnRing ring = changeRing ring.Element (fun r -> { r with State = Unclaim
 
 let isUnclaimed (ring:Ring) = ring.State = Unclaimed
 
-let resolveFireRing attacker next =
+let resolveFireRing attacker =
     let honor = "Honor character"
     let dishonor = "Dishonor character"
     let honorChar char = 
-        [Honor char] @+ next
+        changes [Honor char] 
     let dishonorChar char =
-        [Dishonor char] @+ next
+        changes [Dishonor char] 
     let effectChosen effect =
         if effect = honor then
-            { Commands = []
-              NextActions = chooseCharacterInPlay attacker "Honor character" honorChar }
+            playerActions (chooseCharacterInPlay attacker "Honor character" honorChar)
         else 
-            { Commands = []
-              NextActions = chooseCharacterInPlay attacker "Dishonor character" dishonorChar }
-    { Commands = []
-      NextActions =  fun _ -> choice attacker "Fire ring effect" [honor; dishonor] effectChosen }
+            playerActions (chooseCharacterInPlay attacker "Dishonor character" dishonorChar)
+    playerActions (fun _ -> choice attacker "Fire ring effect" [honor; dishonor] effectChosen)
 
-let resolveAirRing attacker cont = 
+let resolveAirRing attacker = 
     let plus2Honor = "+2 Honor"
     let take1Honor = "Take 1 honor"
     let effectChosen effect = 
-        if effect = plus2Honor then 
-            [AddHonor (attacker, 2)]
-        else 
-            [AddHonor (attacker, 1)
-             AddHonor (otherPlayer attacker, -1)]
-        @+ cont
-    { Commands = []    
-      NextActions = fun _ -> choice attacker "Air ring effect" [plus2Honor; take1Honor] effectChosen }
+        changes 
+            (if effect = plus2Honor then 
+                [AddHonor (attacker, 2)]
+            else 
+                [AddHonor (attacker, 1)
+                 AddHonor (otherPlayer attacker, -1)])
+    playerActions (fun _ -> choice attacker "Air ring effect" [plus2Honor; take1Honor] effectChosen)
 
-let resolveEarthRing attacker next =
-    { Commands = 
+let resolveEarthRing attacker  =
+    changes
         [DrawConflictCard (attacker, 1)
          DiscardRandomConflict (otherPlayer attacker)]
-        @ next.Commands 
-      NextActions = next.NextActions}
 
-let resolveVoidRing attacker cont =
+let resolveVoidRing attacker =
     let remove1fate card = 
-        { Commands = [AddFateOnCard (card, -1)] @ cont.Commands
-          NextActions = cont.NextActions }
-    { Commands = []
-      NextActions = chooseCharacter attacker Card.hasFate "Remove 1 fate from character" remove1fate }
+        changes [AddFateOnCard (card, -1)] 
+    playerActions (chooseCharacter attacker Card.hasFate "Remove 1 fate from character" remove1fate)
 
-let resolveWaterRing attacker next =
+let resolveWaterRing attacker  =
     let bow = "Bow character without fate"
     let ready = "Ready character"
     let bowChar char = 
-        [Bow char] @+ next
+        changes [Bow char]
     let readyChar char =
-        [Ready char] @+ next
+        changes [Ready char]
     let effectChosen effect =
         if effect = bow then
-            { Commands = []
-              NextActions = chooseCharacter attacker (Card.hasFate >> not) "Bow character" bowChar }
-        else 
-            { Commands = []
-              NextActions = chooseCharacterInPlay attacker "Ready character" readyChar }
-    { Commands = []
-      NextActions =  fun _ -> choice attacker "Water ring effect" [bow; ready] effectChosen }
+            playerActions (chooseCharacter attacker (Card.hasFate >> not) "Bow character" bowChar)
+        else playerActions (chooseCharacterInPlay attacker "Ready character" readyChar)
+    playerActions (fun _ -> choice attacker "Water ring effect" [bow; ready] effectChosen)
 
 let addFate amount (ring:Ring) = {ring with Fate = ring.Fate + amount}
+
+
+// ---------------------- message handlers -----------------------------
 
 let onAddFateOnRing ring amount = changeRing ring.Element (addFate amount)
 let onClaimRing = claimRing

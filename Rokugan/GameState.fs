@@ -35,12 +35,6 @@ let changeCards change cards gs =
     cards |> List.fold (fun agg c -> changeCard change c agg) gs     
 
 
-// -------------- Transform helpers ------------------
-
-let transform commands actions = {Commands = commands; NextActions = actions}
-
-let newActionsOnly = transform []
-
 // -------------- Game state queries ------------------
 
 let hasPlayerPassed player gs =

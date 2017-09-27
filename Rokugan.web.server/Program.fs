@@ -26,6 +26,7 @@ type ClientModel = {
 
 
 do CardRepository.repository.AddCards CoreCards.coreCards 
+
 let p1config,p2config = samplePlayerConfigs ()
 let mutable gm = 
     startGame p1config p2config (GameUtils.chooseRandomPlayer ())
