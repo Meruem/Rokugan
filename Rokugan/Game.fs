@@ -75,7 +75,7 @@ let rec update (t:Transform) (gm:GameModel) =
         // add continuation to stack
         let gm' = 
             match t.Continuation with
-            | _ -> {gm with Continuations = t.Continuation @ gm.Continuations}
+            | _::_ -> {gm with Continuations = t.Continuation @ gm.Continuations}
             | [] -> gm
         // if not action is defined pop continuation    
         match t.NextActions with

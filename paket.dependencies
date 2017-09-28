@@ -2,3 +2,7 @@ source https://www.nuget.org/api/v2
 nuget FAKE
 nuget Newtonsoft.Json
 nuget Suave
+
+clitool dotnet-fable
+nuget Fable.Core
+nuget Fable.Import.Browser

@@ -49,7 +49,9 @@ let gameState (gm:GameModel) =
 
 let webApp = 
     choose
-      [ path "/gamestate" >=> (gameState gm)
+      [ path "/" >=> Files.file "../Rokugan.web.client/public/index.html"
+        path "/bundle.js" >=> Files.file "../Rokugan.web.client/public/bundle.js"
+        path "/gamestate" >=> (gameState gm)
         pathScan "/play/%d" (fun d -> 
             gm <- playAction d gm
             (gameState gm))]
