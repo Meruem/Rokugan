@@ -1,5 +1,6 @@
 module CoreCards
 
+open RokuganShared
 open GameTypes
 
 let coreCards = [

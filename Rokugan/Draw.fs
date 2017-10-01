@@ -1,6 +1,8 @@
 module Draw
 
 open GameTypes
+open RokuganShared
+
 open PlayerState
 open GameState
 open Actions

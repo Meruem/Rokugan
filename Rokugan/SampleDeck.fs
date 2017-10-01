@@ -1,5 +1,6 @@
 module SampleDeck
 
+open RokuganShared
 open GameTypes
 open CardDef
 

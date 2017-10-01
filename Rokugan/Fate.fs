@@ -1,5 +1,6 @@
 module Fate
 
+open RokuganShared
 open GameTypes
 open GameState
 

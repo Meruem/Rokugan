@@ -1,8 +1,7 @@
 namespace GameTypes
 
 open Newtonsoft.Json
-
-type CardTitle = Title of string
+open RokuganShared
 
 type Clan = 
     | Lion
@@ -13,8 +12,6 @@ type Clan =
     | Unicorn
     | Dragon
     | Neutral
-
-type Element = Fire | Water | Air | Earth | Void
 
 type Trait =  Bushi | Shugenja | Water | Weapon | Academy
 type CardSet = Core
@@ -90,50 +87,20 @@ type CardDef = {
     Title : CardTitle
     Spec : CardSpec }
 
-type Player = Player1 | Player2
-    // with 
-    //     static member ToJson (pl : Player) = json {
-    //         do! Json.write "player" (toString pl)}
-    //     static member FromJson (_:Player) = json {
-    //         let! pl = Json.read "player"
-    //         return fromString<Player> pl }
-
-type CardState = Bowed | Honored | Dishonored | Hidden | Broken
-
-
-type ZoneName = 
-    | Hand
-    | DynastyDiscard 
-    | ConflictDiscard 
-    | DynastyInProvinces of int
-    | Home 
-    | Conflict 
-    | Province of int
-    | Stronghold 
-    | StrongholdProvince 
-    | DynastyDeck 
-    | ConflictDeck
-
-[<StructuredFormatDisplayAttribute("Card {Id} [{Title}] in {Zone} (+{Fate})")>]
-type Card = {
-    Id : int
-    Title : CardTitle
-    Owner : Player
-    States : CardState Set
-    Fate : int 
-    Zone : ZoneName }
-
 type Deck = 
     Deck of Card list
+    with
+        [<JsonIgnore>]
         member this.Cards = 
             let (Deck lst) = this
             lst
+        [<JsonIgnore>]
+        static member Empty = Deck []
 
 type PlayerFlagEnum = Passed
 
 //defines when the flag or trigger is cleared
 type Lifetime = Round | Phase | Game | Once
-type ConflictType = Military | Political
 
 type PlayerFlag =
   { Lifetime : Lifetime
@@ -169,29 +136,29 @@ type PlayerState = {
             |> Map.filter (fun _ c -> match c.Zone with | DynastyInProvinces _ -> true | _ -> false )
             |> this.ToValuesList
         [<JsonIgnore>]
-        member this.Conflict = this.CardsInPlay |> Map.filter (fun _ c -> c.Zone = Conflict) |> this.ToValuesList
+        member this.Conflict = this.CardsInPlay |> Map.filter (fun _ c -> c.Zone = ZoneName.Conflict) |> this.ToValuesList
         [<JsonIgnore>]
-        member this.Stronghold = this.CardsInPlay |> Map.pick (fun _ c -> if c.Zone = Stronghold then Some c else None)
+        member this.Stronghold = this.CardsInPlay |> Map.pick (fun _ c -> if c.Zone = ZoneName.Stronghold then Some c else None)
         [<JsonIgnore>]
-        member this.StrongholdProvince = this.CardsInPlay |> Map.pick (fun _ c -> if c.Zone = StrongholdProvince then Some c else None)
+        member this.StrongholdProvince = this.CardsInPlay |> Map.pick (fun _ c -> if c.Zone = ZoneName.StrongholdProvince then Some c else None)
         [<JsonIgnore>]
         member this.Provinces = 
             this.CardsInPlay 
-            |> Map.filter (fun _ c -> match c.Zone with | Province n -> true | _ -> false)
+            |> Map.filter (fun _ c -> match c.Zone with | ZoneName.Province n -> true | _ -> false)
             |> this.ToValuesList
         [<JsonIgnore>]
         member this.CardsInPlayList : Card list = this.CardsInPlay |> Map.toList |> List.map (fun (_, c) -> c)
+        [<JsonIgnore>]
+        static member None = {
+            Bid = None
+            ConflictDeck = Deck.Empty
+            DynastyDeck = Deck.Empty
+            Honor = 0
+            Fate = 0
+            Flags = []
+            CardsInPlay = Map.empty
+            DeclaredConflicts = [] }
 
-type GameEnd = Player1Won | Player2Won 
-type GamePhase = Dynasty | Draw | Conflict | Fate | Regroup | End of GameEnd 
-type RingState = Unclaimed | Contested | Claimed of Player
-type YesNo = Yes | No
-
-[<StructuredFormatDisplay("{Element}/{State}/({Fate})")>]
-type Ring = 
-  { Element : Element
-    State : RingState
-    Fate : int }
 
 type Command = 
     | ChangePhase of GamePhase
@@ -227,15 +194,6 @@ type Command =
     | ApplyBids
     | NextRound
 
-type AttackState =
-  { Type : ConflictType
-    Attacker : Player
-    Ring : Ring
-    Province : Card
-    Attackers : Card list
-    Defenders : Card list }
-    with
-        member this.Defender = match this.Attacker with | Player1 -> Player2 | Player2 -> Player1   
 
 type GameState = 
   { TurnNumber : int
@@ -265,23 +223,19 @@ type GameState =
             match this.ActivePlayer with 
             | Player1 -> Player2
             | Player2 -> Player1
+
+        [<JsonIgnore>]
+        static member None = {
+            TurnNumber = 0
+            FirstPlayer =  Player1
+            Player1State = PlayerState.None
+            Player2State = PlayerState.None 
+            Rings = []
+            GamePhase = GamePhase.Dynasty
+            ActivePlayer = Player1
+            AttackState = None }
          
 
-type PlayerActionType = 
-    | Pass
-    | PlayCharacter of Card
-    | ActivateAction
-    | Choicei of int * string
-    | Choice of string * string
-    | YesNoChoice of YesNo * string
-    | DeclareAttack of ConflictType * Ring * Card 
-    | ChooseAttacker of Card 
-    | ChooseDefender of Card
-    | ChooseProvince of Card
-    | ChooseCharacter of Card * string
-    | ChooseCard of Card * string
-    | ChooseDynastyToDiscard of Card
-    | Test
 
 [<StructuredFormatDisplayAttribute("Action ({Player}): {Type}")>]
 type PlayerAction = 

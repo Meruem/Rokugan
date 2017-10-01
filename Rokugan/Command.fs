@@ -1,5 +1,6 @@
 module Command
 
+open RokuganShared
 open GameTypes
 
 let removeCardState state (card:Card) =

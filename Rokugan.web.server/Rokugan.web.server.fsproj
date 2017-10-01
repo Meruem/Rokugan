@@ -4,16 +4,16 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Rokugan.Shared\Rokugan.Shared.fsproj">
+      <Name>Rokugan.Shared.fsproj</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rokugan\Rokugan.fsproj">
       <Name>Rokugan.fsproj</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ClientConvert.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="C:\Projects\Rokugan\packages\Suave\lib\netstandard1.6\Suave.dll" />
-    <Reference Include="..\packages\Newtonsoft.Json\lib\netstandard1.3\Newtonsoft.Json.dll" />
-  </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />  
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

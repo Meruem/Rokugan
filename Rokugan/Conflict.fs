@@ -1,5 +1,6 @@
 module Conflict
 
+open RokuganShared
 open GameTypes
 open GameState
 open PlayerState
@@ -149,7 +150,7 @@ let rec conflictActions (gs:GameState) =
     [passAction] @ actions
   
 let gotoConflictPhase nextPhase gs =
-    change (ChangePhase Conflict)
+    change (ChangePhase GamePhase.Conflict)
     >+> playerActions conflictActions
     >+!> nextPhase
 
@@ -157,10 +158,10 @@ let gotoConflictPhase nextPhase gs =
 // -------------------------- message handlers ----------------------------      
 
 let onPassConflict player gs = 
-    let pass ps = {ps with DeclaredConflicts = None :: ps.DeclaredConflicts}
+    let pass (ps:PlayerState) = {ps with DeclaredConflicts = None :: ps.DeclaredConflicts}
     gs |> changePlayerState player pass  
 
-let onConflictDeclared player ctype ring province gs =
+let onConflictDeclared player ctype ring province (gs:GameState) =
     { gs with 
         AttackState =
           Some

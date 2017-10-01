@@ -1,5 +1,6 @@
 module Dynasty
 
+open RokuganShared
 open GameTypes
 open PlayerState
 open GameState
@@ -66,7 +67,7 @@ let rec dynastyPhaseActions (gs:GameState) =
 
 let gotoDynastyPhase nextPhase (gs:GameState) = 
     changes 
-        ([ChangePhase Dynasty]
+        ([ChangePhase GamePhase.Dynasty]
         @ revealAllDynastyCardsAtProvinces gs  
         @ collectFateFromStronghold gs)
     >+> playerActions     

@@ -12,39 +12,35 @@ open Newtonsoft.Json
 
 open SampleDeck
 open Game
+open RokuganShared
 open GameTypes
 
-type ClientPlayerAction = { 
-    Number : int
-    Description : string
-    Player : string }
-
-type ClientModel = {
-    State : GameState
-    Log : Command list
-    Actions : ClientPlayerAction list }
+open Fable.Core.JsInterop
+open ClientConvert
 
 
 do CardRepository.repository.AddCards CoreCards.coreCards 
 
 let p1config,p2config = samplePlayerConfigs ()
-let mutable gm = 
+
+let startNewGame () =
     startGame p1config p2config (GameUtils.chooseRandomPlayer ())
 
-let getPlayerActions (gm:GameModel) = 
-    gm.Actions
-    |> List.mapi (fun i a -> 
-        { Number = i
-          Description = a.Type.ToString()
-          Player = a.Player.ToString()})
+let mutable gm = 
+    startNewGame()
 
 let getClientModel (gm:GameModel) =
-  { State = gm.State
-    Log = gm.Log
-    Actions = getPlayerActions gm }          
+  { State = toClientGameState gm.State
+    Log = gm.Log |> List.map (fun c -> c.ToString())
+    Actions = toClientPlayerActions gm.Actions }          
+
+let jsonConverter = Fable.JsonConverter() :> JsonConverter
+let modelToJson m =
+    //toJson m
+    JsonConvert.SerializeObject (m, jsonConverter)
 
 let gameState (gm:GameModel) =
-    OK (JsonConvert.SerializeObject (getClientModel gm)) 
+    OK (modelToJson (getClientModel gm)) 
     >=> setMimeType "application/json; charset=utf-8"
 
 let webApp = 
@@ -52,6 +48,9 @@ let webApp =
       [ path "/" >=> Files.file "../Rokugan.web.client/public/index.html"
         path "/bundle.js" >=> Files.file "../Rokugan.web.client/public/bundle.js"
         path "/gamestate" >=> (gameState gm)
+        path "/newgame" >=> fun c -> 
+            gm <- (startNewGame ())
+            gameState gm c
         pathScan "/play/%d" (fun d -> 
             gm <- playAction d gm
             (gameState gm))]

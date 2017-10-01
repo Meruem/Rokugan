@@ -1,6 +1,7 @@
 module Game
 
 open GameTypes
+open RokuganShared
 
 open PlayerState
 open GameState
@@ -13,7 +14,7 @@ open Draw
 let send gsmod gs = (gsmod gs), []
 let cont = id
 
-let updateState command gm = 
+let updateState command (gm:GameModel) = 
     let (gs2, newcommands : Command list) = 
         gm.State |>
             match command with
@@ -88,14 +89,14 @@ let rec update (t:Transform) (gm:GameModel) =
 let rec gotoNextPhase phase gs =
     let nextPhaseLazy phase = fun () -> gotoNextPhase phase gs
     match phase with
-    | Dynasty -> Dynasty.gotoDynastyPhase (nextPhaseLazy Draw) gs
-    | Draw -> Draw.gotoDrawPhase (nextPhaseLazy Conflict) gs
-    | Conflict -> Conflict.gotoConflictPhase (nextPhaseLazy Fate) gs
-    | Fate -> Fate.gotoFatePhase (nextPhaseLazy Regroup) gs
-    | Regroup -> Regroup.gotoRegroupPhase (nextPhaseLazy Dynasty) gs
+    | GamePhase.Dynasty -> Dynasty.gotoDynastyPhase (nextPhaseLazy Draw) gs
+    | GamePhase.Draw -> Draw.gotoDrawPhase (nextPhaseLazy GamePhase.Conflict) gs
+    | GamePhase.Conflict -> Conflict.gotoConflictPhase (nextPhaseLazy Fate) gs
+    | GamePhase.Fate -> Fate.gotoFatePhase (nextPhaseLazy Regroup) gs
+    | GamePhase.Regroup -> Regroup.gotoRegroupPhase (nextPhaseLazy Dynasty) gs
     | _ -> none
 
-let playAction n gm =
+let playAction n (gm: GameModel) =
     if n >= gm.Actions.Length then gm
     else
         let action = gm.Actions.[n]

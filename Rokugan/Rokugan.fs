@@ -7,7 +7,6 @@ open GameState
 open Game
 open CardRepository
 open System
-open JsonSerializers
 
 open Newtonsoft.Json
 

@@ -1,5 +1,6 @@
 module Regroup
 
+open RokuganShared
 open GameTypes
 open GameState
 open PlayerState

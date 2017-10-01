@@ -1,12 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Rokugan.Shared\Rokugan.Shared.fsproj">
+      <Name>Rokugan.Shared.fsproj</Name>
+    </ProjectReference>
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="Utils.fs" />
     <Compile Include="GameTypes.fs" />
-    <Compile Include="JsonSerializers.fs" />
     <Compile Include="CardRepositoryClass.fs" />
     <Compile Include="GameUtils.fs" />
     <Compile Include="Transform.fs" />
@@ -32,9 +36,6 @@
     <Compile Include="Tests/TestUtils.fs" />
     <None Include="Tests/Test1.fsx" />
     <Compile Include="Rokugan.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="..\packages\Newtonsoft.Json\lib\netstandard1.3\Newtonsoft.Json.dll" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

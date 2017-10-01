@@ -1,5 +1,6 @@
 module TestCards
 
+open RokuganShared
 open GameTypes
 
 let ``Generic 1/1`` = 

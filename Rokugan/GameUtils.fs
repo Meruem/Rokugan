@@ -2,6 +2,7 @@
 module GameUtils
 
 open GameTypes
+open RokuganShared
 
 let chooseRandomPlayer () = 
     let rnd = System.Random()

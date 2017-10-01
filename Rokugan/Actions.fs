@@ -2,6 +2,8 @@
 module Actions
 
 open GameTypes
+open RokuganShared
+
 open GameState
 open PlayerState
 

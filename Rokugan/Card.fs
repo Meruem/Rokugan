@@ -1,19 +1,20 @@
 module Card
 
+open RokuganShared
 open GameTypes
 open CardRepository
 
-let (|Dynasty|_|) card =
+let (|Dynasty|_|) (card:Card) =
     match (repository.GetCard card.Title).Spec with
     | CardSpec.Dynasty _ -> Some card
     | _ -> None
 
-let (|Conflict|_|) card =
+let (|Conflict|_|) (card: Card) =
     match (repository.GetCard card.Title).Spec with
     | CardSpec.Conflict _ -> Some card
     | _ -> None
 
-let (|Character|_|) card = 
+let (|Character|_|) (card:Card) = 
     match repository.GetCard card.Title with
     | CardDef.Character c -> Some card
     | _ -> None 
@@ -27,9 +28,9 @@ let createCard title player zone =
     Fate = 0 
     Zone = zone}
 
-let createProviceCard title player nr = createCard title player (Province nr)
+let createProviceCard title player nr = createCard title player (ZoneName.Province nr)
 let createStrongholdProvinceCard title player = createCard title player StrongholdProvince
-let createStrongholdCard title player = createCard title player Stronghold
+let createStrongholdCard title player = createCard title player ZoneName.Stronghold
 
 // ----------- State queries --------------
 
@@ -41,7 +42,7 @@ let isBowed = hasState Bowed
 let isReady = isBowed >> not
 let isHidden = hasState Hidden
 
-let charSkillValue cType card =
+let charSkillValue cType (card:Card) =
     let cardDef = repository.GetCard card.Title
     match  cardDef with
     | CardDef.Character char ->  
@@ -50,7 +51,7 @@ let charSkillValue cType card =
         | Political ->char.PoliticalSkill
     | _ -> None 
 
-let isCharWithValue cType card = 
+let isCharWithValue cType (card:Card) = 
     charSkillValue cType card |> Option.isSome 
 
 let isCharacter = function | Character _ -> true | _ -> false
@@ -81,7 +82,7 @@ let dishonor card =
 let discardConflict card = {card with Zone = ConflictDiscard}
 let discardDynasty card = {card with Zone = DynastyDiscard}
 
-let discard card = 
+let discard (card:Card) = 
     match card with
     | Dynasty d -> discardDynasty d
     | Conflict c -> discardConflict c

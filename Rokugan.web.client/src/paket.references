@@ -1,3 +1,8 @@
 dotnet-fable
 Fable.Core
 Fable.Import.Browser
+Fable.Elmish
+Fable.React
+Fable.Elmish.React
+Fable.Elmish.Debugger
+Newtonsoft.Json

@@ -1,6 +1,8 @@
 module GameState
 
+open RokuganShared
 open GameTypes
+
 open System
 open PlayerState
 
@@ -57,32 +59,32 @@ let switchActivePlayer gs =
 
 let passActive = changeActivePlayerState pass
 
-let cleanPhaseFlags gs =
+let cleanPhaseFlags (gs:GameState) =
     { gs with 
         Player1State = cleanPhaseFlags gs.Player1State
         Player2State = cleanPhaseFlags gs.Player2State }
 
-let removeFateFromRing ring gs =
+let removeFateFromRing ring (gs:GameState) =
     { gs with Rings = gs.Rings |> Utils.replaceListElement { ring with Fate = 0 } (fun r -> r.Element = ring.Element) }
 
 let honor = changeCard Card.honor
 let dishonor = changeCard Card.dishonor
 
-let nextRound gs = {gs with TurnNumber = gs.TurnNumber + 1}
+let nextRound (gs:GameState) = {gs with TurnNumber = gs.TurnNumber + 1}
 
 let drawDynasty position player gs = 
     let ps' = drawCardFromDynastyDeck position (playerState player gs)
     gs |> changePlayerState player (fun _ -> ps')
 
 let cleanDeclaredConflicts (gs:GameState) =
-    let clearConflict ps = {ps with DeclaredConflicts = []}
+    let clearConflict (ps:PlayerState) = {ps with DeclaredConflicts = []}
     gs 
     |> changePlayerState Player1 clearConflict
     |> changePlayerState Player2 clearConflict
 
 // --------------------------- message handlers ------------------------------
 
-let onChangePhase phase gs = 
+let onChangePhase phase (gs:GameState) = 
     {gs with GamePhase = phase; ActivePlayer = gs.FirstPlayer}     
     |> cleanPhaseFlags |> cleanDeclaredConflicts
 
@@ -103,7 +105,7 @@ let onCleanBids = changeBothPlayerState cleanBid
 let onAddHonor player amount = changePlayerState player (addHonor amount) 
 let onDrawConflictCard player amount = changePlayerState player (drawConflictCards amount)
 let onRevealProvince = changeCard Card.revealProvince 
-let onCollectFateFromRing player ring = changePlayerState player (addFateToPlayer ring.Fate) >> removeFateFromRing ring
+let onCollectFateFromRing player (ring:Ring) = changePlayerState player (addFateToPlayer ring.Fate) >> removeFateFromRing ring
 let onDiscardRandomConflict player =  changePlayerState player discardRandomConflictCard
 
 let onCardBow = changeCard Card.bow

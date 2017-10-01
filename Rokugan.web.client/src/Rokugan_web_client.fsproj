@@ -1,10 +1,20 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Rokugan.Shared\Rokugan.Shared.fsproj">
+      <Name>Rokugan.Shared.fsproj</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Rokugan\Rokugan.fsproj">
+      <Name>Rokugan.fsproj</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="App.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="..\node_modules\fable-powerpack\Fable.PowerPack.dll" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

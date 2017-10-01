@@ -1,6 +1,8 @@
 module PlayerState
 
+open RokuganShared
 open GameTypes
+
 open CardRepository
 open System
 
@@ -8,8 +10,8 @@ let otherPlayer player = if player = Player1 then Player2 else Player1
 let hasPlayerFlag flag playerState =
     playerState.Flags |> List.exists (fun ps -> ps.Flag = flag)
 
-let changeBid bid playerState = { playerState with Bid = Some bid }
-let cleanBid ps = { ps with Bid = None }
+let changeBid bid (ps:PlayerState) = { ps with Bid = Some bid }
+let cleanBid (ps:PlayerState) = { ps with Bid = None }
 
 let hasPassed = hasPlayerFlag PlayerFlagEnum.Passed
 

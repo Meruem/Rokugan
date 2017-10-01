@@ -1,5 +1,6 @@
 module Ring
 
+open RokuganShared
 open GameTypes
 open GameState
 open PlayerState
@@ -10,9 +11,9 @@ let changeRing ringElement change gs =
     let rings' = [ for ring in gs.Rings do if ring.Element = ringElement then yield (change ring) else yield ring ]
     {gs with Rings = rings'}
 
-let claimRing ring player = changeRing ring.Element (fun r -> {r with State = Claimed player })
-let contestRing ring = changeRing ring.Element (fun r -> { r with State = Contested})
-let returnRing ring = changeRing ring.Element (fun r -> { r with State = Unclaimed })
+let claimRing (ring:Ring) player = changeRing ring.Element (fun r -> {r with State = Claimed player })
+let contestRing (ring:Ring) = changeRing ring.Element (fun r -> { r with State = Contested})
+let returnRing (ring:Ring) = changeRing ring.Element (fun r -> { r with State = Unclaimed })
 
 let isUnclaimed (ring:Ring) = ring.State = Unclaimed
 
@@ -70,7 +71,7 @@ let addFate amount (ring:Ring) = {ring with Fate = ring.Fate + amount}
 
 // ---------------------- message handlers -----------------------------
 
-let onAddFateOnRing ring amount = changeRing ring.Element (addFate amount)
+let onAddFateOnRing (ring:Ring) amount = changeRing ring.Element (addFate amount)
 let onClaimRing = claimRing
 let onContestRing = contestRing
 let onReturnRing = returnRing

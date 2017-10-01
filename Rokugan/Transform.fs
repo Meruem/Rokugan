@@ -1,6 +1,7 @@
 [<AutoOpen>]
 module Transform
 
+open RokuganShared
 open GameTypes
 
 let action player actionType transform = { Type = actionType; Player = player; OnExecute = transform}
