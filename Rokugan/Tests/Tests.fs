@@ -3,6 +3,7 @@ module Tests
 open System
 open Xunit
 
+open RokuganShared
 open GameTypes
 open CardRepository
 open TestUtils
@@ -42,4 +43,5 @@ let ``Play dynasty card`` () =
         startGameTest cards Player1
     let gs2 = gs |> playAction 1 |> playAction 1  
     Assert.Equal (1, gs2.State.Player1State.Home.Length)
+    Assert.Equal (4, gs2.State.Player1State.DynastyInProvinces.Length)
     

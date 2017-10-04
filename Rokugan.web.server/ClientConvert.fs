@@ -4,7 +4,7 @@ open RokuganShared
 open GameTypes
 
 let toClientPlayerState (ps:PlayerState) =
-  { ClientPlayerState.Bid = ps.Bid
+  { ServerPlayerState.Bid = ps.Bid
     ConflictDeckCount = ps.ConflictDeck.Cards.Length
     DynastyDeckCount = ps.DynastyDeck.Cards.Length
     Honor = ps.Honor
@@ -15,8 +15,8 @@ let toClientPlayerState (ps:PlayerState) =
 let toClientGameState (gs : GameState) = 
   { TurnNumber = gs.TurnNumber
     FirstPlayer = gs.FirstPlayer
-    Player1ClientState = toClientPlayerState gs.Player1State
-    Player2ClientState = toClientPlayerState gs.Player2State
+    Player1ServerState = toClientPlayerState gs.Player1State
+    Player2ServerState = toClientPlayerState gs.Player2State
     Rings = gs.Rings
     GamePhase = gs.GamePhase
     ActivePlayer = gs.ActivePlayer

@@ -2,18 +2,18 @@
 #I ".."
 #I "../CardSets"
 #I "../../packages"
-
-#r "System.Runtime.Serialization"
-#r "System.Runtime.Serialization.Json"
+#I "../../Rokugan.Shared"
 
 //#r "Newtonsoft.Json/lib/netstandard1.3/Newtonsoft.Json.dll"
-#r "Newtonsoft.Json/lib/net45/Newtonsoft.Json.dll"
+//#r "Newtonsoft.Json/lib/net45/Newtonsoft.Json.dll"
 
+#load @"SharedTypes.fs"
 #load @"Utils.fs"
 #load @"GameTypes.fs"
 #load @"GameUtils.fs"
 #load @"fsiHelpers.fsx"
 #load @"CardRepositoryClass.fs"
+#load @"Transform.fs"
 #load @"CardDef.fs"
 #load @"CoreCards.fs"
 #load @"CardRepository.fs"
@@ -35,7 +35,7 @@
 #load @"Game.fs"
 #load @"TestUtils.fs"
 
-
+open RokuganShared
 open GameTypes
 open SampleDeck
 open CardDef
@@ -43,7 +43,6 @@ open GameState
 open Game
 open CardRepository
 open TestUtils
-open Newtonsoft.Json
 
 do repository.AddCards TestCards.testCards  // do this for selecting card sets 
 // do repository.AddCards CoreCards.coreCards // core cards
@@ -54,8 +53,7 @@ let allCards = repository.AllCards ()
 let gs = 
     startGameTest allCards (GameUtils.chooseRandomPlayer ())
 
-let a = JsonConvert.SerializeObject (gs.State)
-let b = JsonConvert.DeserializeObject<GameState> a 
+let card = gs.State.Player1State.DynastyInProvinces.[1]
 
 let gs2 = 
     gs

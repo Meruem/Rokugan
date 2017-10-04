@@ -1,3 +1,4 @@
+open RokuganShared
 open GameTypes
 
 let titleStr (Title title) = title 

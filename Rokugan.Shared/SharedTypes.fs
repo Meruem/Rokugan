@@ -47,7 +47,7 @@ type AttackState =
     with
         member this.Defender = match this.Attacker with | Player1 -> Player2 | Player2 -> Player1   
 
-type ClientPlayerState = {
+type ServerPlayerState = {
     Bid : int option
     ConflictDeckCount : int
     DynastyDeckCount : int
@@ -81,11 +81,11 @@ type PlayerActionType =
     | ChooseDynastyToDiscard of Card
     | Test
 
-type ClientGameState = 
+type ServerGameState = 
   { TurnNumber : int
     FirstPlayer : Player
-    Player1ClientState : ClientPlayerState
-    Player2ClientState : ClientPlayerState 
+    Player1ServerState : ServerPlayerState
+    Player2ServerState : ServerPlayerState 
     Rings : Ring list
     GamePhase : GamePhase
     ActivePlayer : Player
@@ -94,22 +94,22 @@ type ClientGameState =
         static member Empty = 
           { TurnNumber = 0
             FirstPlayer = Player1
-            Player1ClientState = ClientPlayerState.Empty
-            Player2ClientState = ClientPlayerState.Empty 
+            Player1ServerState = ServerPlayerState.Empty
+            Player2ServerState = ServerPlayerState.Empty 
             Rings = []
             GamePhase = GamePhase.Dynasty
             ActivePlayer = Player1
             AttackState = None }
 
-type ClientPlayerAction = { 
+type ServerPlayerAction = { 
     Number : int
     Type : PlayerActionType
     Player : string }
 
-type ClientModel = {
-    State : ClientGameState
+type ServerGameModel = {
+    State : ServerGameState
     Log : string list
-    Actions : ClientPlayerAction list }    
+    Actions : ServerPlayerAction list }    
 
 [<AutoOpen>]
 module Cards =
