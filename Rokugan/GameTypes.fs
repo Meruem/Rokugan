@@ -99,6 +99,41 @@ type PlayerFlagEnum = Passed
 //defines when the flag or trigger is cleared
 type Lifetime = Round | Phase | Game | Once
 
+
+type Command = 
+    | ChangePhase of GamePhase
+    | RemoveCardState of CardState * Card
+    | AddFate of Player * int
+    | DynastyPass of Player
+    | SwitchActivePlayer 
+    | PlayDynasty of Card 
+    | AddFateOnCard of Card * int
+    | DrawDynastyCard of Player * int  // Card position
+    | Bid of Player * int
+    | CleanBids
+    | AddHonor of Player * int
+    | DrawConflictCard of Player * int  // player, number of cards
+    | PassConflict of Player
+    | DeclareConflict of Player * ConflictType * Ring * Card // attacker, (military/political), ring, province
+    | RevealProvince of Card
+    | DeclareAttacker of Card
+    | DeclareDefender of Card
+    | ConflictStarted
+    | CollectFateFromRing of Player * Ring
+    | DiscardRandomConflict of Player
+    | Bow of Card
+    | Ready of Card
+    | Honor of Card
+    | Dishonor of Card
+    | BreakProvince of Card
+    | DiscardFromPlay of Card
+    | AddFateOnRing of Ring * int 
+    | ContestRing of Ring
+    | ClaimRing of Player * Ring
+    | ReturnRing of Ring
+    | ApplyBids
+    | NextRound
+
 type PlayerFlag =
   { Lifetime : Lifetime
     Flag : PlayerFlagEnum}
@@ -143,42 +178,6 @@ type PlayerState = {
             CardsInPlay = Map.empty
             DeclaredConflicts = [] }
 
-
-type Command = 
-    | ChangePhase of GamePhase
-    | RemoveCardState of CardState * Card
-    | AddFate of Player * int
-    | DynastyPass of Player
-    | SwitchActivePlayer 
-    | PlayDynasty of Card 
-    | AddFateOnCard of Card * int
-    | DrawDynastyCard of Player * int  // Card position
-    | Bid of Player * int
-    | CleanBids
-    | AddHonor of Player * int
-    | DrawConflictCard of Player * int  // player, number of cards
-    | PassConflict of Player
-    | DeclareConflict of Player * ConflictType * Ring * Card // attacker, (military/political), ring, province
-    | RevealProvince of Card
-    | DeclareAttacker of Card
-    | DeclareDefender of Card
-    | ConflictStarted
-    | CollectFateFromRing of Player * Ring
-    | DiscardRandomConflict of Player
-    | Bow of Card
-    | Ready of Card
-    | Honor of Card
-    | Dishonor of Card
-    | BreakProvince of Card
-    | DiscardFromPlay of Card
-    | AddFateOnRing of Ring * int 
-    | ContestRing of Ring
-    | ClaimRing of Player * Ring
-    | ReturnRing of Ring
-    | ApplyBids
-    | NextRound
-
-
 type GameState = 
   { TurnNumber : int
     FirstPlayer : Player
@@ -187,6 +186,7 @@ type GameState =
     Rings : Ring list
     GamePhase : GamePhase
     ActivePlayer : Player
+    Triggers : GameTrigger list
     AttackState : AttackState option }
     with
         member this.ActivePlayerState = 
@@ -212,26 +212,27 @@ type GameState =
             Rings = []
             GamePhase = GamePhase.Dynasty
             ActivePlayer = Player1
+            Triggers = []
             AttackState = None }
          
-
-
-[<StructuredFormatDisplayAttribute("Action ({Player}): {Type}")>]
-type PlayerAction = 
-  { Type : PlayerActionType
-    Player : Player
-    OnExecute : Transform }
+and 
+    [<StructuredFormatDisplayAttribute("Action ({Player}): {Type}")>]
+    PlayerAction = 
+      { Type : PlayerActionType
+        Player : Player
+        OnExecute : Transform }
 and Transform = 
   { Commands : Command list 
     NextActions : (GameState -> PlayerAction list) option
     Continuation : (Unit -> Transform) list}
 
-[<StructuredFormatDisplayAttribute("Trigger: {Name}")>]
-type GameTrigger = 
-  { Name : string
-    //Lifetime : Lifetime
-    Condition : GameState -> bool
-    Transform : Transform}
+and
+    [<StructuredFormatDisplayAttribute("Trigger: {Name}")>]
+    GameTrigger = 
+      { Name : string
+        //Lifetime : Lifetime
+        Condition : Command -> GameState -> bool
+        Transform : Transform}
 
 type GameStateMod = GameState -> GameState
 
@@ -240,7 +241,6 @@ type GameModel =
   { State: GameState
     Actions : PlayerAction list 
     Continuations : (Unit -> Transform) list
-    Triggers : Map<string, GameTrigger list>
     Log : Command list }
 
 type InitialPlayerConfig = {

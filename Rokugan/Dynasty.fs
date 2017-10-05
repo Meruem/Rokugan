@@ -79,12 +79,10 @@ let gotoDynastyPhase nextPhase (gs:GameState) =
 let onDynastyPass player gs =
     gs |> changePlayerState player PlayerState.pass
 
-let onPlayDynastyCard card gs =
+let onPlayDynastyCard (card:Card) gs =
     let changeState (state:PlayerState) =
-        let pos = Card.dynastyCardPosition card
-        let state' = PlayerState.drawCardFromDynastyDeck pos state
         let cardDef = repository.GetCharacterCard card.Title
-        state' 
+        state
             |> addFate (-cardDef.Cost)
             |> changeZone Home card
     gs |> GameState.changePlayerState card.Owner changeState    
