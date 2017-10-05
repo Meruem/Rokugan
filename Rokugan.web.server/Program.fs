@@ -36,7 +36,6 @@ let getClientModel (gm:GameModel) =
 
 let jsonConverter = Fable.JsonConverter() :> JsonConverter
 let modelToJson m =
-    //toJson m
     JsonConvert.SerializeObject (m, jsonConverter)
 
 let gameState (gm:GameModel) =

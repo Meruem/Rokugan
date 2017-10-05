@@ -8,7 +8,6 @@ open Fable.Helpers.React.Props
 open Elmish.React
 open Elmish.Debug
 
-open GameTypes
 open RokuganShared
 
 open Fable.PowerPack

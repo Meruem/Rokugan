@@ -60,7 +60,7 @@ let rec update (t:Transform) (gm:GameModel) =
         let (gm2, moreCommands) = updateState cmd gm   
         // update can return additional commands so add them to rest of commands
         let nextTransform = {t with Commands = xs @ moreCommands}
-        let triggers = gm.Triggers.TryFind (cmd.ToString())
+        let triggers = None //gm.State.Triggers.TryFind (cmd.ToString())
         match triggers with
         | None -> 
             update nextTransform gm2
@@ -118,6 +118,7 @@ let startGame playerConfig1 playerConfig2 firstPlayer =
             ActivePlayer = firstPlayer
             GamePhase = Dynasty
             FirstPlayer = firstPlayer
+            Triggers = []
             Player1State = initializePlayerState playerConfig1 Player1
             Player2State = initializePlayerState playerConfig2 Player2 }
         |> addSecondPlayer1Fate
@@ -128,6 +129,5 @@ let startGame playerConfig1 playerConfig2 firstPlayer =
         { State = gs 
           Actions = [] 
           Continuations = []
-          Log = []
-          Triggers = Map.empty}
+          Log = []}
     update (gotoNextPhase Dynasty gs) gm 
