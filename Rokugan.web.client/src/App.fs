@@ -110,7 +110,8 @@ let cardView (actions : ServerPlayerAction list) (card:CardClientState) dispatch
             [ Width "100px"
               Height "150px"
               Border borderStr]]
-        [el]
+        [el
+         str <| if (card.Card.States |> Set.contains Hidden) then "(Hidden)" else ""]
 
 let playerState model = 
     function
@@ -139,12 +140,17 @@ let dynastyZoneView model player dispatch =
     cardContainer
         ([str "Dynasty:"]
         @ (playerCards model player 
-            |> List.filter (fun c -> match c.Zone with | DynastyInProvinces _ -> true | _ -> false)  |> List.map (getCardView model dispatch)))
+            |> List.filter (fun c -> match c.Zone with | DynastyInProvinces _ -> true | _ -> false) 
+            |> List.sortBy (fun c -> match c.Zone with | DynastyInProvinces n -> n | _ -> -1) 
+            |> List.map (getCardView model dispatch)))
 
 let provincesView model player dispatch =
     cardContainer
         ([str "Provinces:"]
-        @ (playerCards model player |> List.filter (fun c -> match c.Zone with | Province _ -> true | _ -> false)  |> List.map (getCardView model dispatch)))     
+        @ (playerCards model player 
+            |> List.filter (fun c -> match c.Zone with | Province _ -> true | _ -> false) 
+            |> List.sortBy (fun c -> match c.Zone with | Province n -> n | _ -> -1) 
+            |> List.map (getCardView model dispatch)))     
 
 let strongholdView model player dispatch = 
     let cards = playerCards model player 

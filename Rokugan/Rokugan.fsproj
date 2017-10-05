@@ -33,8 +33,6 @@
     <Compile Include="Fate.fs" />
     <Compile Include="Regroup.fs" />
     <Compile Include="Game.fs" />
-    <Compile Include="Tests/TestUtils.fs" />
-    <None Include="Tests/Test1.fsx" />
     <Compile Include="Rokugan.fs" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />

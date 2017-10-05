@@ -11,3 +11,7 @@ nuget Fable.Elmish
 nuget Fable.Elmish.React
 nuget Fable.React
 nuget Fable.JsonConverter
+
+nuget Expecto
+nuget Expecto.BenchmarkDotNet
+nuget Expecto.FsCheck

@@ -8,7 +8,7 @@ open Actions
 open CardRepository
 
 let revealAllDynastyCardsAtProvinces gs =
-    List.append gs.Player1State.DynastyInProvinces gs.Player2State.DynastyInProvinces
+    gs.Player1State.DynastyInProvinces @ gs.Player2State.DynastyInProvinces
     |> List.map (Command.removeCardState Hidden) 
     |> List.choose id
 
@@ -68,8 +68,8 @@ let rec dynastyPhaseActions (gs:GameState) =
 let gotoDynastyPhase nextPhase (gs:GameState) = 
     changes 
         ([ChangePhase GamePhase.Dynasty]
-        @ revealAllDynastyCardsAtProvinces gs  
-        @ collectFateFromStronghold gs)
+        @ (revealAllDynastyCardsAtProvinces gs)  
+        @ (collectFateFromStronghold gs))
     >+> playerActions     
         dynastyPhaseActions
     >+!> nextPhase

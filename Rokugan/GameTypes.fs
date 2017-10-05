@@ -160,6 +160,7 @@ type PlayerState = {
             this.CardsInPlay 
             |> Map.filter (fun _ c -> match c.Zone with | DynastyInProvinces _ -> true | _ -> false )
             |> this.ToValuesList
+            //|> List.sortBy (fun c -> match c.Zone with | DynastyInProvinces n -> n | _ -> -1)
         member this.Conflict = this.CardsInPlay |> Map.filter (fun _ c -> c.Zone = ZoneName.Conflict) |> this.ToValuesList
         member this.Stronghold = this.CardsInPlay |> Map.pick (fun _ c -> if c.Zone = ZoneName.Stronghold then Some c else None)
         member this.StrongholdProvince = this.CardsInPlay |> Map.pick (fun _ c -> if c.Zone = ZoneName.StrongholdProvince then Some c else None)
@@ -167,6 +168,7 @@ type PlayerState = {
             this.CardsInPlay 
             |> Map.filter (fun _ c -> match c.Zone with | ZoneName.Province n -> true | _ -> false)
             |> this.ToValuesList
+            //|> List.sortBy (fun c -> match c.Zone with | ZoneName.Province n -> n | _ -> -1)            
         member this.CardsInPlayList : Card list = this.CardsInPlay |> Map.toList |> List.map (fun (_, c) -> c)
         static member None = {
             Bid = None
