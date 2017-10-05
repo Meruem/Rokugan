@@ -31,7 +31,7 @@ In a terminal, run `dotnet new -i Fable.Template` to install or update the templ
 
 Run `dotnet run` in Rokugan.web.server folder. This will restore packages through `Paket` then it will build all server projects and start Suave web server.
 
-### web client
+### Web client
 
 > In the commands below, yarn is the tool of choice. If you want to use npm, just replace `yarn` by `npm` in the commands.
 
@@ -53,7 +53,32 @@ Run `dotnet run` in Rokugan.web.server folder. This will restore packages throug
 
 > Paket dependencies will be installed in the `packages` directory. See [Paket website](https://fsprojects.github.io/Paket/) for more info.
 
-### yarn/npm
+
+### Rokugan.Shared
+
+- Project shared both by client and server codebase.
+
+### Rokugan
+
+- Main game logic code library
+- Can be run with `dotnet run` as console app with very basic UI
+
+### Rokugan.Tests
+
+- Test project for the game library
+- Contains support for fsi scripting
+
+### Rokugan.web.server
+
+- Web server using Suave
+- Provide simple api to Rokugan library and serialization of shared types 
+
+### Rokugan.web.client
+
+- F# codebase compiled by Fable into javascript/react code
+- using elm-like architecture
+
+#### yarn/npm 
 
 - **package.json**: contains the JS dependencies together with other info, like development scripts.
 - **yarn.lock**: is the lock file created by yarn.
@@ -61,13 +86,10 @@ Run `dotnet run` in Rokugan.web.server folder. This will restore packages throug
 
 > JS dependencies will be installed in `node_modules`. See [yarn](https://yarnpkg.com) and/or [npm](http://npmjs.com/) websites for more info.
 
-### Webpack
+#### Webpack
 
 [Webpack](https://webpack.js.org) is a bundler, which links different JS sources into a single file making deployment much easier. It also offers other features, like a static dev server that can automatically refresh the browser upon changes in your code or a minifier for production release. Fable interacts with Webpack through the `fable-loader`.
 
 - **webpack.config.js**: is the configuration file for Webpack. It allows you to set many things: like the path of the bundle, the port for the development server or [Babel](https://babeljs.io/) options. See [Webpack website](https://webpack.js.org) for more info.
 
-### F# source files
-
-The template only contains two F# source files: the project (.fsproj) and a source file (.fs) in `src` folder.
 
