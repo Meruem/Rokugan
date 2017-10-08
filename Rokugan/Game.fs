@@ -9,10 +9,14 @@ open Dynasty
 open Conflict
 open Ring
 open Draw
+open Actions
 
 // helper function for command handlers which doesn't contain any sub-commands
 let send gsmod gs = (gsmod gs), []
 let cont = id
+
+let onEndGame status (gs:GameState) =
+    {gs with GamePhase = GamePhase.End status}
 
 let updateState command (gm:GameModel) = 
     let (gs2, newcommands : Command list) = 
@@ -50,30 +54,37 @@ let updateState command (gm:GameModel) =
             | ClaimRing (player, ring) -> send <| onClaimRing ring player
             | ReturnRing ring -> send <| onReturnRing ring
             | NextRound -> send <| onNextRound
+            | EndGame status -> send <| onEndGame status
+            | ActionPass player -> send <| onActionPass player
     ({ gm with Log = command :: gm.Log; State = gs2 }, newcommands)
 
-
 let rec update (t:Transform) (gm:GameModel) =
-    match t.Commands with 
+    let cmds = 
+        match t.Commands with
+        | Some getCommands -> getCommands gm.State
+        | None -> [] 
+    match cmds with 
     | cmd :: xs -> 
         // pick first command and update the game state
         let (gm2, moreCommands) = updateState cmd gm   
         // update can return additional commands so add them to rest of commands
-        let nextTransform = {t with Commands = xs @ moreCommands}
-        let triggers = None //gm.State.Triggers.TryFind (cmd.ToString())
-        match triggers with
-        | None -> 
-            update nextTransform gm2
-        | Some trgs -> 
-            match trgs with
-            | [] -> failwith "list should always contain min 1 item"
-            | first :: rest -> 
-                let cnt2 = rest |> List.map (fun trg -> (fun () -> trg.Transform)) // other triggers
-                let cnt3 = cnt2 @ [fun () -> nextTransform] @ gm.Continuations // push other triggers first, then current context and then remaining continuations
-                update first.Transform  {gm2 with Continuations = cnt3} 
+        let nextTransform = {t with Commands = Some (fun _ -> xs) }
+        let trgs = 
+            gm2.State.Triggers 
+            |> List.filter (fun t -> t.Condition cmd gm2.State) //gm.State.Triggers.TryFind (cmd.ToString())
+        match trgs with
+        | [] -> update nextTransform gm2
+        | trigger :: rest -> 
+            let cnt2 = rest |> List.map (fun trg -> (fun () -> trg.Transform)) // other triggers
+            let cnt3 = cnt2 @ [fun () -> nextTransform] @ gm.Continuations // push other triggers first, then current context and then remaining continuations
+            let gm3 = 
+                if trigger.Lifetime = Once then 
+                    { gm2 with State = gm2.State |> Triggers.removeTrigger trigger.Name}
+                else gm2 
+            update trigger.Transform  {gm3 with Continuations = cnt3} 
     | [] -> 
         // no more commands
-        // add continuation to stack
+        // if there is continuation -> push tu stack
         let gm' = 
             match t.Continuation with
             | _::_ -> {gm with Continuations = t.Continuation @ gm.Continuations}
@@ -86,14 +97,14 @@ let rec update (t:Transform) (gm:GameModel) =
             | cnt :: rest -> update (cnt()) {gm' with Continuations = rest} 
             | [] -> failwith "expected continuation"
 
-let rec gotoNextPhase phase gs =
-    let nextPhaseLazy phase = fun () -> gotoNextPhase phase gs
+let rec gotoNextPhase phase =
+    let nextPhaseLazy phase = fun () -> gotoNextPhase phase
     match phase with
-    | GamePhase.Dynasty -> Dynasty.gotoDynastyPhase (nextPhaseLazy Draw) gs
-    | GamePhase.Draw -> Draw.gotoDrawPhase (nextPhaseLazy GamePhase.Conflict) gs
-    | GamePhase.Conflict -> Conflict.gotoConflictPhase (nextPhaseLazy Fate) gs
-    | GamePhase.Fate -> Fate.gotoFatePhase (nextPhaseLazy Regroup) gs
-    | GamePhase.Regroup -> Regroup.gotoRegroupPhase (nextPhaseLazy Dynasty) gs
+    | GamePhase.Dynasty -> Dynasty.gotoDynastyPhase (nextPhaseLazy Draw)
+    | GamePhase.Draw -> Draw.gotoDrawPhase (nextPhaseLazy GamePhase.Conflict)
+    | GamePhase.Conflict -> Conflict.gotoConflictPhase (nextPhaseLazy Fate)
+    | GamePhase.Fate -> Fate.gotoFatePhase (nextPhaseLazy Regroup)
+    | GamePhase.Regroup -> Regroup.gotoRegroupPhase (nextPhaseLazy Dynasty)
     | _ -> none
 
 let playAction n (gm: GameModel) =
@@ -122,12 +133,10 @@ let startGame playerConfig1 playerConfig2 firstPlayer =
             Player1State = initializePlayerState playerConfig1 Player1
             Player2State = initializePlayerState playerConfig2 Player2 }
         |> addSecondPlayer1Fate
-      //  |> Triggers.addWinConditionsTriggers
-      //  |> Triggers.addDynastyPassTrigger gotoNextPhase
-     //   |> Triggers.addConflictEndTrigger gotoNextPhase
+        |> Triggers.addWinConditionsTriggers
     let gm =
         { State = gs 
           Actions = [] 
           Continuations = []
           Log = []}
-    update (gotoNextPhase Dynasty gs) gm 
+    update (gotoNextPhase Dynasty) gm 

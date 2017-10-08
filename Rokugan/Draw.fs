@@ -5,7 +5,7 @@ open RokuganShared
 
 open PlayerState
 open GameState
-open Actions
+open PlayerActions
 
 let applyBids gs =
     let pl1Bid = match gs.Player1State.Bid with | Some x -> x | None -> 0
@@ -25,12 +25,12 @@ let rec drawPhaseActions gs =
         let l2 = if pl2Bid then [] else choicei Player2 "Player 2 bid" 1 5 (fun i -> change (Bid (Player2, i)) >+> playerActionsM next)
         l1 @ l2
 
-let gotoDrawPhase nextPhase gs =
+let gotoDrawPhase nextPhase =
     changes
         [ChangePhase Draw
          CleanBids]
     >+> playerActions drawPhaseActions
-    >+> change ApplyBids
+    >+> act applyBids
     >+!> nextPhase
 
 let onApplyBids gs = (gs, applyBids gs)

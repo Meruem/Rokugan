@@ -4,7 +4,7 @@ open RokuganShared
 open GameTypes
 open GameState
 open PlayerState
-open Actions
+open PlayerActions
 
 let createRing element = {Element = element; State = Unclaimed; Fate = 0}
 let changeRing ringElement change gs =

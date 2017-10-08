@@ -15,7 +15,7 @@ let cleanBid (ps:PlayerState) = { ps with Bid = None }
 
 let hasPassed = hasPlayerFlag PlayerFlagEnum.Passed
 
-let pass ps = {ps with Flags = { Lifetime = Phase; Flag = Passed } :: ps.Flags}
+let passPlayer ps = {ps with Flags = { Lifetime = Phase; Flag = Passed } :: ps.Flags}
 
 let addHonor honor (playerState:PlayerState) = 
     { playerState with Honor = playerState.Honor + honor}

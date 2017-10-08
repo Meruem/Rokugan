@@ -4,7 +4,7 @@ open RokuganShared
 open GameTypes
 open GameState
 open PlayerState
-open Actions
+open PlayerActions
 open CardRepository
 
 let attackState gs = 
@@ -101,7 +101,7 @@ let rec private chooseAttackers (gs:GameState) =
     let state = attackState gs
     let passAction = 
         if state.Attackers.Length = 0 then
-            pass gs.ActivePlayer (changes (passConflict gs))
+            pass gs.ActivePlayer (act passConflict)
         else
             pass 
                 gs.ActivePlayer
@@ -140,8 +140,8 @@ let rec conflictActions (gs:GameState) =
     let passAction = 
         let cnt = 
             if gs.OtherPlayerState.DeclaredConflicts.Length = 2 then 
-                changes (passConflict gs) 
-            else changes (passConflict gs) >+> playerActions conflictActions
+                act passConflict 
+            else act passConflict >+> playerActions conflictActions
         pass gs.ActivePlayer cnt
     let actions = 
         [for ct in (availableConflicts ps) do
@@ -149,7 +149,7 @@ let rec conflictActions (gs:GameState) =
                 for prov in (availableProvinces gs.OtherPlayer gs) do yield createDeclareConflictAction ct ring prov] 
     [passAction] @ actions
   
-let gotoConflictPhase nextPhase gs =
+let gotoConflictPhase nextPhase =
     change (ChangePhase GamePhase.Conflict)
     >+> playerActions conflictActions
     >+!> nextPhase

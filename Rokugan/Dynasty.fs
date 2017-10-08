@@ -4,7 +4,7 @@ open RokuganShared
 open GameTypes
 open PlayerState
 open GameState
-open Actions
+open PlayerActions
 open CardRepository
 
 let revealAllDynastyCardsAtProvinces gs =
@@ -50,34 +50,32 @@ let rec dynastyPhaseActions (gs:GameState) =
                 gs.ActivePlayer 
                 card 
                 (playerActions <| fun gs -> choicei gs.ActivePlayer "Add fate" 0 remainingFate playCard))
-    let commands =
-        [DynastyPass gs.ActivePlayer] 
-        @ (add1fateIfPassedFirstMsg gs) 
-        @ [SwitchActivePlayer]
     let passAction = 
+        let transform =
+            changes [DynastyPass gs.ActivePlayer] 
+            >+> act add1fateIfPassedFirstMsg 
+            >+> changes [SwitchActivePlayer]
         pass 
             gs.ActivePlayer 
             (if hasPlayerPassed (gs.OtherPlayer) gs then 
-                changes commands
+                transform
             else
-                changes commands
+                transform
                 >+> playerActions dynastyPhaseActions)
     passAction :: actions     
 
 
-let gotoDynastyPhase nextPhase (gs:GameState) = 
-    changes 
-        ([ChangePhase GamePhase.Dynasty]
-        @ (revealAllDynastyCardsAtProvinces gs)  
-        @ (collectFateFromStronghold gs))
-    >+> playerActions     
-        dynastyPhaseActions
+let gotoDynastyPhase nextPhase = 
+    changes [ChangePhase GamePhase.Dynasty]
+    >+> act revealAllDynastyCardsAtProvinces  
+    >+> act collectFateFromStronghold 
+    >+> playerActions dynastyPhaseActions
     >+!> nextPhase
 
 // ------------------------ Message handlers ------------------------
 
 let onDynastyPass player gs =
-    gs |> changePlayerState player PlayerState.pass
+    gs |> changePlayerState player PlayerState.passPlayer
 
 let onPlayDynastyCard (card:Card) gs =
     let changeState (state:PlayerState) =

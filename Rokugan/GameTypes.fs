@@ -133,6 +133,8 @@ type Command =
     | ReturnRing of Ring
     | ApplyBids
     | NextRound
+    | EndGame of GameEnd
+    | ActionPass of Player
 
 type PlayerFlag =
   { Lifetime : Lifetime
@@ -224,15 +226,15 @@ and
         Player : Player
         OnExecute : Transform }
 and Transform = 
-  { Commands : Command list 
+  { Commands : (GameState -> Command list) option 
     NextActions : (GameState -> PlayerAction list) option
-    Continuation : (Unit -> Transform) list}
+    Continuation : (Unit -> Transform) list}    
 
 and
     [<StructuredFormatDisplayAttribute("Trigger: {Name}")>]
     GameTrigger = 
       { Name : string
-        //Lifetime : Lifetime
+        Lifetime : Lifetime
         Condition : Command -> GameState -> bool
         Transform : Transform}
 

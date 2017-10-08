@@ -25,6 +25,7 @@
     <Compile Include="PlayerState.fs" />
     <Compile Include="Triggers.fs" />
     <Compile Include="GameState.fs" />
+    <Compile Include="PlayerActions.fs" />
     <Compile Include="Actions.fs" />
     <Compile Include="Dynasty.fs" />
     <Compile Include="Draw.fs" />

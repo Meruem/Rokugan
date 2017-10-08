@@ -4,7 +4,7 @@ open RokuganShared
 open GameTypes
 open GameState
 open PlayerState
-open Actions 
+open PlayerActions 
 
 let readyAllCards (gs:GameState) = 
     gs.Cards 
@@ -21,7 +21,7 @@ let returnRings (gs:GameState) =
     |> List.filter Ring.isUnclaimed 
     |> List.map ReturnRing
 
-let gotoRegroupPhase gotoNextPhase (gs:GameState) =
+let gotoRegroupPhase gotoNextPhase =
     let drawAndDiscardCards cards = 
         let drawAndDiscardCard card =
             match card.Zone with 
@@ -30,12 +30,11 @@ let gotoRegroupPhase gotoNextPhase (gs:GameState) =
             @ [DiscardFromPlay card] 
         changes (cards |> List.collect drawAndDiscardCard)
         
-    changes
-        ([ChangePhase Regroup]
-        @ (readyAllCards gs)
-        @ (addFateToRings gs)
-        @ (returnRings gs)
-        @ [NextRound])
+    changes [ChangePhase Regroup]
+    >+> act readyAllCards
+    >+> act addFateToRings
+    >+> act returnRings
+    >+> changes [NextRound]
     >+> chooseDynastyInProvince drawAndDiscardCards
     >+!> gotoNextPhase
 

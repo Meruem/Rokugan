@@ -57,7 +57,7 @@ let switchActivePlayer gs =
     if hasPlayerPassed otherPl gs then gs
     else { gs with ActivePlayer = otherPl}
 
-let passActive = changeActivePlayerState pass
+let passActive = changeActivePlayerState passPlayer
 
 let cleanPhaseFlags (gs:GameState) =
     { gs with 

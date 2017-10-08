@@ -1,8 +1,9 @@
 #I __SOURCE_DIRECTORY__
 #I ".."
-#I "../CardSets"
-#I "../../packages"
-#I "../../Rokugan.Shared"
+#I "../Rokugan/CardSets"
+#I "../packages"
+#I "../Rokugan.Shared"
+#I "../Rokugan"
 
 //#r "Newtonsoft.Json/lib/netstandard1.3/Newtonsoft.Json.dll"
 //#r "Newtonsoft.Json/lib/net45/Newtonsoft.Json.dll"
@@ -53,6 +54,22 @@ let allCards = repository.AllCards ()
 let gs = 
     startGameTest allCards (GameUtils.chooseRandomPlayer ())
 
+let mutable gsa = gs
+
+let testTrigger = 
+    { Name = "test"
+      Condition = fun cmd gs -> gs.TurnNumber < 5
+      Transform = changes [NextRound]}
+
+//gsa <- gsa |> playAction 0; gsa;;
+gsa <- {gsa with State = gsa.State |> Triggers.addTrigger testTrigger }
+
+
+
+let addHonorPlayer1 x = changes [AddHonor (Player1,x)]
+gsa <- gsa |> update (addHonorPlayer1 -5)
+
+
 let card = gs.State.Player1State.DynastyInProvinces.[1]
 
 let gs2 = 
@@ -84,9 +101,7 @@ let testBiding =
 //     |> playAction 1 // bid 2
 //     |> playAction 1 // conflict
 
-let mutable gsa = gs
 
-gsa <- gsa |> playAction 0; gsa;;
 
 
 let map = Map.empty |> Map.add 1 "neco" |> Map.add 1 "nic"
