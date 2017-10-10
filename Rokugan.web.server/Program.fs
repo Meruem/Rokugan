@@ -29,7 +29,7 @@ let startNewGame () =
 let mutable gm = 
     startNewGame()
 
-let getClientModel (gm:GameModel) =
+let getClientModel gm =
   { State = toClientGameState gm.State
     Log = gm.Log |> List.map (fun c -> c.ToString())
     Actions = toClientPlayerActions gm.Actions }          
@@ -38,7 +38,7 @@ let jsonConverter = Fable.JsonConverter() :> JsonConverter
 let modelToJson m =
     JsonConvert.SerializeObject (m, jsonConverter)
 
-let gameState (gm:GameModel) =
+let gameState gm =
     OK (modelToJson (getClientModel gm)) 
     >=> setMimeType "application/json; charset=utf-8"
 

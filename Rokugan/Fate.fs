@@ -13,7 +13,14 @@ let checkAllCardsForDiscard (gs:GameState) =
     |> List.filter (fun c -> Card.isCharacter c && c.Zone = Home) 
     |> List.map remove1FateorDiscard
 
+let addFateToRings (gs:GameState) = 
+    gs.Rings 
+    |> List.filter Ring.isUnclaimed
+    |> List.map (fun ring -> AddFateOnRing (ring,1))
+
 let gotoFatePhase gotoNextPhase =
     changes [ChangePhase Fate]
     >+> act checkAllCardsForDiscard
+    >+> act addFateToRings
+    >+> Actions.actionWindow FirstPlayer
     >+!> gotoNextPhase

@@ -11,11 +11,6 @@ let readyAllCards (gs:GameState) =
     |> List.filter Card.isBowed 
     |> List.map Ready
     
-let addFateToRings (gs:GameState) = 
-    gs.Rings 
-    |> List.filter Ring.isUnclaimed
-    |> List.map (fun ring -> AddFateOnRing (ring,1))
-
 let returnRings (gs:GameState) =
     gs.Rings 
     |> List.filter Ring.isUnclaimed 
@@ -31,10 +26,10 @@ let gotoRegroupPhase gotoNextPhase =
         changes (cards |> List.collect drawAndDiscardCard)
         
     changes [ChangePhase Regroup]
+    >+> Actions.actionWindow FirstPlayer
     >+> act readyAllCards
-    >+> act addFateToRings
+    >+> chooseDynastyInProvince drawAndDiscardCards
     >+> act returnRings
     >+> changes [NextRound]
-    >+> chooseDynastyInProvince drawAndDiscardCards
     >+!> gotoNextPhase
 

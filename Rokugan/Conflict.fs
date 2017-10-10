@@ -31,7 +31,7 @@ let resolveRingEffect (gs:GameState) yesNo =
     let state = attackState gs
     let ring = state.Ring
     match yesNo with 
-    | No -> none
+    | No -> none ()
     | Yes -> 
         match ring.Element with
         | Element.Fire -> Ring.resolveFireRing state.Attacker 
@@ -41,40 +41,39 @@ let resolveRingEffect (gs:GameState) yesNo =
         | Element.Water ->  Ring.resolveWaterRing state.Attacker 
     
 
-let getConflictResolveActions gs =
-    let state = attackState gs
+let getConflictResolveActions =
+    let totalAttack gs = (attackState gs).Attackers |> calculateTotalSkill (attackState gs).Type
+    let totalDefence gs = (attackState gs).Defenders |> calculateTotalSkill (attackState gs).Type
+    let attackerWon gs = (totalAttack gs) >= (totalDefence gs) && (totalAttack gs) > 0
+    let defenderWon gs = (totalDefence gs) > (totalAttack gs) || (totalAttack gs) = 0     
+    // rewrite! eyes bleeding
 
-    let totalAttack = state.Attackers |> calculateTotalSkill state.Type
-    let totalDefence = state.Defenders |> calculateTotalSkill state.Type
-    let attackerWon = totalAttack >= totalDefence && totalAttack > 0
-    let defenderWon = totalDefence > totalAttack || totalAttack = 0     
+    let looseHonorIfUndefended gs =
+        if (attackState gs).Defenders.Length = 0 then [AddHonor ((attackState gs).Defender, -1)] else []
 
-    let looseHonorIfUndefended =
-        if state.Defenders.Length = 0 then [AddHonor (state.Defender, -1)] else []
+    let bowCombatants gs =
+        (attackState gs).Attackers @ (attackState gs).Defenders |> List.map Bow
 
-    let bowCombatants =
-        state.Attackers @ state.Defenders |> List.map Bow
+    let breakProvince gs = 
+        let provDef = repository.GetProvinceCard (attackState gs).Province.Title
+        if  (totalAttack gs) >= (totalDefence gs) + provDef.Strength then [BreakProvince (attackState gs).Province] else []
 
-    let breakProvince = 
-        let provDef = repository.GetProvinceCard state.Province.Title
-        if totalAttack >= totalDefence + provDef.Strength then [BreakProvince state.Province] else []
-
-    if attackerWon then 
-        changes  
-            [SwitchActivePlayer
-             ClaimRing (state.Attacker, state.Ring)]
-        >+> playerActions (fun gs -> yesNo state.Attacker "Resolve ring effect" (resolveRingEffect gs))
-    else 
-        changes
-            ([SwitchActivePlayer]
-            @ if defenderWon then [ClaimRing (state.Defender, state.Ring)] else [ReturnRing state.Ring])
-    >+>
-        changes 
-            (looseHonorIfUndefended
-            @ bowCombatants
-            @ breakProvince
-            @ [SwitchActivePlayer])
-
+    Actions.actionWindow Defender
+    >+> act looseHonorIfUndefended
+    >+> act breakProvince
+    >+> act (fun gs -> 
+        if attackerWon gs then 
+                [SwitchActivePlayer
+                 ClaimRing ((attackState gs).Attacker, (attackState gs).Ring)]
+        else 
+                ([SwitchActivePlayer]
+                @ if (defenderWon gs) then [ClaimRing ((attackState gs).Defender, (attackState gs).Ring)] else [ReturnRing (attackState gs).Ring]))
+    >+> playerActions 
+            (fun gs ->
+                if (attackerWon gs) then (yesNo (attackState gs).Attacker "Resolve ring effect" (resolveRingEffect gs)) else [])
+    
+    >+> act bowCombatants
+    >+> act (fun gs -> [SetActivePlayer (attackState gs).Defender])
 
 
 let rec private chooseDefenders (gs:GameState) =
@@ -82,7 +81,7 @@ let rec private chooseDefenders (gs:GameState) =
     let passAction = 
         pass 
             state.Defender 
-            (getConflictResolveActions gs)
+            getConflictResolveActions
 
     let actions = 
         getCharactersForConflict state.Type state.Defenders gs.ActivePlayerState 
@@ -127,7 +126,7 @@ let availableProvinces player gs =
 
 let revealProvince card = if Card.isHidden card then [RevealProvince card] else []
 
-let rec conflictActions (gs:GameState) =
+let rec declareAttackActions (gs:GameState) =
     let ps = gs.ActivePlayerState
     let createDeclareConflictAction ct ring prov = 
         declareAttack 
@@ -136,12 +135,16 @@ let rec conflictActions (gs:GameState) =
                 ([DeclareConflict (gs.ActivePlayer, ct, ring, prov) ]
                 @ revealProvince prov)
             >+> playerActions chooseAttackers
-            >+> playerActions conflictActions)
+            >+> Actions.actionWindow FirstPlayer // another pre-conflict
+            >+> playerActions declareAttackActions)
     let passAction = 
         let cnt = 
             if gs.OtherPlayerState.DeclaredConflicts.Length = 2 then 
                 act passConflict 
-            else act passConflict >+> playerActions conflictActions
+            else 
+                act passConflict 
+                >+> Actions.actionWindow FirstPlayer // another pre-conflict
+                >+> playerActions declareAttackActions
         pass gs.ActivePlayer cnt
     let actions = 
         [for ct in (availableConflicts ps) do
@@ -151,7 +154,8 @@ let rec conflictActions (gs:GameState) =
   
 let gotoConflictPhase nextPhase =
     change (ChangePhase GamePhase.Conflict)
-    >+> playerActions conflictActions
+    >+> Actions.actionWindow FirstPlayer // pre-combat
+    >+> playerActions declareAttackActions
     >+!> nextPhase
 
 

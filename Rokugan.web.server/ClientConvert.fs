@@ -22,9 +22,9 @@ let toClientGameState (gs : GameState) =
     ActivePlayer = gs.ActivePlayer
     AttackState = gs.AttackState }
 
-let toClientPlayerActions (actions : PlayerAction list) = 
+let toClientPlayerActions (actions : PlayerAction<'a, 'b, 'c> list) = 
     actions
     |> List.mapi (fun i a -> 
         { Number = i
-          Type = a.Type
+          Type = a.Type.ToString()
           Player = a.Player.ToString()})    

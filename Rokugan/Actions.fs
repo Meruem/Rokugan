@@ -32,8 +32,15 @@ let rec actions gs =
         passAction :: (getAllPlayableActions gs.ActivePlayer gs)
     
 
-let actionWindow gs =
+let actionWindow startingPlayer =
     changes [CleanPassFlags]
+    >+> act (fun gs -> 
+        match startingPlayer with 
+        | ActionWindowStarts.FirstPlayer -> [SetActivePlayer gs.FirstPlayer] 
+        | Defender ->
+            match gs.AttackState with 
+            | Some state -> [SetActivePlayer state.Defender] 
+            | None -> failwith "called action window with 'Defender' but outside combat" )
     >+> playerActions actions
 
 let onActionPass player gs =

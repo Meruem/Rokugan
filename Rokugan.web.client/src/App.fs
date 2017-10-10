@@ -37,17 +37,17 @@ type ClientModel =
   { Game : ServerGameModel
     Client : ClientState }
 
-let (|PlayerActionOnCard|_|) (action:ServerPlayerAction) =
-    match action.Type with
-    | PlayCharacter c -> Some (action, c)
-    | DeclareAttack (ct,r,c) -> Some (action, c) 
-    | ChooseAttacker c -> Some (action, c)
-    | ChooseDefender c -> Some (action, c)
-    | ChooseProvince c -> Some (action, c)
-    | ChooseCharacter (c, des) -> Some (action, c)
-    | ChooseCard (c, des) -> Some (action, c)
-    | ChooseDynastyToDiscard c -> Some (action, c)
-    | _ -> None
+// let (|PlayerActionOnCard|_|) (action:ServerPlayerAction) =
+//     match action.Type with
+//     | PlayCharacter c -> Some (action, c)
+//     | DeclareAttack (ct,r,c) -> Some (action, c) 
+//     | ChooseAttacker c -> Some (action, c)
+//     | ChooseDefender c -> Some (action, c)
+//     | ChooseProvince c -> Some (action, c)
+//     | ChooseCharacter (c, des) -> Some (action, c)
+//     | ChooseCard (c, des) -> Some (action, c)
+//     | ChooseDynastyToDiscard c -> Some (action, c)
+//     | _ -> None
 
 let cardClientState clientState (card:Card) =
     match clientState.Cards |> List.tryFind (fun c -> c.Card.Id = card.Id) with
@@ -96,7 +96,7 @@ let actionsView actions dispatch =
 
 let cardView (actions : ServerPlayerAction list) (card:CardClientState) dispatch =
     let (Title title) = card.Card.Title
-    let cardAction action = match action with | PlayerActionOnCard (a,c) -> card.Card.Id = c.Id  | _ -> false
+    let cardAction action = false // match action with | PlayerActionOnCard (a,c) -> card.Card.Id = c.Id  | _ -> false
     let text = sprintf "Card: %s [%d]" title card.Card.Fate
     let el =
         match actions |> List.tryFind cardAction with

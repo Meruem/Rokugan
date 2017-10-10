@@ -65,22 +65,6 @@ type ServerPlayerState = {
             CardsInPlay = []
             DeclaredConflicts = [] }
 
-type PlayerActionType = 
-    | Pass
-    | PlayCharacter of Card
-    | ActivateAction
-    | Choicei of int * string
-    | Choice of string * string
-    | YesNoChoice of YesNo * string
-    | DeclareAttack of ConflictType * Ring * Card 
-    | ChooseAttacker of Card 
-    | ChooseDefender of Card
-    | ChooseProvince of Card
-    | ChooseCharacter of Card * string
-    | ChooseCard of Card * string
-    | ChooseDynastyToDiscard of Card
-    | Test
-
 type ServerGameState = 
   { TurnNumber : int
     FirstPlayer : Player
@@ -103,7 +87,7 @@ type ServerGameState =
 
 type ServerPlayerAction = { 
     Number : int
-    Type : PlayerActionType
+    Type : string
     Player : string }
 
 type ServerGameModel = {

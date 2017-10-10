@@ -56,6 +56,8 @@ let updateState command (gm:GameModel<GameState, Command, PlayerActionType>) =
             | NextRound -> send <| onNextRound
             | EndGame status -> send <| onEndGame status
             | ActionPass player -> send <| onActionPass player
+            | SetActivePlayer player -> send <| onSetActivePlayer player
+            | CleanPassFlags -> send <| onCleanPassFlags
     ({ gm with Log = command :: gm.Log; State = gs2 }, newcommands)
 
 let rec update t updateState (gm:GameModel<'gs, 'cmd, 'pa>) =
@@ -136,6 +138,7 @@ let startGame playerConfig1 playerConfig2 firstPlayer =
             ActivePlayer = firstPlayer
             GamePhase = Dynasty
             FirstPlayer = firstPlayer
+            CardActions = []
             Player1State = initializePlayerState playerConfig1 Player1
             Player2State = initializePlayerState playerConfig2 Player2 }
         |> addSecondPlayer1Fate

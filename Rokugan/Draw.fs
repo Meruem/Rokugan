@@ -15,12 +15,12 @@ let applyBids gs =
      DrawConflictCard (Player1, pl1Bid)
      DrawConflictCard (Player2, pl2Bid) ]
 
-let rec drawPhaseActions gs =
+let rec bidActions gs =
     let pl1Bid = gs.Player1State.Bid.IsSome
     let pl2Bid = gs.Player2State.Bid.IsSome
     if pl1Bid && pl2Bid then []
     else
-        let next = if (not pl1Bid) && (not pl2Bid) then Some drawPhaseActions else None
+        let next = if (not pl1Bid) && (not pl2Bid) then Some bidActions else None
         let l1 = if pl1Bid then [] else choicei Player1 "Player 1 bid" 1 5 (fun i -> change (Bid (Player1, i)) >+> playerActionsM next) 
         let l2 = if pl2Bid then [] else choicei Player2 "Player 2 bid" 1 5 (fun i -> change (Bid (Player2, i)) >+> playerActionsM next)
         l1 @ l2
@@ -29,8 +29,9 @@ let gotoDrawPhase nextPhase =
     changes
         [ChangePhase Draw
          CleanBids]
-    >+> playerActions drawPhaseActions
+    >+> playerActions bidActions
     >+> act applyBids
+    >+> Actions.actionWindow FirstPlayer
     >+!> nextPhase
 
 let onApplyBids gs = (gs, applyBids gs)

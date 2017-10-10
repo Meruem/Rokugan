@@ -23,7 +23,7 @@ let yesNo player desc getTransform =
 
 let transform commands next cont = {Commands = commands; NextActions = next; Continuation = cont}
 
-let none = transform None None []
+let inline none () = transform None None []
 
 let playerActionsM actions = transform None actions []
 let playerActions actions = playerActionsM (Some actions)

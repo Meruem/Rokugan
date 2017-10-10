@@ -18,6 +18,8 @@ type CardSet = Core
 //defines when the flag or trigger is cleared
 type Lifetime = Round | Phase | Game | Once
 
+type ActionWindowStarts = FirstPlayer | Defender
+
 type Transform<'gs, 'cmd, 'pa> = 
   { Commands : ('gs -> 'cmd list) option 
     NextActions : ('gs -> PlayerAction<'gs, 'cmd, 'pa> list) option
@@ -43,27 +45,6 @@ type GameModel<'gs, 'cmd, 'pa> =
     Triggers : GameTrigger<'gs, 'cmd, 'pa> list
     Continuations : (Unit -> Transform<'gs, 'cmd, 'pa>) list
     Log : 'cmd list }
-
-[<StructuredFormatDisplayAttribute("Card {Id} [{Title}] in {Zone} (+{Fate})")>]
-type Card = {
-    Id : int
-    Title : CardTitle
-    Owner : Player
-    States : CardState Set
-    Fate : int 
-    Zone : ZoneName }    
-
-
-
-type AttackState =
-  { Type : ConflictType
-    Attacker : Player
-    Ring : Ring
-    Province : Card
-    Attackers : Card list
-    Defenders : Card list }
-    with
-        member this.Defender = match this.Attacker with | Player1 -> Player2 | Player2 -> Player1   
 
 type Deck = 
     Deck of Card list
@@ -111,6 +92,7 @@ type Command =
     | EndGame of GameEnd
     | ActionPass of Player
     | CleanPassFlags
+    | SetActivePlayer of Player
 
 type PlayerFlag =
   { Lifetime : Lifetime

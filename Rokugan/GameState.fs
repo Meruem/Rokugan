@@ -72,7 +72,10 @@ let removeFateFromRing ring (gs:GameState) =
 let honor = changeCard Card.honor
 let dishonor = changeCard Card.dishonor
 
-let nextRound (gs:GameState) = {gs with TurnNumber = gs.TurnNumber + 1}
+let nextRound (gs:GameState) = 
+    {gs with 
+        TurnNumber = gs.TurnNumber + 1
+        FirstPlayer = otherPlayer gs.FirstPlayer}
 
 let drawDynasty position player gs = 
     let ps' = drawCardFromDynastyDeck position (playerState player gs)
@@ -119,3 +122,5 @@ let onBreakProvince = changeCard Card.breakProvince
 let onDiscardCardFromPlay = changeCard (Card.move DynastyDiscard) 
 
 let onNextRound = nextRound
+
+let onSetActivePlayer player (gs:GameState) = { gs with ActivePlayer = player }
