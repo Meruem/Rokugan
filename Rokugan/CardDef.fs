@@ -28,3 +28,7 @@ let (|Character|_|) cardDef =
         | ConflictCardDef.Character char -> Some char
         | _ -> None
     | _ -> None
+
+let actions cardDef = 
+    cardDef.Ability 
+    |> List.choose (fun a -> match a with | Action act -> Some act | _ -> None)
