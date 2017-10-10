@@ -13,21 +13,21 @@ let coreCards = [
             PoliticalSkill = Some 1
             Glory = 2
             Traits = [Bushi]
-            Set = CardSet.Core
-            Ability = Ability "Pride and some stuff" })
+            Set = CardSet.Core})
+        Ability = []     //Ability "Pride and some stuff" })
     }
 
     {
         Title = Title "Adept of the Waves" 
         Spec = CardSpec.Dynasty (DynastyCardDef.Character {
-        Cost = 2
-        Clan = Clan.Phoenix
-        MilitarySkill = Some 2
-        PoliticalSkill = Some 2
-        Glory = 2
-        Traits = [Shugenja; Water]
-        Set = CardSet.Core
-        Ability = Ability "Gives covert"})
+            Cost = 2
+            Clan = Clan.Phoenix
+            MilitarySkill = Some 2
+            PoliticalSkill = Some 2
+            Glory = 2
+            Traits = [Shugenja; Water]
+            Set = CardSet.Core}) //Ability "Gives covert"})
+        Ability = []
     }
         
     {
@@ -36,16 +36,16 @@ let coreCards = [
             Clan = Clan.Crane
             BonusStrength = 1
             Traits = [Academy]
-            Set = CardSet.Core
-            Ability = Ability "Play top conflict card"})
+            Set = CardSet.Core}) // Ability "Play top conflict card"})
+        Ability = []            
     }
 
     {
         Title = Title "Admit Defeat"
         Spec = CardSpec.Conflict (ConflictCardDef.Event {
             Clan = Clan.Crane
-            Cost = 1
-            Ability = Ability "Bow character or something" })
+            Cost = 1 }) //Ability "Bow character or something" })
+        Ability = []            
     }
 
     {
@@ -55,8 +55,8 @@ let coreCards = [
             Cost = 1
             BonusMilitary = 2
             BonusPolitical = 0
-            Traits = [Weapon]
-            Ability = Ability "Ancestral restricted"})
+            Traits = [Weapon]}) //Ability "Ancestral restricted"})
+        Ability = []    
     }
 
     {
@@ -64,8 +64,8 @@ let coreCards = [
         Spec = CardSpec.Province {
             Strength = 4
             Clan = Clan.Crab
-            Element = Earth
-            Ability = Ability "blabla" }
+            Element = Earth}
+        Ability = []    
     }
 
     {
@@ -75,7 +75,7 @@ let coreCards = [
             BonusStrength = 0
             StartingHonor = 10
             FatePerRound = 7
-            Influence = 10
-            Ability = Ability "sda" }
+            Influence = 10 }
+        Ability = []    
     }
 ]
