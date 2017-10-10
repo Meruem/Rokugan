@@ -18,10 +18,6 @@ type CardSet = Core
 //defines when the flag or trigger is cleared
 type Lifetime = Round | Phase | Game | Once
 
-type CardAbility = {
-    Spec : string//CardAbilitySpec
-}
-
 type Transform<'gs, 'cmd, 'pa> = 
   { Commands : ('gs -> 'cmd list) option 
     NextActions : ('gs -> PlayerAction<'gs, 'cmd, 'pa> list) option
@@ -48,7 +44,6 @@ type GameModel<'gs, 'cmd, 'pa> =
     Continuations : (Unit -> Transform<'gs, 'cmd, 'pa>) list
     Log : 'cmd list }
 
-
 [<StructuredFormatDisplayAttribute("Card {Id} [{Title}] in {Zone} (+{Fate})")>]
 type Card = {
     Id : int
@@ -56,24 +51,9 @@ type Card = {
     Owner : Player
     States : CardState Set
     Fate : int 
-    Zone : ZoneName
-    Abilities : CardAbility list }    
+    Zone : ZoneName }    
 
-type PlayerActionType = 
-    | Pass
-    | PlayCharacter of Card
-    | ActivateAction
-    | Choicei of int * string
-    | Choice of string * string
-    | YesNoChoice of YesNo * string
-    | DeclareAttack of ConflictType * Ring * Card 
-    | ChooseAttacker of Card 
-    | ChooseDefender of Card
-    | ChooseProvince of Card
-    | ChooseCharacter of Card * string
-    | ChooseCard of Card * string
-    | ChooseDynastyToDiscard of Card
-    | Test
+
 
 type AttackState =
   { Type : ConflictType
@@ -94,8 +74,6 @@ type Deck =
         static member Empty = Deck []
 
 type PlayerFlagEnum = Passed
-
-
 
 type Command = 
     | ChangePhase of GamePhase
@@ -188,6 +166,7 @@ type GameState =
     Rings : Ring list
     GamePhase : GamePhase
     ActivePlayer : Player
+    CardActions : CardAction list
     AttackState : AttackState option }
     with
         member this.ActivePlayerState = 
@@ -213,17 +192,37 @@ type GameState =
             Rings = []
             GamePhase = GamePhase.Dynasty
             ActivePlayer = Player1
+            CardActions = []
             AttackState = None }
-         
+and CardAction = {
+    Spec : CardActionDef
+    Card : Card
+    LastUsed : (GamePhase * int) option }         
 
-type CardActionDef = {
+and CardActionDef = {
     Name : string
-    Condition : GameState -> bool
-    Effect : Transform<GameState, Command, PlayerActionType>  }
+    Condition : Card -> GameState -> bool
+    Effect : Card -> Transform<GameState, Command, PlayerActionType>  }
 
-type AbilityDef = 
+and AbilityDef = 
     | Action of CardActionDef 
     | Somethingelse
+
+and PlayerActionType = 
+    | Pass
+    | PlayCharacter of Card
+    | Choicei of int * string
+    | Choice of string * string
+    | YesNoChoice of YesNo * string
+    | DeclareAttack of ConflictType * Ring * Card 
+    | ChooseAttacker of Card 
+    | ChooseDefender of Card
+    | ChooseProvince of Card
+    | ChooseCharacter of Card * string
+    | ChooseCard of Card * string
+    | ChooseDynastyToDiscard of Card
+    | ActivateAction of CardAction
+    | Test    
 
 type CharacterCardDef = {
     Cost : int
