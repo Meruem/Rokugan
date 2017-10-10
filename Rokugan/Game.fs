@@ -18,8 +18,8 @@ let cont = id
 let onEndGame status (gs:GameState) =
     {gs with GamePhase = GamePhase.End status}
 
-let updateState command (gm:GameModel) = 
-    let (gs2, newcommands : Command list) = 
+let updateState command (gm:GameModel<GameState, Command, PlayerActionType>) = 
+    let (gs2, newcommands) = 
         gm.State |>
             match command with
             | ChangePhase p -> send <| onChangePhase p
@@ -58,7 +58,7 @@ let updateState command (gm:GameModel) =
             | ActionPass player -> send <| onActionPass player
     ({ gm with Log = command :: gm.Log; State = gs2 }, newcommands)
 
-let rec update (t:Transform) (gm:GameModel) =
+let rec update t updateState (gm:GameModel<'gs, 'cmd, 'pa>) =
     let cmds = 
         match t.Commands with
         | Some getCommands -> getCommands gm.State
@@ -70,18 +70,18 @@ let rec update (t:Transform) (gm:GameModel) =
         // update can return additional commands so add them to rest of commands
         let nextTransform = {t with Commands = Some (fun _ -> xs) }
         let trgs = 
-            gm2.State.Triggers 
+            gm2.Triggers 
             |> List.filter (fun t -> t.Condition cmd gm2.State) //gm.State.Triggers.TryFind (cmd.ToString())
         match trgs with
-        | [] -> update nextTransform gm2
+        | [] -> update nextTransform updateState gm2
         | trigger :: rest -> 
             let cnt2 = rest |> List.map (fun trg -> (fun () -> trg.Transform)) // other triggers
             let cnt3 = cnt2 @ [fun () -> nextTransform] @ gm.Continuations // push other triggers first, then current context and then remaining continuations
             let gm3 = 
                 if trigger.Lifetime = Once then 
-                    { gm2 with State = gm2.State |> Triggers.removeTrigger trigger.Name}
+                    gm2 |> Triggers.removeTrigger trigger.Name
                 else gm2 
-            update trigger.Transform  {gm3 with Continuations = cnt3} 
+            update trigger.Transform  updateState {gm3 with Continuations = cnt3} 
     | [] -> 
         // no more commands
         // if there is continuation -> push tu stack
@@ -89,13 +89,20 @@ let rec update (t:Transform) (gm:GameModel) =
             match t.Continuation with
             | _::_ -> {gm with Continuations = t.Continuation @ gm.Continuations}
             | [] -> gm
-        // if not action is defined pop continuation    
+        // if not action is defined pop continuation 
+        let updateContinuation gm =
+            match gm.Continuations with
+            | [] -> gm
+            | cnt :: rest -> update (cnt()) updateState {gm with Continuations = rest} 
+
         match t.NextActions with
-        | Some getactions -> {gm' with Actions = getactions gm'.State}
+        | Some getactions -> 
+            let newActions = getactions gm'.State
+            match newActions with
+            | _ :: _ -> {gm' with Actions = newActions}
+            | [] -> gm' |> updateContinuation  // empty player action -> pop continuation
         | None -> 
-            match gm'.Continuations with
-            | cnt :: rest -> update (cnt()) {gm' with Continuations = rest} 
-            | [] -> failwith "expected continuation"
+            gm' |> updateContinuation
 
 let rec gotoNextPhase phase =
     let nextPhaseLazy phase = fun () -> gotoNextPhase phase
@@ -105,13 +112,13 @@ let rec gotoNextPhase phase =
     | GamePhase.Conflict -> Conflict.gotoConflictPhase (nextPhaseLazy Fate)
     | GamePhase.Fate -> Fate.gotoFatePhase (nextPhaseLazy Regroup)
     | GamePhase.Regroup -> Regroup.gotoRegroupPhase (nextPhaseLazy Dynasty)
-    | _ -> none
+    | _ -> transform None None []
 
-let playAction n (gm: GameModel) =
+let playAction n (gm:GameModel<GameState, Command, PlayerActionType>) =
     if n >= gm.Actions.Length then gm
     else
         let action = gm.Actions.[n]
-        update action.OnExecute gm
+        update action.OnExecute updateState gm
 
 let createStartingRings = 
   [ Ring.createRing Element.Fire
@@ -129,14 +136,14 @@ let startGame playerConfig1 playerConfig2 firstPlayer =
             ActivePlayer = firstPlayer
             GamePhase = Dynasty
             FirstPlayer = firstPlayer
-            Triggers = []
             Player1State = initializePlayerState playerConfig1 Player1
             Player2State = initializePlayerState playerConfig2 Player2 }
         |> addSecondPlayer1Fate
-        |> Triggers.addWinConditionsTriggers
     let gm =
         { State = gs 
           Actions = [] 
           Continuations = []
+          Triggers = []
           Log = []}
-    update (gotoNextPhase Dynasty) gm 
+        |> Triggers.addWinConditionsTriggers
+    update (gotoNextPhase Dynasty) updateState gm 
