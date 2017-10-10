@@ -15,76 +15,75 @@ type Clan =
 type Trait =  Bushi | Shugenja | Water | Weapon | Academy
 type CardSet = Core
 
-type Ability = Ability of string 
+//defines when the flag or trigger is cleared
+type Lifetime = Round | Phase | Game | Once
 
-type CharacterCardDef = {
-    Cost : int
-    Clan : Clan
-    MilitarySkill : int option
-    PoliticalSkill : int option
-    Glory : int
-    Traits : Trait list
-    Set : CardSet
-    Ability : Ability }
+type CardAbility = {
+    Spec : string//CardAbilitySpec
+}
 
-type HoldingCardDef = {
-    Clan : Clan
-    BonusStrength : int     
-    Traits : Trait list   
-    Ability : Ability
-    Set : CardSet }
+type Transform<'gs, 'cmd, 'pa> = 
+  { Commands : ('gs -> 'cmd list) option 
+    NextActions : ('gs -> PlayerAction<'gs, 'cmd, 'pa> list) option
+    Continuation : (Unit -> Transform<'gs, 'cmd, 'pa>) list }    
 
-type DynastyCardDef = 
-    | Character of CharacterCardDef
-    | Holding of HoldingCardDef
+and 
+    [<StructuredFormatDisplayAttribute("Action ({Player}): {Type}")>]
+    PlayerAction<'gs, 'cmd, 'pa> = 
+      { Type : 'pa
+        Player : Player
+        OnExecute : Transform<'gs, 'cmd, 'pa> }
 
-type EventCardDef = {
-    Clan : Clan
-    Cost : int
-    Ability : Ability }
+[<StructuredFormatDisplayAttribute("Trigger: {Name}")>]
+type GameTrigger<'gs, 'cmd, 'pa> = 
+      { Name : string
+        Lifetime : Lifetime
+        Condition : 'cmd -> 'gs -> bool
+        Transform : Transform<'gs, 'cmd, 'pa>}
 
-type AttachmentCardDef = {
-    Cost : int
-    Clan : Clan
-    BonusMilitary : int 
-    BonusPolitical : int 
-    Traits : Trait list
-    Ability : Ability }
-
-type StrongholdCardDef = {
-    Clan : Clan
-    BonusStrength : int
-    StartingHonor : int
-    FatePerRound : int
-    Influence : int
-    Ability : Ability }
+type GameModel<'gs, 'cmd, 'pa> =
+  { State: 'gs
+    Actions : PlayerAction<'gs, 'cmd, 'pa> list 
+    Triggers : GameTrigger<'gs, 'cmd, 'pa> list
+    Continuations : (Unit -> Transform<'gs, 'cmd, 'pa>) list
+    Log : 'cmd list }
 
 
-type ConflictCardDef = 
-    | Character of CharacterCardDef
-    | Event of EventCardDef
-    | Attachment of AttachmentCardDef
-
-type ProvinceCardDef = {
-    Strength : int
-    Clan : Clan
-    Element : Element
-    Ability : Ability }
-
-type RoleCardDef = {
-    Ability : Ability
-    Traits : Trait list }
-
-type CardSpec = 
-    | Dynasty of DynastyCardDef
-    | Conflict of ConflictCardDef
-    | Stronghold of StrongholdCardDef
-    | Province of ProvinceCardDef
-    | Role of RoleCardDef
-
-type CardDef = {
+[<StructuredFormatDisplayAttribute("Card {Id} [{Title}] in {Zone} (+{Fate})")>]
+type Card = {
+    Id : int
     Title : CardTitle
-    Spec : CardSpec }
+    Owner : Player
+    States : CardState Set
+    Fate : int 
+    Zone : ZoneName
+    Abilities : CardAbility list }    
+
+type PlayerActionType = 
+    | Pass
+    | PlayCharacter of Card
+    | ActivateAction
+    | Choicei of int * string
+    | Choice of string * string
+    | YesNoChoice of YesNo * string
+    | DeclareAttack of ConflictType * Ring * Card 
+    | ChooseAttacker of Card 
+    | ChooseDefender of Card
+    | ChooseProvince of Card
+    | ChooseCharacter of Card * string
+    | ChooseCard of Card * string
+    | ChooseDynastyToDiscard of Card
+    | Test
+
+type AttackState =
+  { Type : ConflictType
+    Attacker : Player
+    Ring : Ring
+    Province : Card
+    Attackers : Card list
+    Defenders : Card list }
+    with
+        member this.Defender = match this.Attacker with | Player1 -> Player2 | Player2 -> Player1   
 
 type Deck = 
     Deck of Card list
@@ -96,8 +95,6 @@ type Deck =
 
 type PlayerFlagEnum = Passed
 
-//defines when the flag or trigger is cleared
-type Lifetime = Round | Phase | Game | Once
 
 
 type Command = 
@@ -135,6 +132,7 @@ type Command =
     | NextRound
     | EndGame of GameEnd
     | ActionPass of Player
+    | CleanPassFlags
 
 type PlayerFlag =
   { Lifetime : Lifetime
@@ -190,7 +188,6 @@ type GameState =
     Rings : Ring list
     GamePhase : GamePhase
     ActivePlayer : Player
-    Triggers : GameTrigger list
     AttackState : AttackState option }
     with
         member this.ActivePlayerState = 
@@ -216,36 +213,86 @@ type GameState =
             Rings = []
             GamePhase = GamePhase.Dynasty
             ActivePlayer = Player1
-            Triggers = []
             AttackState = None }
          
-and 
-    [<StructuredFormatDisplayAttribute("Action ({Player}): {Type}")>]
-    PlayerAction = 
-      { Type : PlayerActionType
-        Player : Player
-        OnExecute : Transform }
-and Transform = 
-  { Commands : (GameState -> Command list) option 
-    NextActions : (GameState -> PlayerAction list) option
-    Continuation : (Unit -> Transform) list}    
 
-and
-    [<StructuredFormatDisplayAttribute("Trigger: {Name}")>]
-    GameTrigger = 
-      { Name : string
-        Lifetime : Lifetime
-        Condition : Command -> GameState -> bool
-        Transform : Transform}
+type CardActionDef = {
+    Name : string
+    Condition : GameState -> bool
+    Effect : Transform<GameState, Command, PlayerActionType>  }
+
+type AbilityDef = 
+    | Action of CardActionDef 
+    | Somethingelse
+
+type CharacterCardDef = {
+    Cost : int
+    Clan : Clan
+    MilitarySkill : int option
+    PoliticalSkill : int option
+    Glory : int
+    Traits : Trait list
+    Set : CardSet}
+
+type HoldingCardDef = {
+    Clan : Clan
+    BonusStrength : int     
+    Traits : Trait list   
+    Set : CardSet }
+
+type DynastyCardDef = 
+    | Character of CharacterCardDef
+    | Holding of HoldingCardDef
+
+type EventCardDef = {
+    Clan : Clan
+    Cost : int }
+
+type AttachmentCardDef = {
+    Cost : int
+    Clan : Clan
+    BonusMilitary : int 
+    BonusPolitical : int 
+    Traits : Trait list }
+
+type StrongholdCardDef = {
+    Clan : Clan
+    BonusStrength : int
+    StartingHonor : int
+    FatePerRound : int
+    Influence : int }
+
+
+type ConflictCardDef = 
+    | Character of CharacterCardDef
+    | Event of EventCardDef
+    | Attachment of AttachmentCardDef
+
+type ProvinceCardDef = {
+    Strength : int
+    Clan : Clan
+    Element : Element }
+
+type RoleCardDef = {
+    Abilities : AbilityDef list
+    Traits : Trait list }
+
+type CardSpec = 
+    | Dynasty of DynastyCardDef
+    | Conflict of ConflictCardDef
+    | Stronghold of StrongholdCardDef
+    | Province of ProvinceCardDef
+    | Role of RoleCardDef
+
+type CardDef = {
+    Title : CardTitle
+    Spec : CardSpec 
+    Ability : AbilityDef list }
+
 
 type GameStateMod = GameState -> GameState
 
 
-type GameModel =
-  { State: GameState
-    Actions : PlayerAction list 
-    Continuations : (Unit -> Transform) list
-    Log : Command list }
 
 type InitialPlayerConfig = {
     ConflictDeck : CardTitle list
