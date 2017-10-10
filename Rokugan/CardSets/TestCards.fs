@@ -12,8 +12,8 @@ let ``Generic 1/1`` =
             PoliticalSkill = Some 1
             Glory = 0
             Traits = []
-            Set = CardSet.Core
-            Ability = Ability "none" })
+            Set = CardSet.Core })
+        Ability = []    
     }
 
 let ``Generic 2/2`` =
@@ -25,8 +25,8 @@ let ``Generic 2/2`` =
             PoliticalSkill = Some 2
             Glory = 0
             Traits = []
-            Set = CardSet.Core
-            Ability = Ability "none" })
+            Set = CardSet.Core })
+        Ability = []    
     }
         
 let ``Holding`` =
@@ -36,8 +36,8 @@ let ``Holding`` =
             Clan = Clan.Crane
             BonusStrength = 1
             Traits = []
-            Set = CardSet.Core
-            Ability = Ability "none"})
+            Set = CardSet.Core })
+        Ability = []    
     }
 
 let ``Event`` =
@@ -45,8 +45,8 @@ let ``Event`` =
         Title = Title "Event"
         Spec = CardSpec.Conflict (ConflictCardDef.Event {
             Clan = Clan.Crane
-            Cost = 1
-            Ability = Ability "none" })
+            Cost = 1 })
+        Ability = []    
     }
 
 let ``Attachment`` =
@@ -57,8 +57,8 @@ let ``Attachment`` =
             Cost = 1
             BonusMilitary = 2
             BonusPolitical = 0
-            Traits = [Weapon]
-            Ability = Ability "none"})
+            Traits = [Weapon] })
+        Ability = []    
     }
 
 let ``Province str 4``=
@@ -67,8 +67,8 @@ let ``Province str 4``=
         Spec = CardSpec.Province {
             Strength = 4
             Clan = Clan.Crab
-            Element = Earth
-            Ability = Ability "none" }
+            Element = Earth }
+        Ability =[] 
     }
 
 let ``Stronghold`` =
@@ -79,8 +79,8 @@ let ``Stronghold`` =
             BonusStrength = 0
             StartingHonor = 10
             FatePerRound = 7
-            Influence = 10
-            Ability = Ability "none" }
+            Influence = 10 }
+        Ability = []    
     }
 
 let testCards = 
