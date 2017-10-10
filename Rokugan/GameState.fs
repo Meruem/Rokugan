@@ -64,6 +64,8 @@ let cleanPhaseFlags (gs:GameState) =
         Player1State = cleanPhaseFlags gs.Player1State
         Player2State = cleanPhaseFlags gs.Player2State }
 
+let cleanPass gs = gs |> changeBothPlayerState PlayerState.cleanPass
+
 let removeFateFromRing ring (gs:GameState) =
     { gs with Rings = gs.Rings |> Utils.replaceListElement { ring with Fate = 0 } (fun r -> r.Element = ring.Element) }
 
