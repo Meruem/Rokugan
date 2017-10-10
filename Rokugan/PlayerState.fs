@@ -17,6 +17,8 @@ let hasPassed = hasPlayerFlag PlayerFlagEnum.Passed
 
 let passPlayer ps = {ps with Flags = { Lifetime = Phase; Flag = Passed } :: ps.Flags}
 
+let cleanPass ps = { ps with Flags = ps.Flags |> List.filter (fun f -> f.Flag <> Passed)}
+
 let addHonor honor (playerState:PlayerState) = 
     { playerState with Honor = playerState.Honor + honor}
 
