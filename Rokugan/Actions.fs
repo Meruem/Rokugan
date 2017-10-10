@@ -10,15 +10,14 @@ open CardRepository
 let getAllPlayableActions player gs  =
     let ps = gs |> playerState player 
     let actions =
-        [for card in ps.CardsInPlayList do
-            let cardDef = repository.GetCard card.Title
-            for action in CardDef.actions cardDef do
-                if action.Condition gs then yield action]
+        [for action in gs.CardActions do
+            if action.Spec.Condition action.Card gs then yield action]
     
-
-    [{ Type =  PlayerActionType.Test
-       Player = player
-       OnExecute = none ()}]
+    actions 
+    |> List.map (fun action ->
+        { Type =  PlayerActionType.ActivateAction action
+          Player = player
+          OnExecute = action.Spec.Effect action.Card})
 
 let rec actions gs =
     if hasPassed gs.Player1State && hasPassed gs.Player2State then []
