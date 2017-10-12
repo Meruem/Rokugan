@@ -93,6 +93,8 @@ type Command =
     | ActionPass of Player
     | CleanPassFlags
     | SetActivePlayer of Player
+    | SetFirstPlayerActive
+    | Debug of string
 
 type PlayerFlag =
   { Lifetime : Lifetime
@@ -265,14 +267,20 @@ type CardSpec =
     | Province of ProvinceCardDef
     | Role of RoleCardDef
 
+type CardTriggerDef =
+      { Name : string
+        Lifetime : Lifetime
+        Condition : Card -> Command -> GameState -> bool
+        Transform : Card -> Transform<GameState, Command, PlayerActionType>}
+
 type CardDef = {
     Title : CardTitle
     Spec : CardSpec 
-    Ability : AbilityDef list }
+    Ability : AbilityDef list 
+    Triggers : CardTriggerDef list }
 
 
 type GameStateMod = GameState -> GameState
-
 
 
 type InitialPlayerConfig = {
