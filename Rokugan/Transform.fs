@@ -21,17 +21,17 @@ let yesNo player desc getTransform =
       action player (YesNoChoice (No, desc)) (getTransform No)]
 
 
-let transform commands next cont = {Commands = commands; NextActions = next; Continuation = cont}
+let transform commands next cont prompt = {Commands = commands; NextActions = next; Continuation = cont; ActionPrompt = prompt}
 
-let inline none () = transform None None []
+let inline none () = transform None None [] ""
 
-let playerActionsM actions = transform None actions []
-let playerActions actions = playerActionsM (Some actions)
+let playerActionsM actions prompt = transform None actions [] prompt
+let playerActions actions prompt = playerActionsM (Some actions) prompt
 
-let changes commands = transform (Some (fun _ -> commands)) None []
+let changes commands = transform (Some (fun _ -> commands)) None [] ""
 let change command = changes [command]
 
-let act commands = transform (Some commands) None []
+let act commands = transform (Some commands) None [] ""
 
 // let rec reduce tr = 
 //     if tr.NextActions.IsNone then
@@ -58,7 +58,7 @@ let rec addContinuation t cont =
 
 let addTransforms t1 t2 = 
     if t1.NextActions.IsNone && t2.Commands.IsNone && t1.Continuation.IsEmpty then
-        {Commands = t1.Commands; NextActions = t2.NextActions; Continuation = t2.Continuation}
+        {Commands = t1.Commands; NextActions = t2.NextActions; Continuation = t2.Continuation; ActionPrompt = t2.ActionPrompt}
     else
         addContinuation t1 (fun () -> t2)        
 

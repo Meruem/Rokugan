@@ -26,10 +26,10 @@ let resolveFireRing attacker =
         changes [Dishonor char] 
     let effectChosen effect =
         if effect = honor then
-            playerActions (chooseCharacterInPlay attacker "Honor character" honorChar)
+            playerActions (chooseCharacterInPlay attacker "Honor character" honorChar) "Choose character to honor: "
         else 
-            playerActions (chooseCharacterInPlay attacker "Dishonor character" dishonorChar)
-    playerActions (fun _ -> choice attacker "Fire ring effect" [honor; dishonor] effectChosen)
+            playerActions (chooseCharacterInPlay attacker "Dishonor character" dishonorChar) "Choose character to dishonor: "
+    playerActions (fun _ -> choice attacker "Fire ring effect" [honor; dishonor] effectChosen) "Choose honor or dishonor: "
 
 let resolveAirRing attacker = 
     let plus2Honor = "+2 Honor"
@@ -41,7 +41,7 @@ let resolveAirRing attacker =
             else 
                 [AddHonor (attacker, 1)
                  AddHonor (otherPlayer attacker, -1)])
-    playerActions (fun _ -> choice attacker "Air ring effect" [plus2Honor; take1Honor] effectChosen)
+    playerActions (fun _ -> choice attacker "Air ring effect" [plus2Honor; take1Honor] effectChosen) "Choose +1/-1 or +2 honor: "
 
 let resolveEarthRing attacker  =
     changes
@@ -51,7 +51,7 @@ let resolveEarthRing attacker  =
 let resolveVoidRing attacker =
     let remove1fate card = 
         changes [AddFateOnCard (card, -1)] 
-    playerActions (chooseCharacter attacker Card.hasFate "Remove 1 fate from character" remove1fate)
+    playerActions (chooseCharacter attacker Card.hasFate "Remove 1 fate from character" remove1fate) "Choose character to remove 1 fate: "
 
 let resolveWaterRing attacker  =
     let bow = "Bow character without fate"
@@ -62,9 +62,9 @@ let resolveWaterRing attacker  =
         changes [Ready char]
     let effectChosen effect =
         if effect = bow then
-            playerActions (chooseCharacter attacker (Card.hasFate >> not) "Bow character" bowChar)
-        else playerActions (chooseCharacterInPlay attacker "Ready character" readyChar)
-    playerActions (fun _ -> choice attacker "Water ring effect" [bow; ready] effectChosen)
+            playerActions (chooseCharacter attacker (Card.hasFate >> not) "Bow character" bowChar) "Choose character to bow: "
+        else playerActions (chooseCharacterInPlay attacker "Ready character" readyChar) "Choose character to ready: "
+    playerActions (fun _ -> choice attacker "Water ring effect" [bow; ready] effectChosen) "Choose ready or bow: "
 
 let addFate amount (ring:Ring) = {ring with Fate = ring.Fate + amount}
 

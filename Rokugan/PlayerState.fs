@@ -116,7 +116,7 @@ let changePlayerCards cards stateChange (ps:PlayerState) =
 
 let revealProvince province = changePlayerCard Card.revealProvince province
 
-let changeZone zone card ps = 
+let changeCardZone zone card ps = 
     let card2 = ps.CardsInPlay.Item card.Id
     let card3 = {card2 with Zone = zone}
     { ps with CardsInPlay = ps.CardsInPlay |> Map.add card3.Id card3 } 

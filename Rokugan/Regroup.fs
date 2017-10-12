@@ -26,7 +26,7 @@ let gotoRegroupPhase gotoNextPhase =
         changes (cards |> List.collect drawAndDiscardCard)
         
     changes [ChangePhase Regroup]
-    >+> Actions.actionWindow FirstPlayer
+    >+> Actions.actionWindow FirstPlayer "Regroup phase action window: "
     >+> act readyAllCards
     >+> chooseDynastyInProvince drawAndDiscardCards
     >+> act returnRings

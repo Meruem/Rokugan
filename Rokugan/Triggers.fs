@@ -75,3 +75,4 @@ let addCardTriggers (card:Card) (gm:GameModel<GameState, Command, PlayerActionTy
 let addAllCardsTriggers (gm:GameModel<GameState, Command, PlayerActionType>) = 
     gm.State.Cards 
     |> List.fold (fun acc card -> addCardTriggers card acc) gm
+

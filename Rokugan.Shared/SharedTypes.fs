@@ -93,7 +93,8 @@ type ServerPlayerAction = {
 type ServerGameModel = {
     State : ServerGameState
     Log : string list
-    Actions : ServerPlayerAction list }    
+    Actions : ServerPlayerAction list
+    Prompt : string }    
 
 [<AutoOpen>]
 module Cards =

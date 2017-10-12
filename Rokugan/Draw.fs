@@ -21,17 +21,17 @@ let rec bidActions gs =
     if pl1Bid && pl2Bid then []
     else
         let next = if (not pl1Bid) && (not pl2Bid) then Some bidActions else None
-        let l1 = if pl1Bid then [] else choicei Player1 "Player 1 bid" 1 5 (fun i -> change (Bid (Player1, i)) >+> playerActionsM next) 
-        let l2 = if pl2Bid then [] else choicei Player2 "Player 2 bid" 1 5 (fun i -> change (Bid (Player2, i)) >+> playerActionsM next)
+        let l1 = if pl1Bid then [] else choicei Player1 "Player 1 bid" 1 5 (fun i -> change (Bid (Player1, i)) >+> playerActionsM next "Choose bid: ") 
+        let l2 = if pl2Bid then [] else choicei Player2 "Player 2 bid" 1 5 (fun i -> change (Bid (Player2, i)) >+> playerActionsM next "Choose bid: ")
         l1 @ l2
 
 let gotoDrawPhase nextPhase =
     changes
         [ChangePhase Draw
          CleanBids]
-    >+> playerActions bidActions
+    >+> playerActions bidActions "Choose bid:"
     >+> act applyBids
-    >+> Actions.actionWindow FirstPlayer
+    >+> Actions.actionWindow FirstPlayer "Draw phase action window: "
     >+!> nextPhase
 
 let onApplyBids gs = (gs, applyBids gs)

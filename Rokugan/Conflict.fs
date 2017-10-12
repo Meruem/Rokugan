@@ -58,7 +58,7 @@ let getConflictResolveActions =
         let provDef = repository.GetProvinceCard (attackState gs).Province.Title
         if  (totalAttack gs) >= (totalDefence gs) + provDef.Strength then [BreakProvince (attackState gs).Province] else []
 
-    Actions.actionWindow Defender
+    Actions.actionWindow Defender "Conflict actions: "
     >+> act looseHonorIfUndefended
     >+> act breakProvince
     >+> act (fun gs -> 
@@ -71,7 +71,7 @@ let getConflictResolveActions =
     >+> playerActions 
             (fun gs ->
                 if (attackerWon gs) then (yesNo (attackState gs).Attacker "Resolve ring effect" (resolveRingEffect gs)) else [])
-    
+            "Resolve ring effect: "
     >+> act bowCombatants
     >+> act (fun gs -> [SetActivePlayer (attackState gs).Defender])
 
@@ -89,8 +89,9 @@ let rec private chooseDefenders (gs:GameState) =
                                     state.Defender 
                                     (ChooseDefender char) 
                                     (changes [DeclareDefender char]
-                                    >+> playerActions chooseDefenders))
+                                    >+> playerActions chooseDefenders "Choose defenders: "))
     [passAction] @ actions
+
 
 let passConflict gs = 
     [PassConflict gs.ActivePlayer
@@ -108,14 +109,14 @@ let rec private chooseAttackers (gs:GameState) =
                     [SwitchActivePlayer
                      ConflictStarted
                      ContestRing state.Ring]
-                >+> playerActions chooseDefenders)
+                >+> playerActions chooseDefenders "Choose defenders: ")
     let actions = 
         getCharactersForConflict state.Type state.Attackers gs.ActivePlayerState 
         |> List.map (fun char -> action 
                                     state.Attacker 
                                     (ChooseAttacker char)
                                     (changes [DeclareAttacker char]
-                                    >+> playerActions chooseAttackers))
+                                    >+> playerActions chooseAttackers "Choose attackers: "))
     [passAction] @ actions
  
 
@@ -134,17 +135,18 @@ let rec declareAttackActions (gs:GameState) =
             (changes 
                 ([DeclareConflict (gs.ActivePlayer, ct, ring, prov) ]
                 @ revealProvince prov)
-            >+> playerActions chooseAttackers
-            >+> Actions.actionWindow FirstPlayer // another pre-conflict
-            >+> playerActions declareAttackActions)
+            >+> playerActions chooseAttackers "Choose attackers: "
+            >+> Actions.actionWindow FirstPlayer "Pre-conflict: "
+            >+> playerActions declareAttackActions "Declare conflict: ")
     let passAction = 
         let cnt = 
             if gs.OtherPlayerState.DeclaredConflicts.Length = 2 then 
-                act passConflict 
+                changes [PassConflict gs.ActivePlayer] 
             else 
-                act passConflict 
-                >+> Actions.actionWindow FirstPlayer // another pre-conflict
-                >+> playerActions declareAttackActions
+                changes [PassConflict gs.ActivePlayer] 
+                >+> Actions.actionWindow FirstPlayer "Pre-conflict: "
+                >+> changes [SetActivePlayer (otherPlayer gs.ActivePlayer)]
+                >+> playerActions declareAttackActions "Declare conflict: "
         pass gs.ActivePlayer cnt
     let actions = 
         [for ct in (availableConflicts ps) do
@@ -155,8 +157,8 @@ let rec declareAttackActions (gs:GameState) =
 let gotoConflictPhase nextPhase =
     change (ChangePhase GamePhase.Conflict)
     >+> changes [SetFirstPlayerActive]
-    >+> Actions.actionWindow FirstPlayer // pre-combat
-    >+> playerActions declareAttackActions
+    >+> Actions.actionWindow FirstPlayer "Pre-conflict: "
+    >+> playerActions declareAttackActions  "Declare conflict: "
     >+!> nextPhase
 
 

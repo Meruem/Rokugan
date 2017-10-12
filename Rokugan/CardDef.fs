@@ -30,5 +30,5 @@ let (|Character|_|) cardDef =
     | _ -> None
 
 let actions cardDef = 
-    cardDef.Ability 
+    cardDef.Abilities 
     |> List.choose (fun a -> match a with | Action act -> Some act | _ -> None)

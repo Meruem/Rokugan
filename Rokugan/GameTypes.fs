@@ -22,7 +22,8 @@ type ActionWindowStarts = FirstPlayer | Defender
 
 type Transform<'gs, 'cmd, 'pa> = 
   { Commands : ('gs -> 'cmd list) option 
-    NextActions : ('gs -> PlayerAction<'gs, 'cmd, 'pa> list) option
+    NextActions : ('gs -> PlayerAction<'gs, 'cmd, 'pa> list) option  
+    ActionPrompt : string
     Continuation : (Unit -> Transform<'gs, 'cmd, 'pa>) list }    
 
 and 
@@ -44,6 +45,7 @@ type GameModel<'gs, 'cmd, 'pa> =
     Actions : PlayerAction<'gs, 'cmd, 'pa> list 
     Triggers : GameTrigger<'gs, 'cmd, 'pa> list
     Continuations : (Unit -> Transform<'gs, 'cmd, 'pa>) list
+    Prompt : string
     Log : 'cmd list }
 
 type Deck = 
@@ -276,7 +278,7 @@ type CardTriggerDef =
 type CardDef = {
     Title : CardTitle
     Spec : CardSpec 
-    Ability : AbilityDef list 
+    Actions : CardActionDef list 
     Triggers : CardTriggerDef list }
 
 

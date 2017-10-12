@@ -103,7 +103,7 @@ let rec update t (updateState:'cmd-> GameModel<'gs,'cmd, 'pa> -> (GameModel<'gs,
         | Some getactions -> 
             let newActions = getactions gm'.State
             match newActions with
-            | _ :: _ -> {gm' with Actions = newActions}
+            | _ :: _ -> {gm' with Actions = newActions; Prompt = t.ActionPrompt}
             | [] -> gm' |> updateContinuation  // empty player action -> pop continuation
         | None -> 
             gm' |> updateContinuation
@@ -116,7 +116,7 @@ let rec gotoNextPhase phase =
     | GamePhase.Conflict -> Conflict.gotoConflictPhase (nextPhaseLazy Fate)
     | GamePhase.Fate -> Fate.gotoFatePhase (nextPhaseLazy Regroup)
     | GamePhase.Regroup -> Regroup.gotoRegroupPhase (nextPhaseLazy Dynasty)
-    | _ -> transform None None []
+    | _ -> none ()
 
 let playAction n (gm:GameModel<GameState, Command, PlayerActionType>) =
     if n >= gm.Actions.Length then gm
@@ -149,7 +149,9 @@ let startGame playerConfig1 playerConfig2 firstPlayer =
           Actions = [] 
           Continuations = []
           Triggers = []
-          Log = []}
+          Log = []
+          Prompt  = ""}
         |> Triggers.addWinConditionsTriggers
         |> Triggers.addAllCardsTriggers
+        |> Actions.addAllCardsActions
     update (gotoNextPhase Dynasty) updateState gm 

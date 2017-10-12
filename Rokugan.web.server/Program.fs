@@ -32,7 +32,8 @@ let mutable gm =
 let getClientModel gm =
   { State = toClientGameState gm.State
     Log = gm.Log |> List.map (fun c -> c.ToString())
-    Actions = toClientPlayerActions gm.Actions }          
+    Actions = toClientPlayerActions gm.Actions 
+    Prompt = gm.Prompt}          
 
 let jsonConverter = Fable.JsonConverter() :> JsonConverter
 let modelToJson m =

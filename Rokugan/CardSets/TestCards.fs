@@ -13,7 +13,7 @@ let ``Generic 1/1`` =
             Glory = 0
             Traits = []
             Set = CardSet.Core })
-        Ability = []    
+        Actions = []    
         Triggers = []
     }
 
@@ -27,7 +27,7 @@ let ``Generic 2/2`` =
             Glory = 0
             Traits = []
             Set = CardSet.Core })
-        Ability = []    
+        Actions = []    
         Triggers = []
     }
         
@@ -39,7 +39,7 @@ let ``Holding`` =
             BonusStrength = 1
             Traits = []
             Set = CardSet.Core })
-        Ability = []    
+        Actions = []    
         Triggers = []
     }
 
@@ -49,7 +49,7 @@ let ``Event`` =
         Spec = CardSpec.Conflict (ConflictCardDef.Event {
             Clan = Clan.Crane
             Cost = 1 })
-        Ability = []    
+        Actions = []    
         Triggers = []
     }
 
@@ -62,7 +62,7 @@ let ``Attachment`` =
             BonusMilitary = 2
             BonusPolitical = 0
             Traits = [Weapon] })
-        Ability = [] 
+        Actions = [] 
         Triggers = []   
     }
 
@@ -73,7 +73,7 @@ let ``Province str 4``=
             Strength = 4
             Clan = Clan.Crab
             Element = Earth }
-        Ability =[] 
+        Actions =[] 
         Triggers = []
     }
 
@@ -86,7 +86,7 @@ let ``Stronghold`` =
             StartingHonor = 10
             FatePerRound = 7
             Influence = 10 }
-        Ability = []    
+        Actions = []    
         Triggers = []
     }
 

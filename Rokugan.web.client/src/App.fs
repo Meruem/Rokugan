@@ -68,7 +68,8 @@ let init () =
   { Game =
       { State = ServerGameState.Empty
         Log = []
-        Actions = [] }
+        Actions = [] 
+        Prompt = ""}
     Client = ClientState.Empty }
     , Cmd.ofMsg QueryState
 
@@ -88,11 +89,14 @@ let update msg model =
         {model with Game = st } , []
     | NewGame -> model, Cmd.ofPromise startNewGame () ChangeState FetchFailure
 
-let actionsView actions dispatch =
-    div 
+let actionsView actions prompt dispatch =
+    div
         []
-        (actions |> List.map (fun a -> 
-            button [ OnClick (fun _ -> dispatch (PlayAction a.Number))] [str <| a.Type.ToString()]))
+        [ str <| prompt
+          div 
+            []
+            (actions |> List.map (fun a -> 
+                button [ OnClick (fun _ -> dispatch (PlayAction a.Number))] [str <| a.Type.ToString()])) ]
 
 let cardView (actions : ServerPlayerAction list) (card:CardClientState) dispatch =
     let (Title title) = card.Card.Title
@@ -216,7 +220,7 @@ let view model dispatch =
         [ div 
               [Style [Position "absolute"; Top "0px"; Left "0px"; Right "80%"; Bottom "0"]]
               ([ button [ OnClick (fun _ -> dispatch NewGame)] [str "New Game"] 
-                 actionsView game.Actions dispatch
+                 actionsView game.Actions model.Game.Prompt dispatch
                  str "Log: "]
               @ (logView game.Log dispatch))
           div 

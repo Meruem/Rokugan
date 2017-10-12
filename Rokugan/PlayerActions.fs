@@ -52,6 +52,7 @@ let rec chooseDynastyInProvince next =
                     @ if pl2Passed then [] else [passPl2 ()]
                     @ if pl1Passed then [] else actions gs.Player1State
                     @ if pl2Passed then [] else actions gs.Player2State)
+            "Choose dynasty card:"        
     chooseDynastyInProvinceRec next [] [] 
 
 let playCharacter player card = action player (PlayCharacter card)

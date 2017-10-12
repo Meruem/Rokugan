@@ -22,5 +22,5 @@ let gotoFatePhase gotoNextPhase =
     changes [ChangePhase Fate]
     >+> act checkAllCardsForDiscard
     >+> act addFateToRings
-    >+> Actions.actionWindow FirstPlayer
+    >+> Actions.actionWindow FirstPlayer "Fate phase action window: "
     >+!> gotoNextPhase
