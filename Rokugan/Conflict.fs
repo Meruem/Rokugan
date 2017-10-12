@@ -154,6 +154,7 @@ let rec declareAttackActions (gs:GameState) =
   
 let gotoConflictPhase nextPhase =
     change (ChangePhase GamePhase.Conflict)
+    >+> changes [SetFirstPlayerActive]
     >+> Actions.actionWindow FirstPlayer // pre-combat
     >+> playerActions declareAttackActions
     >+!> nextPhase
