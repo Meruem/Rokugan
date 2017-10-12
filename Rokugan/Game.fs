@@ -58,9 +58,11 @@ let updateState command (gm:GameModel<GameState, Command, PlayerActionType>) =
             | ActionPass player -> send <| onActionPass player
             | SetActivePlayer player -> send <| onSetActivePlayer player
             | CleanPassFlags -> send <| onCleanPassFlags
+            | SetFirstPlayerActive -> send <| onSetActivePlayer gm.State.FirstPlayer
+            | Debug str -> send <| (fun gs -> (printfn "Debug: %s" str); gs)
     ({ gm with Log = command :: gm.Log; State = gs2 }, newcommands)
 
-let rec update t updateState (gm:GameModel<'gs, 'cmd, 'pa>) =
+let rec update t (updateState:'cmd-> GameModel<'gs,'cmd, 'pa> -> (GameModel<'gs,'cmd, 'pa> * 'cmd list)) (gm:GameModel<'gs, 'cmd, 'pa>) =
     let cmds = 
         match t.Commands with
         | Some getCommands -> getCommands gm.State
@@ -149,4 +151,5 @@ let startGame playerConfig1 playerConfig2 firstPlayer =
           Triggers = []
           Log = []}
         |> Triggers.addWinConditionsTriggers
+        |> Triggers.addAllCardsTriggers
     update (gotoNextPhase Dynasty) updateState gm 
