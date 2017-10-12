@@ -14,7 +14,15 @@ let coreCards = [
             Glory = 2
             Traits = [Bushi]
             Set = CardSet.Core})
-        Ability = []     //Ability "Pride and some stuff" })
+        Ability = []
+        Triggers = 
+            [{ Name = "test"
+               Lifetime = Game
+               Condition = fun card cmd state ->
+                    match cmd with
+                    | PlayDynasty c -> c = card
+                    | _ -> false
+               Transform = fun card -> changes [Debug (sprintf "played card %A %d" card.Title card.Id )]}]
     }
 
     {
@@ -28,6 +36,7 @@ let coreCards = [
             Traits = [Shugenja; Water]
             Set = CardSet.Core}) //Ability "Gives covert"})
         Ability = []
+        Triggers = []
     }
         
     {
@@ -37,7 +46,8 @@ let coreCards = [
             BonusStrength = 1
             Traits = [Academy]
             Set = CardSet.Core}) // Ability "Play top conflict card"})
-        Ability = []            
+        Ability = [] 
+        Triggers = []           
     }
 
     {
@@ -45,7 +55,8 @@ let coreCards = [
         Spec = CardSpec.Conflict (ConflictCardDef.Event {
             Clan = Clan.Crane
             Cost = 1 }) //Ability "Bow character or something" })
-        Ability = []            
+        Ability = [] 
+        Triggers = []           
     }
 
     {
@@ -57,6 +68,7 @@ let coreCards = [
             BonusPolitical = 0
             Traits = [Weapon]}) //Ability "Ancestral restricted"})
         Ability = []    
+        Triggers = []
     }
 
     {
@@ -65,7 +77,8 @@ let coreCards = [
             Strength = 4
             Clan = Clan.Crab
             Element = Earth}
-        Ability = []    
+        Ability = []  
+        Triggers = []  
     }
 
     {
@@ -77,5 +90,6 @@ let coreCards = [
             FatePerRound = 7
             Influence = 10 }
         Ability = []    
+        Triggers = []
     }
 ]
