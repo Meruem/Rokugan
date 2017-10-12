@@ -29,12 +29,18 @@ let add1fateIfPassedFirstMsg gs =
     else 
         [AddFate (gs.ActivePlayer, 1)]
 
+let switchActivePlayer gs =
+    let otherPl = otherPlayer gs.ActivePlayer
+    if hasPlayerPassed otherPl gs then []
+    else [SwitchActivePlayer]
+    
+
 let playDynastyMod card pos addFate player = 
     [ PlayDynasty card
       AddFateOnCard (card, addFate)
       AddFate (player, -addFate)
-      DrawDynastyCard (player, pos)
-      SwitchActivePlayer ]
+      DrawDynastyCard (player, pos) ]
+
 
 let rec dynastyPhaseActions (gs:GameState) =
     let ps = gs.ActivePlayerState
@@ -45,6 +51,7 @@ let rec dynastyPhaseActions (gs:GameState) =
             let playCard = 
                 fun fate -> 
                         changes (playDynastyMod card pos fate gs.ActivePlayer)
+                        >+> act switchActivePlayer
                         >+> playerActions dynastyPhaseActions 
             playCharacter 
                 gs.ActivePlayer 
@@ -54,7 +61,7 @@ let rec dynastyPhaseActions (gs:GameState) =
         let transform =
             changes [DynastyPass gs.ActivePlayer] 
             >+> act add1fateIfPassedFirstMsg 
-            >+> changes [SwitchActivePlayer]
+            >+> act switchActivePlayer
         pass 
             gs.ActivePlayer 
             (if hasPlayerPassed (gs.OtherPlayer) gs then 
