@@ -11,7 +11,7 @@ let getAllPlayableActions player gs  =
     let ps = gs |> playerState player 
     let actions =
         [for action in gs.CardActions do
-            if action.Spec.Condition action.Card gs then yield action]
+            if action.Card.Owner = player && action.Spec.Condition action.Card gs then yield action]
     
     actions 
     |> List.map (fun action ->
