@@ -14,6 +14,7 @@ let ``Generic 1/1`` =
             Traits = []
             Set = CardSet.Core })
         Ability = []    
+        Triggers = []
     }
 
 let ``Generic 2/2`` =
@@ -27,6 +28,7 @@ let ``Generic 2/2`` =
             Traits = []
             Set = CardSet.Core })
         Ability = []    
+        Triggers = []
     }
         
 let ``Holding`` =
@@ -38,6 +40,7 @@ let ``Holding`` =
             Traits = []
             Set = CardSet.Core })
         Ability = []    
+        Triggers = []
     }
 
 let ``Event`` =
@@ -47,6 +50,7 @@ let ``Event`` =
             Clan = Clan.Crane
             Cost = 1 })
         Ability = []    
+        Triggers = []
     }
 
 let ``Attachment`` =
@@ -58,7 +62,8 @@ let ``Attachment`` =
             BonusMilitary = 2
             BonusPolitical = 0
             Traits = [Weapon] })
-        Ability = []    
+        Ability = [] 
+        Triggers = []   
     }
 
 let ``Province str 4``=
@@ -69,6 +74,7 @@ let ``Province str 4``=
             Clan = Clan.Crab
             Element = Earth }
         Ability =[] 
+        Triggers = []
     }
 
 let ``Stronghold`` =
@@ -81,6 +87,7 @@ let ``Stronghold`` =
             FatePerRound = 7
             Influence = 10 }
         Ability = []    
+        Triggers = []
     }
 
 let testCards = 
