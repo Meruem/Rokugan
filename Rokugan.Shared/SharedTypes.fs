@@ -2,13 +2,13 @@ namespace RokuganShared
 
 type Player = Player1 | Player2
 type YesNo = Yes | No
-type Element = Fire | Water | Air | Earth | Void
+type Element = Fire | Water | Air | Earth | Void | Undefined
 type GameEnd = Player1Won | Player2Won 
 type GamePhase = Dynasty | Draw | Conflict | Fate | Regroup | End of GameEnd 
 type ConflictType = Military | Political
 type RingState = Unclaimed | Contested | Claimed of Player
 type CardTitle = Title of string
-type CardState = Bowed | Honored | Dishonored | Hidden | Broken
+type CardState = Bowed | Honored | Dishonored | Hidden | Broken | CannotBlock
 type ZoneName = 
     | Hand
     | DynastyDiscard 
