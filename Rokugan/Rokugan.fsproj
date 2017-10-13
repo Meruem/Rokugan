@@ -14,11 +14,7 @@
     <Compile Include="CardRepositoryClass.fs" />
     <Compile Include="GameUtils.fs" />
     <Compile Include="Transform.fs" />
-    <Compile Include="CardDef.fs" />
     <Compile Include="CardRepository.fs" />
-    <Compile Include="CardSets/CoreCards.fs" />
-    <Compile Include="CardSets/TestCards.fs" />
-    <Compile Include="SampleDeck.fs" />
     <Compile Include="Card.fs" />
     <Compile Include="Deck.fs" />
     <Compile Include="Command.fs" />
@@ -33,6 +29,10 @@
     <Compile Include="Conflict.fs" />
     <Compile Include="Fate.fs" />
     <Compile Include="Regroup.fs" />
+    <Compile Include="CardDef.fs" />
+    <Compile Include="CardSets/CoreCards.fs" />
+    <Compile Include="CardSets/TestCards.fs" />
+    <Compile Include="SampleDeck.fs" />
     <Compile Include="Game.fs" />
     <Compile Include="Rokugan.fs" />
   </ItemGroup>
