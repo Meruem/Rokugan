@@ -18,8 +18,11 @@ let availableConflicts ps =
 
 let availableRings gs = gs.Rings |> List.filter (fun r -> r.State = Unclaimed)
 
-let getCharactersForConflict cType alreadyInConflict (ps:PlayerState) = 
+let getCharactersForConflict attackOrDefence cType alreadyInConflict player (gs:GameState) = 
+    let ps = gs |> playerState player
     let notBowed c = not (Card.isBowed c)
+    let efType = match attackOrDefence with | Attack -> CannotAttack | Defence -> CannotBlock
+    let cannotBlock c = gs.CardEffects |> List.exists (fun ce -> ce.Card = c && ce.Type = efType)
     ps.Home 
         |> List.filter (fun c -> notBowed c && Card.isCharWithValue cType c && not (List.contains c alreadyInConflict))
 
@@ -39,6 +42,7 @@ let resolveRingEffect (gs:GameState) yesNo =
         | Element.Earth -> Ring.resolveEarthRing state.Attacker 
         | Element.Void -> Ring.resolveVoidRing state.Attacker 
         | Element.Water ->  Ring.resolveWaterRing state.Attacker 
+        | _ -> failwith "ring should always have defined element"
     
 
 let getConflictResolveActions =
@@ -84,7 +88,7 @@ let rec private chooseDefenders (gs:GameState) =
             getConflictResolveActions
 
     let actions = 
-        getCharactersForConflict state.Type state.Defenders gs.ActivePlayerState 
+        getCharactersForConflict Defence state.Type state.Defenders state.Defender gs
         |> List.map (fun char -> action 
                                     state.Defender 
                                     (ChooseDefender char) 
@@ -95,6 +99,7 @@ let rec private chooseDefenders (gs:GameState) =
 
 let passConflict gs = 
     [PassConflict gs.ActivePlayer
+     ConflictEnd
      SwitchActivePlayer]
 
 let rec private chooseAttackers (gs:GameState) = 
@@ -111,7 +116,7 @@ let rec private chooseAttackers (gs:GameState) =
                      ContestRing state.Ring]
                 >+> playerActions chooseDefenders "Choose defenders: ")
     let actions = 
-        getCharactersForConflict state.Type state.Attackers gs.ActivePlayerState 
+        getCharactersForConflict Attack state.Type state.Attackers state.Attacker gs
         |> List.map (fun char -> action 
                                     state.Attacker 
                                     (ChooseAttacker char)
@@ -137,13 +142,14 @@ let rec declareAttackActions (gs:GameState) =
                 @ revealProvince prov)
             >+> playerActions chooseAttackers "Choose attackers: "
             >+> Actions.actionWindow FirstPlayer "Pre-conflict: "
-            >+> playerActions declareAttackActions "Declare conflict: ")
+            >+> playerActions declareAttackActions "Declare conflict: "
+            >+> changes [ConflictEnd])
     let passAction = 
         let cnt = 
             if gs.OtherPlayerState.DeclaredConflicts.Length = 2 then 
-                changes [PassConflict gs.ActivePlayer] 
+                changes [PassConflict gs.ActivePlayer; ConflictEnd] 
             else 
-                changes [PassConflict gs.ActivePlayer] 
+                changes [PassConflict gs.ActivePlayer; ConflictEnd] 
                 >+> Actions.actionWindow FirstPlayer "Pre-conflict: "
                 >+> changes [SetActivePlayer (otherPlayer gs.ActivePlayer)]
                 >+> playerActions declareAttackActions "Declare conflict: "
@@ -192,3 +198,5 @@ let onDefenderDeclared card gs =
 let onConflictStarted gs = 
     let state = attackState gs
     gs |> changePlayerState state.Attacker (fun st -> {st with DeclaredConflicts = Some state.Type :: st.DeclaredConflicts}) 
+
+let onConflictEnd = cleanEffectsByLifetime Lifetime.Conflict
