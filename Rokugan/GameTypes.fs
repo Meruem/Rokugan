@@ -11,14 +11,18 @@ type Clan =
     | Unicorn
     | Dragon
     | Neutral
+    | Undefined
 
 type Trait =  Bushi | Shugenja | Water | Weapon | Academy
-type CardSet = Core
+type CardSet = Core | Undefined
+type AttackOrDefence = Attack | Defence
 
 //defines when the flag or trigger is cleared
-type Lifetime = Round | Phase | Game | Once
+type Lifetime = Round | Phase | Game | Once | Conflict
 
 type ActionWindowStarts = FirstPlayer | Defender
+
+type EffectType = CannotBlock | CannotAttack
 
 type Transform<'gs, 'cmd, 'pa> = 
   { Commands : ('gs -> 'cmd list) option 
@@ -97,6 +101,9 @@ type Command =
     | SetActivePlayer of Player
     | SetFirstPlayerActive
     | Debug of string
+    | AddCardEffect of Card * Lifetime * EffectType
+    | RemoveCardEffect of int
+    | ConflictEnd
 
 type PlayerFlag =
   { Lifetime : Lifetime
@@ -153,6 +160,7 @@ type GameState =
     GamePhase : GamePhase
     ActivePlayer : Player
     CardActions : CardAction list
+    CardEffects : CardEffect list
     AttackState : AttackState option }
     with
         member this.ActivePlayerState = 
@@ -178,6 +186,7 @@ type GameState =
             Rings = []
             GamePhase = GamePhase.Dynasty
             ActivePlayer = Player1
+            CardEffects = []
             CardActions = []
             AttackState = None }
 and CardAction = {
@@ -209,39 +218,39 @@ and PlayerActionType =
     | ChooseDynastyToDiscard of Card
     | ActivateAction of CardAction
     | Test    
+and CardEffect =
+  { Id : int
+    Type : EffectType
+    Lifetime : Lifetime
+    Card : Card }
+
+// ------------------------ Card definitions ---------------------
 
 type CharacterCardDef = {
     Cost : int
-    Clan : Clan
     MilitarySkill : int option
     PoliticalSkill : int option
     Glory : int
-    Traits : Trait list
-    Set : CardSet}
+    Traits : Trait list }
 
 type HoldingCardDef = {
-    Clan : Clan
     BonusStrength : int     
-    Traits : Trait list   
-    Set : CardSet }
+    Traits : Trait list }
 
 type DynastyCardDef = 
     | Character of CharacterCardDef
     | Holding of HoldingCardDef
 
 type EventCardDef = {
-    Clan : Clan
     Cost : int }
 
 type AttachmentCardDef = {
     Cost : int
-    Clan : Clan
     BonusMilitary : int 
     BonusPolitical : int 
     Traits : Trait list }
 
 type StrongholdCardDef = {
-    Clan : Clan
     BonusStrength : int
     StartingHonor : int
     FatePerRound : int
@@ -255,7 +264,6 @@ type ConflictCardDef =
 
 type ProvinceCardDef = {
     Strength : int
-    Clan : Clan
     Element : Element }
 
 type RoleCardDef = {
@@ -268,6 +276,7 @@ type CardSpec =
     | Stronghold of StrongholdCardDef
     | Province of ProvinceCardDef
     | Role of RoleCardDef
+    | Undefined
 
 type CardTriggerDef =
       { Name : string
@@ -277,9 +286,88 @@ type CardTriggerDef =
 
 type CardDef = {
     Title : CardTitle
+    Clan : Clan
     Spec : CardSpec 
+    Set : CardSet
     Actions : CardActionDef list 
     Triggers : CardTriggerDef list }
+
+// -------------------------------------------------------------------------------
+
+// --------------------------- Card definition builders --------------------------
+
+// type CharacterCardDefBuilder = {
+//     Cost : int
+//     Clan : Clan
+//     MilitarySkill : int option
+//     PoliticalSkill : int option
+//     Glory : int
+//     Traits : Trait list
+//     Set : CardSet}
+
+// type HoldingCardDef = {
+//     Clan : Clan
+//     BonusStrength : int     
+//     Traits : Trait list   
+//     Set : CardSet }
+
+// type DynastyCardDef = 
+//     | Character of CharacterCardDef
+//     | Holding of HoldingCardDef
+
+// type EventCardDef = {
+//     Clan : Clan
+//     Cost : int }
+
+// type AttachmentCardDef = {
+//     Cost : int
+//     Clan : Clan
+//     BonusMilitary : int 
+//     BonusPolitical : int 
+//     Traits : Trait list }
+
+// type StrongholdCardDef = {
+//     Clan : Clan
+//     BonusStrength : int
+//     StartingHonor : int
+//     FatePerRound : int
+//     Influence : int }
+
+
+// type ConflictCardDef = 
+//     | Character of CharacterCardDef
+//     | Event of EventCardDef
+//     | Attachment of AttachmentCardDef
+
+// type ProvinceCardDef = {
+//     Strength : int
+//     Clan : Clan
+//     Element : Element }
+
+// type RoleCardDef = {
+//     Abilities : AbilityDef list
+//     Traits : Trait list }
+
+// type CardSpec = 
+//     | Dynasty of DynastyCardDef
+//     | Conflict of ConflictCardDef
+//     | Stronghold of StrongholdCardDef
+//     | Province of ProvinceCardDef
+//     | Role of RoleCardDef
+
+// type CardTriggerDef =
+//       { Name : string
+//         Lifetime : Lifetime
+//         Condition : Card -> Command -> GameState -> bool
+//         Transform : Card -> Transform<GameState, Command, PlayerActionType>}
+
+// type CardDef = {
+//     Title : CardTitle
+//     Spec : CardSpec 
+//     Actions : CardActionDef list 
+//     Triggers : CardTriggerDef list }
+
+// -------------------------------------------------------------------------------
 
 
 type GameStateMod = GameState -> GameState
