@@ -2,98 +2,72 @@ module CoreCards
 
 open RokuganShared
 open GameTypes
+open CardDef
 
-let coreCards = [
-    {
-        Title = Title "Akodo Gunsō" 
-        Spec = CardSpec.Dynasty (DynastyCardDef.Character {
-            Cost = 2
-            Clan = Clan.Lion
-            MilitarySkill = Some 2
-            PoliticalSkill = Some 1
-            Glory = 2
-            Traits = [Bushi]
-            Set = CardSet.Core})
-        Actions = 
-         [{ 
-            Name = "Some action"
-            Condition = fun card gs -> true
-            Effect = fun card -> changes [Debug (sprintf "Activated card %A %d" card.Title card.Id )] }]
-        Triggers = 
-            [{ Name = "test"
-               Lifetime = Game
-               Condition = fun card cmd state ->
+let ``Akodo Gunsō`` = 
+    title "Akodo Gunsō" 
+    @+> clan Clan.Lion
+    @+> dynastychar 2 (Some 2)  (Some 1) 2  [Bushi]
+    @+> action  { Name = "Some action"
+                  Condition = fun card gs -> true
+                  Effect = fun card -> changes [Debug (sprintf "Activated card %A %d" card.Title card.Id )] }
+    @+> trigger { Name = "covert"
+                  Lifetime = Game
+                  Condition = fun card cmd state ->
                     match cmd with
-                    | PlayDynasty c -> c = card
+                    | DeclareAttacker c -> c.Id = card.Id 
                     | _ -> false
-               Transform = fun card -> changes [Debug (sprintf "played card %A %d" card.Title card.Id )]}]
-    }
+                  Transform = fun card -> 
+                        changes [Debug "covert activated"]
+                        >+> covert card.Owner }             
 
-    {
-        Title = Title "Adept of the Waves" 
-        Spec = CardSpec.Dynasty (DynastyCardDef.Character {
-            Cost = 2
-            Clan = Clan.Phoenix
-            MilitarySkill = Some 2
-            PoliticalSkill = Some 2
-            Glory = 2
-            Traits = [Shugenja; Water]
-            Set = CardSet.Core}) //Ability "Gives covert"})
-        Actions = []
-        Triggers = []
-    }
-        
-    {
-        Title = Title "Artisan Academy" 
-        Spec = CardSpec.Dynasty (DynastyCardDef.Holding {
-            Clan = Clan.Crane
-            BonusStrength = 1
-            Traits = [Academy]
-            Set = CardSet.Core}) // Ability "Play top conflict card"})
-        Actions = [] 
-        Triggers = []           
-    }
+let ``Adept of the Waves`` =
+    title "Adept of the Waves" 
+    @+> clan Clan.Phoenix
+    @+> dynastychar 2 (Some 2) (Some 2) 2 [Shugenja; Water]
+    @+> trigger { Name = "covert"
+                  Lifetime = Game
+                  Condition = fun card cmd state ->
+                    match cmd with
+                    | DeclareAttacker c -> c.Id = card.Id 
+                    | _ -> false
+                  Transform = fun card -> 
+                        changes [Debug "covert activated"]
+                        >+> covert card.Owner } 
+    
+let ``Artisan Academy`` =
+    title "Artisan Academy"
+    @+> clan Clan.Crane
+    @+> holding 1 [Academy]
 
-    {
-        Title = Title "Admit Defeat"
-        Spec = CardSpec.Conflict (ConflictCardDef.Event {
-            Clan = Clan.Crane
-            Cost = 1 }) //Ability "Bow character or something" })
-        Actions = [] 
-        Triggers = []           
-    }
+let ``Admit Defeat`` =
+    title "Admit Defeat"
+    @+> clan Clan.Crane
+    @+> event 1
 
-    {
-        Title = Title "Ancestral Daishō"
-        Spec = CardSpec.Conflict (ConflictCardDef.Attachment {
-            Clan = Clan.Dragon
-            Cost = 1
-            BonusMilitary = 2
-            BonusPolitical = 0
-            Traits = [Weapon]}) //Ability "Ancestral restricted"})
-        Actions = []    
-        Triggers = []
-    }
+let ``Ancestral Daishō`` = 
+    title "Ancestral Daishō"
+    @+> clan Clan.Dragon
+    @+> attachment 1 2 0 [Weapon]
 
-    {
-        Title = Title "Defend the Wall"
-        Spec = CardSpec.Province {
-            Strength = 4
-            Clan = Clan.Crab
-            Element = Earth}
-        Actions = []  
-        Triggers = []  
-    }
+let ``Defend the Wall`` = 
+    title "Defend the Wall"
+    @+> clan Clan.Crab
+    @+> province 4 Earth
 
-    {
-        Title = Title "Golden Plains Outpost"
-        Spec = CardSpec.Stronghold {
-            Clan = Clan.Unicorn
-            BonusStrength = 0
-            StartingHonor = 10
-            FatePerRound = 7
-            Influence = 10 }
-        Actions = []    
-        Triggers = []
-    }
-]
+let ``Golden Plains Outpost`` =
+    title "Golden Plains Outpost"
+    @+> clan Clan.Unicorn
+    @+> stronghold 0 10 7 10
+
+let addCore def = def @+> cardset Core
+
+let coreCards =
+   [ ``Akodo Gunsō`` 
+     ``Adept of the Waves``
+     ``Artisan Academy``
+     ``Admit Defeat``
+     ``Ancestral Daishō``
+     ``Defend the Wall``
+     ``Golden Plains Outpost`` ]
+   |> List.map addCore
