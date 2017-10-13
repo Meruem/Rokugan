@@ -60,6 +60,9 @@ let updateState command (gm:GameModel<GameState, Command, PlayerActionType>) =
             | CleanPassFlags -> send <| onCleanPassFlags
             | SetFirstPlayerActive -> send <| onSetActivePlayer gm.State.FirstPlayer
             | Debug str -> send <| (fun gs -> (printfn "Debug: %s" str); gs)
+            | AddCardEffect (card, lifetime, effect) -> send <| onAddCardEffect card lifetime effect
+            | RemoveCardEffect id -> send <| onRemoveCardEffect id
+            | ConflictEnd -> send <| onConflictEnd
     ({ gm with Log = command :: gm.Log; State = gs2 }, newcommands)
 
 let rec update t (updateState:'cmd-> GameModel<'gs,'cmd, 'pa> -> (GameModel<'gs,'cmd, 'pa> * 'cmd list)) (gm:GameModel<'gs, 'cmd, 'pa>) =
@@ -141,6 +144,7 @@ let startGame playerConfig1 playerConfig2 firstPlayer =
             GamePhase = Dynasty
             FirstPlayer = firstPlayer
             CardActions = []
+            CardEffects = []
             Player1State = initializePlayerState playerConfig1 Player1
             Player2State = initializePlayerState playerConfig2 Player2 }
         |> addSecondPlayer1Fate
