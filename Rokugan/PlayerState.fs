@@ -116,7 +116,7 @@ let changePlayerCards cards stateChange (ps:PlayerState) =
 
 let revealProvince province = changePlayerCard Card.revealProvince province
 
-let changeCardZone zone card ps = 
+let changeCardZone zone (card:Card) ps = 
     let card2 = ps.CardsInPlay.Item card.Id
     let card3 = {card2 with Zone = zone}
     { ps with CardsInPlay = ps.CardsInPlay |> Map.add card3.Id card3 } 
@@ -125,7 +125,7 @@ let addFate fate (ps:PlayerState) = { ps with Fate = ps.Fate + fate}
 
 let charactersInPlay ps =
     ps.CardsInPlay 
-    |> Map.filter (fun _ card -> Card.isCharacter card)
+    |> Map.filter (fun _ card -> Card.isCharacter card && card.Zone = ZoneName.Home)
     |> Utils.toValuesList
 
 let cardsByCondition cond ps =
