@@ -7,6 +7,9 @@ open RokuganShared
 open GameState
 open PlayerState
 
+
+let pass player = action player Pass
+
 let private chooseCharacterAction player desc next card = action player (ChooseCharacter (card, desc)) (next card)
 let private chooseCardAction player desc next card = action player (ChooseCard (card, desc)) (next card)
 
@@ -15,6 +18,9 @@ let chooseDynastyToDiscard player next card = action player (ChooseDynastyToDisc
 let chooseCharacterInPlay player desc next gs =
     List.append (charactersInPlay gs.Player1State) (charactersInPlay gs.Player2State) 
     |> List.map (chooseCharacterAction player desc next)
+
+let chooseCharacterInPlayOrPass player desc next passAction gs =
+    (pass player passAction) :: (chooseCharacterInPlay player desc next gs)
 
 let chooseCard player condition desc next (gs:GameState) =
     gs.Cards 
@@ -26,7 +32,6 @@ let chooseCharacter player condition desc getTransform (gs:GameState) =
     |> List.filter (fun c -> condition c && Card.isCharacter c)
     |> List.map (chooseCharacterAction player desc getTransform)
 
-let pass player = action player Pass
 
 //gets list of actions for both players for each dynasty card to be chosen
 //each action has continuation pointing again at this function
