@@ -2,94 +2,32 @@ module TestCards
 
 open RokuganShared
 open GameTypes
+open CardDef
 
 let ``Generic 1/1`` = 
-    {   Title = Title "Generic 1/1" 
-        Spec = CardSpec.Dynasty (DynastyCardDef.Character {
-            Cost = 1
-            Clan = Clan.Lion
-            MilitarySkill = Some 1
-            PoliticalSkill = Some 1
-            Glory = 0
-            Traits = []
-            Set = CardSet.Core })
-        Actions = []    
-        Triggers = []
-    }
+    title "Generic 1/1" 
+    @+> dynastychar 1 (Some 1) (Some 1) 0 []
 
 let ``Generic 2/2`` =
-     {  Title = Title "Generic 2/2" 
-        Spec = CardSpec.Dynasty (DynastyCardDef.Character {
-            Cost = 2
-            Clan = Clan.Lion
-            MilitarySkill = Some 2
-            PoliticalSkill = Some 2
-            Glory = 0
-            Traits = []
-            Set = CardSet.Core })
-        Actions = []    
-        Triggers = []
-    }
+    title "Generic 2/2" 
+    @+> dynastychar 2 (Some 2) (Some 2) 0 []
         
 let ``Holding`` =
-    {
-        Title = Title "Holding" 
-        Spec = CardSpec.Dynasty (DynastyCardDef.Holding {
-            Clan = Clan.Crane
-            BonusStrength = 1
-            Traits = []
-            Set = CardSet.Core })
-        Actions = []    
-        Triggers = []
-    }
+    title  "Holding" 
+    @+> holding 1 []
 
 let ``Event`` =
-    {
-        Title = Title "Event"
-        Spec = CardSpec.Conflict (ConflictCardDef.Event {
-            Clan = Clan.Crane
-            Cost = 1 })
-        Actions = []    
-        Triggers = []
-    }
-
+    title "Event"
+    @+> event 1
 let ``Attachment`` =
-    {
-        Title = Title "Attachment"
-        Spec = CardSpec.Conflict (ConflictCardDef.Attachment {
-            Clan = Clan.Dragon
-            Cost = 1
-            BonusMilitary = 2
-            BonusPolitical = 0
-            Traits = [Weapon] })
-        Actions = [] 
-        Triggers = []   
-    }
-
+    title "Attachment"
+    @+> attachment 1 2 0 [Weapon]
 let ``Province str 4``=
-    {
-        Title = Title "Province str 4"
-        Spec = CardSpec.Province {
-            Strength = 4
-            Clan = Clan.Crab
-            Element = Earth }
-        Actions =[] 
-        Triggers = []
-    }
-
+    title "Province str 4"
+    @+> province 4 Earth
 let ``Stronghold`` =
-    {
-        Title = Title "Stronghold"
-        Spec = CardSpec.Stronghold {
-            Clan = Clan.Unicorn
-            BonusStrength = 0
-            StartingHonor = 10
-            FatePerRound = 7
-            Influence = 10 }
-        Actions = []    
-        Triggers = []
-    }
-
+    title "Stronghold"
+    @+> stronghold 0 10 7 10
 let testCards = 
   [ ``Generic 1/1``
     ``Generic 2/2``
