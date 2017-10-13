@@ -14,10 +14,23 @@ let (|Conflict|_|) (card: Card) =
     | CardSpec.Conflict _ -> Some card
     | _ -> None
 
+let (|CharacterDef|_|) cardDef = 
+    match cardDef.Spec with 
+    | CardSpec.Dynasty d ->
+        match d with 
+        | DynastyCardDef.Character c -> Some c
+        | _ -> None
+    | CardSpec.Conflict c ->
+        match c with
+        | ConflictCardDef.Character char -> Some char
+        | _ -> None
+    | _ -> None    
+
 let (|Character|_|) (card:Card) = 
     match repository.GetCard card.Title with
-    | CardDef.Character c -> Some card
+    | CharacterDef c -> Some card
     | _ -> None 
+    
 
 // ----------- Card creation ------------
 let createCard title player zone =
@@ -45,7 +58,7 @@ let isHidden = hasState Hidden
 let charSkillValue cType (card:Card) =
     let cardDef = repository.GetCard card.Title
     match  cardDef with
-    | CardDef.Character char ->  
+    | CharacterDef char ->  
         match cType with
         | Military -> char.MilitarySkill
         | Political ->char.PoliticalSkill
