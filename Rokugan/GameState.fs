@@ -87,11 +87,31 @@ let cleanDeclaredConflicts (gs:GameState) =
     |> changePlayerState Player1 clearConflict
     |> changePlayerState Player2 clearConflict
 
+let addCardEffect id card lifetime effect gs =
+    let newEffect = 
+      { CardEffect.Id = id
+        Card = card
+        Lifetime = lifetime
+        Type = effect }
+    {gs with CardEffects = newEffect :: gs.CardEffects }
+
+let removeCardEffect id gs =
+    {gs with CardEffects = gs.CardEffects |> List.filter (fun ce -> ce.Id <> id)}
+
+let cleanEffectsByLifetime lifetime gs =
+    gs.CardEffects 
+    |> List.filter (fun ce -> ce.Lifetime = lifetime)
+    |> List.fold (fun gs' ce -> gs' |> removeCardEffect ce.Id) gs
+
+
 // --------------------------- message handlers ------------------------------
 
 let onChangePhase phase (gs:GameState) = 
     {gs with GamePhase = phase; ActivePlayer = gs.FirstPlayer}     
-    |> cleanPhaseFlags |> cleanDeclaredConflicts
+    |> cleanPhaseFlags 
+    |> cleanDeclaredConflicts
+    |> cleanEffectsByLifetime Lifetime.Phase
+     
 
 let onRemoveCardState card state (gs:GameState) =
     gs |> changeCard (Card.removeCardState state) card
@@ -121,6 +141,17 @@ let onBreakProvince = changeCard Card.breakProvince
 
 let onDiscardCardFromPlay = changeCard (Card.move DynastyDiscard) 
 
-let onNextRound = nextRound
+let onNextRound gs = 
+    gs 
+    |> nextRound
+    |> cleanEffectsByLifetime Lifetime.Round
 
 let onSetActivePlayer player (gs:GameState) = { gs with ActivePlayer = player }
+
+let onAddCardEffect = 
+    let id = Utils.newId ()
+    addCardEffect id 
+
+let onRemoveCardEffect = removeCardEffect
+
+    
