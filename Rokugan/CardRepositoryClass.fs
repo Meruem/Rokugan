@@ -2,6 +2,7 @@ namespace CardRepositoryClass
 
 open GameTypes
 open RokuganShared
+open CardDef
 
 type Repository() = 
     let allCardsDict = new System.Collections.Generic.Dictionary<CardTitle,CardDef>()
