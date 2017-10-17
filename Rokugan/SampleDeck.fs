@@ -3,6 +3,7 @@ module SampleDeck
 open RokuganShared
 open GameTypes
 open CardDef
+open CardDef.CardDef
 
 let rnd = System.Random()
 

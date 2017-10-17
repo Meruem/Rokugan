@@ -25,11 +25,6 @@ type ActionWindowStarts = FirstPlayer | Defender
 type EffectType = CannotBlock | CannotAttack
 type DeckType = Conflict | Dynasty
 
-type CardId = int
-type TriggerId = int
-type CardEffectId = int
-type CardPosition = int
-
 type Transform<'gs, 'cmd, 'pa> = 
   { Commands : ('gs -> 'cmd list) option 
     NextActions : ('gs -> PlayerAction<'gs, 'cmd, 'pa> list) option  
@@ -49,7 +44,7 @@ type GameTrigger<'gs, 'cmd, 'pa> =
         Name : string
         Lifetime : Lifetime
         Condition : 'cmd -> 'gs -> bool
-        Transform : Transform<'gs, 'cmd, 'pa>}
+        Effect : 'cmd -> Transform<'gs, 'cmd, 'pa>}
 
 type GameModel<'gs, 'cmd, 'pa> =
   { State: 'gs
@@ -70,36 +65,36 @@ type Deck =
 type PlayerFlagEnum = Passed
 
 type ConflictResolution = 
-  { Winners : Card list
-    Loosers : Card list}
+  { Winners : CardId list
+    Loosers : CardId list}
 
 type Command<'gs, 'pa> = 
     | ChangePhase of GamePhase
-    | RemoveCardState of CardState * Card
+    | RemoveCardState of CardState * CardId
     | AddFate of Player * int
     | DynastyPass of Player
     | SwitchActivePlayer 
-    | PlayDynasty of Card * CardPosition 
-    | AddFateOnCard of Card * int
+    | PlayDynasty of CardId * CardPosition 
+    | AddFateOnCard of CardId * int
     | DrawDynastyCard of Player * CardPosition  // Card position
     | Bid of Player * int
     | CleanBids
     | AddHonor of Player * int
     | DrawConflictCard of Player * int  // player, number of cards
     | PassConflict of Player
-    | DeclareConflict of Player * ConflictType * Ring * Card // attacker, (military/political), ring, province
-    | RevealProvince of Card
-    | DeclareAttacker of Card
-    | DeclareDefender of Card
+    | DeclareConflict of Player * ConflictType * Ring * CardId // attacker, (military/political), ring, province
+    | RevealProvince of CardId
+    | DeclareAttacker of CardId
+    | DeclareDefender of CardId
     | ConflictStarted
     | CollectFateFromRing of Player * Ring
     | DiscardRandomConflict of Player
-    | Bow of Card
-    | Ready of Card
-    | Honor of Card
-    | Dishonor of Card
-    | BreakProvince of Card
-    | DiscardFromPlay of Card
+    | Bow of CardId
+    | Ready of CardId
+    | Honor of CardId
+    | Dishonor of CardId
+    | BreakProvince of CardId
+    | DiscardFromPlay of CardId
     | AddFateOnRing of Ring * int 
     | ContestRing of Ring
     | ClaimRing of Player * Ring
@@ -112,7 +107,7 @@ type Command<'gs, 'pa> =
     | SetActivePlayer of Player
     | SetFirstPlayerActive
     | Debug of string
-    | AddCardEffect of Card * Lifetime * EffectType
+    | AddCardEffect of CardId * Lifetime * EffectType
     | RemoveCardEffect of CardEffectId
     | ConflictEnd of ConflictResolution option
     | AddTrigger of GameTrigger<'gs, Command<'gs,'pa> , 'pa>
@@ -195,7 +190,15 @@ type GameState =
             match this.ActivePlayer with 
             | Player1 -> Player2
             | Player2 -> Player1
-
+        
+        member this.Card cardId =
+            match this.Player1State.CardsInPlay |> Map.tryFind cardId with
+            | Some card -> card
+            | None -> 
+                match this.Player2State.CardsInPlay |> Map.tryFind cardId with
+                | Some card -> card
+                | None -> failwith "Card not found"
+        
         static member None = {
             TurnNumber = 0
             FirstPlayer =  Player1
@@ -211,13 +214,13 @@ type GameState =
 
 and CardAction = {
     Spec : CardActionDef
-    Card : Card
+    CardId : CardId
     LastUsed : (GamePhase * int) option }         
 
 and CardActionDef = {
     Name : string
-    Condition : Card -> GameState -> bool
-    Effect : Card -> Transform<GameState, Command<GameState,PlayerActionType>, PlayerActionType>  }
+    Condition : CardId -> GameState -> bool
+    Effect : CardId -> Transform<GameState, Command<GameState,PlayerActionType>, PlayerActionType>  }
 
 and AbilityDef = 
     | Action of CardActionDef 

@@ -30,7 +30,8 @@ let activePlayerState gs = playerState gs.ActivePlayer gs
 
 let otherPlayerState gs = playerState (otherPlayer gs.ActivePlayer) gs
 
-let changeCard change card (gs: GameState) =
+let changeCard change cardId (gs: GameState) =
+    let card = gs.Card cardId
     changePlayerState card.Owner (fun ps -> ps |> changePlayerCard change card.Id) gs
 
 let changeCards change cards gs =
@@ -93,7 +94,8 @@ let cleanDeclaredConflicts (gs:GameState) =
     |> changePlayerState Player1 clearConflict
     |> changePlayerState Player2 clearConflict
 
-let addCardEffect id card lifetime effect gs =
+let addCardEffect id cardId lifetime effect (gs:GameState) =
+    let card = gs.Card cardId
     let newEffect = 
       { CardEffect.Id = id
         Card = card

@@ -5,12 +5,35 @@
     "tasks": [
         {
             "taskName": "buildCore",
-            "command": "dotnet build",
+            "command": "dotnet build Rokugan -o ${workspaceRoot}/build",
             "type": "shell",
             "group": "build",
             "presentation": {
                 "reveal": "silent"
             },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "taskName": "buildServer",
+            "command": "dotnet build Rokugan.web.server -o ${workspaceRoot}/build",
+            "type": "shell",
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "taskName": "buildClient",
+            "command": "dotnet fable yarn-build Rokugan.web.server ",
+            "type": "shell",
+            "options" :{
+                "cwd": "${workspaceRoot}/Rokugan.web.client/src"
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            }, 
             "problemMatcher": "$msCompile"
         },
         {

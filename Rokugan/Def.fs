@@ -6,43 +6,44 @@ open CardDef
 open CardDef.CardDef
 module PA = PlayerActions
 
-let inPlay = fun card _ -> Card.isInPlay card
-let onDecklaredAsAttacker (card:Card) cmd _ = 
+let inPlay = fun cardId (gs:GameState) -> Card.isInPlay (gs.Card cardId)
+let onDecklaredAsAttacker (id:CardId) cmd _ = 
     match cmd with
-    | DeclareAttacker c -> c.Id = card.Id 
+    | DeclareAttacker c -> c = id 
     | _ -> false
 
-let onCardPlayed (card:Card) cmd gs =
+let onCardPlayed (id:CardId) cmd gs =
     match cmd with
-    | PlayDynasty (c, pos) -> c.Id = card.Id
+    | PlayDynasty (c, pos) -> c = id
     // missing character from hand, attachment    
     | _ -> false
 
-let onWonConflict (card:Card) cmd gs =
+let onWonConflict (id:CardId) cmd gs =
     match cmd with
-    | ConflictEnd (Some state) -> state.Winners |> List.exists (fun w -> w.Id = card.Id)
+    | ConflictEnd (Some state) -> state.Winners |> List.exists (fun w -> w = id)
     | _ -> false
 
-let onLostConflict (card:Card) cmd gs =
+let onLostConflict (id:CardId) cmd gs =
     match cmd with
-    | ConflictEnd (Some state) -> state.Loosers |> List.exists (fun l -> l.Id = card.Id)
+    | ConflictEnd (Some state) -> state.Loosers |> List.exists (fun l -> l = id)
     | _ -> false
 
 //----------------- Actions --------------------------
 
-let covertEffect activatingPlayer =
-    let onTargetSelected card = 
-        act <| fun gs -> [AddCardEffect (card, Lifetime.Conflict, CannotBlock)]
+let covertEffect cardId (gs:GameState) =
+    let activatingPlayer = (gs.Card cardId).Owner
+    let onTargetSelected (card:Card) = 
+        act <| fun gs -> [AddCardEffect (card.Id, Lifetime.Conflict, CannotBlock)]
     let onPass = none ()
-    playerActions (PA.chooseCharacterInPlayOrPass activatingPlayer "Covert target" onTargetSelected onPass) "Choose target for convert: "
+    (PA.chooseCharacterInPlayOrPass activatingPlayer "Covert target" onTargetSelected onPass) gs 
 
 let covertTrigger =
     tName "covert"
     @?+ tLifetime Game
     @?+ tCondition onDecklaredAsAttacker
-    @?+ tEffect (fun card -> 
+    @?+ tEffect (fun cardId cmd -> 
                      changes [Debug "covert activated"]
-                     >+> covertEffect card.Owner)
+                     >+> playerActions (covertEffect cardId) "Choose target for convert: ")
 let covert = trigger covertTrigger
 
 
@@ -51,8 +52,8 @@ let pernamentCardEffect effect =
         (tName "add pernament card effect"
         @?+ tLifetime Game
         @?+ tCondition onCardPlayed
-        @?+ tEffect (fun card ->
-            changes [AddCardEffect (card, Lifetime.Game, effect)]))
+        @?+ tEffect (fun cardId cmd ->
+            act (fun gs -> [AddCardEffect (cardId, Lifetime.Game, effect)])))
 
 
 let cannotBlock = pernamentCardEffect CannotBlock
@@ -62,10 +63,10 @@ let pride =
         (tName "pride win"
         @?+ tLifetime Game
         @?+ tCondition onWonConflict
-        @?+ tEffect (fun card -> changes [Honor card]))
+        @?+ tEffect (fun cardId cmd -> changes [Honor cardId]))
     @+ trigger            
         (tName "pride loss"
         @?+ tLifetime Game
         @?+ tCondition onLostConflict
-        @?+ tEffect (fun card -> changes [Dishonor card]))
+        @?+ tEffect (fun cardId cmd -> changes [Dishonor cardId]))
     

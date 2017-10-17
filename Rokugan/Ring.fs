@@ -20,10 +20,10 @@ let isUnclaimed (ring:Ring) = ring.State = Unclaimed
 let resolveFireRing attacker =
     let honor = "Honor character"
     let dishonor = "Dishonor character"
-    let honorChar char = 
-        changes [Honor char] 
-    let dishonorChar char =
-        changes [Dishonor char] 
+    let honorChar (char:Card) = 
+        changes [Honor char.Id] 
+    let dishonorChar (char:Card) =
+        changes [Dishonor char.Id] 
     let effectChosen effect =
         if effect = honor then
             playerActions (chooseCharacterInPlay attacker "Honor character" honorChar) "Choose character to honor: "
@@ -49,17 +49,17 @@ let resolveEarthRing attacker  =
          DiscardRandomConflict (otherPlayer attacker)]
 
 let resolveVoidRing attacker =
-    let remove1fate card = 
-        changes [AddFateOnCard (card, -1)] 
+    let remove1fate (card:Card) = 
+        changes [AddFateOnCard (card.Id, -1)] 
     playerActions (chooseCharacter attacker Card.hasFate "Remove 1 fate from character" remove1fate) "Choose character to remove 1 fate: "
 
 let resolveWaterRing attacker  =
     let bow = "Bow character without fate"
     let ready = "Ready character"
-    let bowChar char = 
-        changes [Bow char]
-    let readyChar char =
-        changes [Ready char]
+    let bowChar (char:Card) = 
+        changes [Bow char.Id]
+    let readyChar (char:Card) =
+        changes [Ready char.Id]
     let effectChosen effect =
         if effect = bow then
             playerActions (chooseCharacter attacker (Card.hasFate >> not) "Bow character" bowChar) "Choose character to bow: "

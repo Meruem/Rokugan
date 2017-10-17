@@ -5,8 +5,8 @@ open GameTypes
 open GameState
 
 let remove1FateorDiscard (card:Card) = 
-    if card.Fate > 0 then (AddFateOnCard (card, -1))
-    else (DiscardFromPlay card)
+    if card.Fate > 0 then (AddFateOnCard (card.Id, -1))
+    else (DiscardFromPlay card.Id)
 
 let checkAllCardsForDiscard (gs:GameState) =
     gs.Cards 

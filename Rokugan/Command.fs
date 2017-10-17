@@ -4,5 +4,5 @@ open RokuganShared
 open GameTypes
 
 let removeCardState state (card:Card) =
-    if (card.States.Contains state) then Some (RemoveCardState (state, card))
+    if (card.States.Contains state) then Some (RemoveCardState (state, card.Id))
     else None

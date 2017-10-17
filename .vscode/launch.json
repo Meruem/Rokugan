@@ -5,7 +5,7 @@
             "name": ".NET Core Launch (console)",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "buildNoRestore",
+            "preLaunchTask": "buildCore",
             "program": "${workspaceRoot}/build/Rokugan.dll",
             "args": [],
             "cwd": "${workspaceRoot}",

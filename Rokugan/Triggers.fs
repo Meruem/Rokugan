@@ -26,39 +26,39 @@ let addWinConditionsTriggers (gs:GameModel<GameState,Command<GameState,PlayerAct
     let pl2over25honor cmd gs = gs.Player2State.Honor >= 25
     let pl1BrokenStronghold cmd gs = gs.Player1State.StrongholdProvince |> Card.isProvinceBroken    
     let pl2BrokenStronghold cmd gs = gs.Player2State.StrongholdProvince |> Card.isProvinceBroken  
-    let pl2Win = changes [EndGame Player2Won] // {gs with GamePhase = End Player2Won; Actions = [] }
-    let pl1Win = changes [EndGame Player1Won] // {gs with GamePhase = End Player1Won; Actions = [] }
+    let pl2Win _ = changes [EndGame Player2Won] // {gs with GamePhase = End Player2Won; Actions = [] }
+    let pl1Win _ = changes [EndGame Player1Won] // {gs with GamePhase = End Player1Won; Actions = [] }
     let triggers = [
       { Id = Utils.newId ()
         GameTrigger.Name = "Player1 military victory"
         Lifetime = Once
         Condition = pl2BrokenStronghold
-        Transform = pl1Win }
+        Effect = pl1Win }
       { Id = Utils.newId ()
         Name = "Player2 military victory"
         Lifetime = Once
         Condition = pl1BrokenStronghold
-        Transform = pl2Win }
+        Effect = pl2Win }
       { Id = Utils.newId ()
         Name = "Player1 no honor defeat"
         Lifetime = Once
         Condition = pl1NoHonor
-        Transform = pl2Win }
+        Effect = pl2Win }
       { Id = Utils.newId ()
         Name = "Player2 no honor defeat"
         Lifetime = Once
         Condition = pl2NoHonor
-        Transform = pl1Win }
+        Effect = pl1Win }
       { Id = Utils.newId ()
         Name = "Player1 honor victory"
         Lifetime = Once
         Condition = pl1over25honor
-        Transform = pl1Win }
+        Effect = pl1Win }
       { Id = Utils.newId () 
         Name = "Player2 honor victory"
         Lifetime = Once
         Condition = pl2over25honor
-        Transform = pl2Win }]
+        Effect = pl2Win }]
     { gs with Triggers = List.append triggers gs.Triggers}
 
 let gameTrigger name lifetime condition transform =
@@ -66,21 +66,21 @@ let gameTrigger name lifetime condition transform =
     GameTrigger.Name = name
     Lifetime = lifetime 
     Condition = condition
-    Transform = transform }
+    Effect = transform }
 
-let fromCardTrigger (card:Card) ct =
+let fromCardTrigger (cardId:CardId) ct =
     gameTrigger 
-        (sprintf "%A[%d]: %s" card.Title card.Id ct.Name)
+        (sprintf "[%d]: %s" cardId ct.Name)
         ct.Lifetime
-        (ct.Condition card)
-        (ct.Effect card)
+        (ct.Condition cardId)
+        (ct.Effect cardId)
 
 
 let addCardTriggers (card:Card) (gm:GameModel<GameState, Command<GameState,PlayerActionType>, PlayerActionType>) = 
     let cardDef = CardRepository.repository.GetCard card.Title
     let newTriggers =
         cardDef.Triggers 
-        |> List.map (fromCardTrigger card)
+        |> List.map (fromCardTrigger card.Id)
     {gm with Triggers = newTriggers @ gm.Triggers}
 
 let addAllCardsTriggers (gm:GameModel<GameState, Command<GameState,PlayerActionType>, PlayerActionType>) = 

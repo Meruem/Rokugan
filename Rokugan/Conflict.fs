@@ -25,7 +25,7 @@ let getCharactersForConflict attackOrDefence cType alreadyInConflict player (gs:
     let efType = match attackOrDefence with | Attack -> CannotAttack | Defence -> CannotBlock
     let cannotBlock c = gs.CardEffects |> List.exists (fun ce -> ce.Card = c && ce.Type = efType)
     ps.Home 
-        |> List.filter (fun c -> notBowed c && Card.isCharWithValue cType c && not (List.contains c alreadyInConflict))
+        |> List.filter (fun c -> notBowed c && Card.isCharWithValue cType c && not (List.contains c.Id alreadyInConflict))
 
 let calculateTotalSkill cType chars = 
     chars 
@@ -45,6 +45,12 @@ let resolveRingEffect (gs:GameState) yesNo =
         | Element.Water ->  Ring.resolveWaterRing state.Attacker 
         | _ -> failwith "ring should always have defined element"
     
+let totalAttack gs = (attackState gs).Attackers |> List.map gs.Card |> calculateTotalSkill (attackState gs).Type
+let totalDefence gs = (attackState gs).Defenders |> List.map gs.Card |> calculateTotalSkill (attackState gs).Type
+let attackerWon gs = (totalAttack gs) >= (totalDefence gs) && (totalAttack gs) > 0
+let defenderWon gs = (totalDefence gs) > (totalAttack gs) || (totalAttack gs) = 0     
+
+
 let endConflict gs =
     let state = attackState gs
     let winners = 
@@ -53,13 +59,9 @@ let endConflict gs =
     let loosers = 
         if attackerWon gs then state.Defenders 
         else if defenderWon gs then state.Attackers else []
-    [ConflictEnd (Some {Winners = winners; Loosers = loosers}) ])
+    [ConflictEnd (Some {Winners = winners; Loosers = loosers}) ]
 
 let getConflictResolveActions =
-    let totalAttack gs = (attackState gs).Attackers |> calculateTotalSkill (attackState gs).Type
-    let totalDefence gs = (attackState gs).Defenders |> calculateTotalSkill (attackState gs).Type
-    let attackerWon gs = (totalAttack gs) >= (totalDefence gs) && (totalAttack gs) > 0
-    let defenderWon gs = (totalDefence gs) > (totalAttack gs) || (totalAttack gs) = 0     
     // rewrite! eyes bleeding
 
     let looseHonorIfUndefended gs =
@@ -68,8 +70,8 @@ let getConflictResolveActions =
     let bowCombatants gs =
         (attackState gs).Attackers @ (attackState gs).Defenders |> List.map Bow
 
-    let breakProvince gs = 
-        let provDef = repository.GetProvinceCard (attackState gs).Province.Title
+    let breakProvince (gs:GameState) = 
+        let provDef = repository.GetProvinceCard (gs.Card (attackState gs).Province).Title
         if  (totalAttack gs) >= (totalDefence gs) + provDef.Strength then [BreakProvince (attackState gs).Province] else []
 
     Actions.actionWindow Defender "Conflict actions: "
@@ -103,7 +105,7 @@ let rec private chooseDefenders (gs:GameState) =
         |> List.map (fun char -> action 
                                     state.Defender 
                                     (ChooseDefender char) 
-                                    (changes [DeclareDefender char]
+                                    (changes [DeclareDefender char.Id]
                                     >+> playerActions chooseDefenders "Choose defenders: "))
     [passAction] @ actions
 
@@ -131,7 +133,7 @@ let rec private chooseAttackers (gs:GameState) =
         |> List.map (fun char -> action 
                                     state.Attacker 
                                     (ChooseAttacker char)
-                                    (changes [DeclareAttacker char]
+                                    (changes [DeclareAttacker char.Id]
                                     >+> playerActions chooseAttackers "Choose attackers: "))
     [passAction] @ actions
  
@@ -141,7 +143,7 @@ let availableProvinces player gs =
     let provinces = ps.Provinces |> List.filter (Card.isProvinceBroken >> not)
     if provinces.Length <= 1 then ps.StrongholdProvince :: provinces else provinces
 
-let revealProvince card = if Card.isHidden card then [RevealProvince card] else []
+let revealProvince card = if Card.isHidden card then [RevealProvince card.Id] else []
 
 let rec declareAttackActions (gs:GameState) =
     let ps = gs.ActivePlayerState
@@ -149,7 +151,7 @@ let rec declareAttackActions (gs:GameState) =
         declareAttack 
             gs.ActivePlayer ct ring prov
             (changes 
-                ([DeclareConflict (gs.ActivePlayer, ct, ring, prov) ]
+                ([DeclareConflict (gs.ActivePlayer, ct, ring, prov.Id) ]
                 @ revealProvince prov)
             >+> playerActions chooseAttackers "Choose attackers: "
             >+> Actions.actionWindow FirstPlayer "Pre-conflict: "
@@ -184,14 +186,14 @@ let onPassConflict player gs =
     let pass (ps:PlayerState) = {ps with DeclaredConflicts = None :: ps.DeclaredConflicts}
     gs |> changePlayerState player pass  
 
-let onConflictDeclared player ctype ring province (gs:GameState) =
+let onConflictDeclared player ctype ring provinceId (gs:GameState) =
     { gs with 
         AttackState =
           Some
               { Attacker = gs.ActivePlayer
                 Type = ctype
                 Ring = ring
-                Province = province
+                Province = provinceId
                 Attackers = []
                 Defenders = []}}
  

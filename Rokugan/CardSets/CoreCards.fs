@@ -16,8 +16,8 @@ let ``Adept of the Waves`` =
         (aName "Give covert in water"
         @!+ aCondition inPlay
         @!+ aEffect 
-            (fun thisCard -> 
-                let onTargetSelected card = 
+            (fun thisCardId -> 
+                let onTargetSelected (card:Card) = 
                     let cardTrigger = 
                         covertTrigger
                         @?+ tCondition 
@@ -25,10 +25,15 @@ let ``Adept of the Waves`` =
                                 match gs.AttackState with 
                                 | Some state -> state.Ring.Element = Element.Water
                                 | None -> false )
-                    let newTrigger = Triggers.fromCardTrigger card covertTrigger
+                    let newTrigger = Triggers.fromCardTrigger card.Id covertTrigger
                     changes [AddTrigger newTrigger]
                 let onPass = none ()
-                playerActions (PA.chooseCharacterInPlayOrPass thisCard.Owner "Gain covert in water conflict" onTargetSelected onPass) "Choose target for water covert: "))
+                let getActions (gs:GameState) =
+                    let card = gs.Card thisCardId
+                    PA.chooseCharacterInPlayOrPass card.Owner "Gain covert in water conflict" onTargetSelected onPass gs
+
+                playerActions getActions 
+                    "Choose target for water covert: " ))
 
 
 let ``Agasha Swordsmith`` =
@@ -39,14 +44,23 @@ let ``Agasha Swordsmith`` =
         (aName "Search for attachment"
          @!+ aCondition inPlay
          @!+ aEffect
-            (fun thisCard -> 
-                let passAction = changes [CleanRevealedCards; Shuffle (thisCard.Owner, DeckType.Conflict)]
+            (fun thisCardId -> 
+                let passAction = 
+                    act <| fun (gs:GameState) ->
+                        let card = gs.Card thisCardId
+                        [CleanRevealedCards; Shuffle (card.Owner, DeckType.Conflict)]
                 let afterChoice (card:Card) = 
                     changes [PutCardFromDeckToHand card.Id]
                     >+> passAction
                 let onlyAttachment  = function | Card.Attachment _ -> true | _ -> false 
-                act (topConflictCards 5 thisCard.Owner >> List.map RevealCard)
-                >+> playerActions (PA.chooseRevealedCardOrPassCond onlyAttachment thisCard.Owner "Choose revealed card" afterChoice passAction) "Choose attachment: "))
+                act (fun gs ->
+                    gs 
+                    |> topConflictCards 5 (gs.Card thisCardId).Owner
+                    |> List.map RevealCard)
+                >+> playerActions
+                    (fun gs -> 
+                        let card = gs.Card thisCardId
+                        PA.chooseRevealedCardOrPassCond onlyAttachment card.Owner "Choose revealed card" afterChoice passAction gs) "Choose attachment: "))
 
 let ``Aggressive Moto`` =
     title "Aggressive Moto"
@@ -63,11 +77,11 @@ let ``Akodo Gunsō`` =
         (tName "Replenish dynasty"
         @?+ tLifetime Game
         @?+ tCondition 
-            (fun card cmd gs -> 
+            (fun cardId cmd gs -> 
                 match cmd with
-                | PlayDynasty (c, pos) -> card.Id = c.Id
+                | PlayDynasty (c, pos) -> cardId = c
                 | _ -> false)
-        @?+ tEffect (fun card -> none ())) 
+        @?+ tEffect (fun cardId cmd -> none ())) 
 
 
 let ``Artisan Academy`` =
@@ -97,9 +111,12 @@ let ``Golden Plains Outpost`` =
 
 let addCore def = def @+ cardset Core
 
+
 let coreCards =
-   [ ``Akodo Gunsō`` 
-     ``Adept of the Waves``
+   [ ``Adept of the Waves``
+     ``Agasha Swordsmith``
+     ``Aggressive Moto``
+     ``Akodo Gunsō`` 
      ``Artisan Academy``
      ``Admit Defeat``
      ``Ancestral Daishō``

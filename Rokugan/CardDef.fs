@@ -60,8 +60,8 @@ type CardSpec =
 type CardTriggerDef =
       { Name : string
         Lifetime : Lifetime
-        Condition : Card -> Command<GameState,PlayerActionType> -> GameState -> bool
-        Effect : Card -> Transform<GameState, Command<GameState,PlayerActionType>, PlayerActionType>}
+        Condition : CardId -> Command<GameState,PlayerActionType> -> GameState -> bool
+        Effect : CardId -> Command<GameState,PlayerActionType> -> Transform<GameState, Command<GameState,PlayerActionType>, PlayerActionType>}
 
 type CardDef = {
     Title : CardTitle
@@ -246,6 +246,12 @@ module CardDef =
         fun c cmd gs -> (c1 c cmd gs) && (c2 c cmd gs)
 
     let addEffect e1 e2 =
+        fun card cmd -> 
+            let tr = e1 card cmd
+            let cont = e2 card cmd
+            Transform.addContinuation tr (fun () -> cont)
+
+    let addActionEffect e1 e2 =
         fun card -> 
             let tr = e1 card
             let cont = e2 card
@@ -273,7 +279,7 @@ module CardDef =
         actionDef
             (if a2.Name <> "" then a2.Name else a1.Name)
             (addActionConditions a1.Condition a2.Condition)
-            (addEffect a1.Effect a2.Effect)
+            (addActionEffect a1.Effect a2.Effect)
 
     let inline (@!+) (a1:CardActionDef) (a2:CardActionDef)= addActions a1 a2 
     
@@ -283,18 +289,19 @@ module CardDef =
 
     let always = fun _ _ _ -> true
 
-    let nothing = fun _ -> Transform.none ()
+    let tNothing = fun _ _ -> Transform.none ()
+    let aNothing = fun _ -> Transform.none ()
 
-    let tName name = triggerDef name Lifetime.Undefined always nothing
-    let tLifetime lifetime = triggerDef "" lifetime always nothing
-    let tCondition condition = triggerDef "" Lifetime.Undefined condition nothing
+    let tName name = triggerDef name Lifetime.Undefined always tNothing
+    let tLifetime lifetime = triggerDef "" lifetime always tNothing
+    let tCondition condition = triggerDef "" Lifetime.Undefined condition tNothing
 
     let tEffect effect = triggerDef "" Lifetime.Undefined always effect
 
     let anytime = fun _ _ -> true
 
-    let aName name = actionDef name anytime nothing
-    let aCondition condition = actionDef "" condition nothing
+    let aName name = actionDef name anytime aNothing
+    let aCondition condition = actionDef "" condition aNothing
     let aEffect effect = actionDef "" anytime effect
 
 

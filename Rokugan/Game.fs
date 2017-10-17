@@ -24,7 +24,7 @@ let onEndGame status (gs:GameState) =
     {gs with GamePhase = GamePhase.End status}
 
 let updateState command (gm:GameModel<GameState, Command<GameState,PlayerActionType>, PlayerActionType>) = 
-    let (gs2, newcommands) = 
+    let (gm2, newcommands) = 
         gm |>
             match command with
             | ChangePhase p -> send <| onChangePhase p
@@ -74,7 +74,7 @@ let updateState command (gm:GameModel<GameState, Command<GameState,PlayerActionT
             | RemoveTrigger trgId -> gmsend <| onRemoveTrigger trgId
             | Shuffle (pl, deckType) -> send <| onDeckShuffle pl deckType
             | PutCardFromDeckToHand id -> send <| onPutCardFromDeckToHand id
-    ({ gm with Log = command :: gm.Log }, newcommands)
+    ({ gm2 with Log = command :: gm.Log }, newcommands)
 
 let rec update t (updateState:'cmd-> GameModel<'gs,'cmd, 'pa> -> (GameModel<'gs,'cmd, 'pa> * 'cmd list)) (gm:GameModel<'gs, 'cmd, 'pa>) =
     let cmds = 
@@ -86,20 +86,20 @@ let rec update t (updateState:'cmd-> GameModel<'gs,'cmd, 'pa> -> (GameModel<'gs,
         // pick first command and update the game state
         let (gm2, moreCommands) = updateState cmd gm   
         // update can return additional commands so add them to rest of commands
-        let nextTransform = {t with Commands = Some (fun _ -> xs) }
+        let nextTransform = {t with Commands = Some (fun _-> xs) }
         let trgs = 
             gm2.Triggers 
             |> List.filter (fun t -> t.Condition cmd gm2.State) //gm.State.Triggers.TryFind (cmd.ToString())
         match trgs with
         | [] -> update nextTransform updateState gm2
         | trigger :: rest -> 
-            let cnt2 = rest |> List.map (fun trg -> (fun () -> trg.Transform)) // other triggers
+            let cnt2 = rest |> List.map (fun trg -> (fun () -> trg.Effect cmd)) // other triggers
             let cnt3 = cnt2 @ [fun () -> nextTransform] @ gm.Continuations // push other triggers first, then current context and then remaining continuations
             let gm3 = 
                 if trigger.Lifetime = Once then 
                     gm2 |> Triggers.removeTrigger trigger.Id
                 else gm2 
-            update trigger.Transform  updateState {gm3 with Continuations = cnt3} 
+            update (trigger.Effect cmd)  updateState {gm3 with Continuations = cnt3} 
     | [] -> 
         // no more commands
         // if there is continuation -> push tu stack

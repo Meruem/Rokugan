@@ -9,6 +9,10 @@ type ConflictType = Military | Political
 type RingState = Unclaimed | Contested | Claimed of Player
 type CardTitle = Title of string
 type CardState = Bowed | Honored | Dishonored | Hidden | Broken | CannotBlock
+type CardId = int
+type TriggerId = int
+type CardEffectId = int
+type CardPosition = int
 type ZoneName = 
     | Hand
     | DynastyDiscard 
@@ -41,9 +45,9 @@ type AttackState =
   { Type : ConflictType
     Attacker : Player
     Ring : Ring
-    Province : Card
-    Attackers : Card list
-    Defenders : Card list }
+    Province : CardId
+    Attackers : CardId list
+    Defenders : CardId list }
     with
         member this.Defender = match this.Attacker with | Player1 -> Player2 | Player2 -> Player1   
 

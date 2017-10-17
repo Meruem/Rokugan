@@ -16,14 +16,15 @@ let rec actions prompt gs =
             let player = gs.ActivePlayer
             let cardActions =
                 [for action in gs.CardActions do
-                    if action.Card.Owner = player && action.Spec.Condition action.Card gs then yield action]
+                    let card = gs.Card action.CardId
+                    if card.Owner = player && action.Spec.Condition action.CardId gs then yield action]
 
             cardActions 
             |> List.map (fun action ->
                 { Type =  PlayerActionType.ActivateAction action
                   Player = player
                   OnExecute = 
-                      action.Spec.Effect action.Card
+                      action.Spec.Effect action.CardId
                       >+> changes [CleanPassFlags; SwitchActivePlayer]
                       >+> playerActions (actions prompt) prompt})
         let passAction = 
@@ -49,17 +50,18 @@ let actionWindow startingPlayer prompt =
             | None -> failwith "called action window with 'Defender' but outside combat" )
     >+> playerActions (actions prompt) prompt
 
-let cardAction name condition effect card =
+let cardAction name condition effect cardId =
   { Spec =  
       { Name = name
         Condition = condition
         Effect = effect }
-    Card = card
+    CardId = cardId
     LastUsed = None }
 
 
 
-let addCardActions (card:Card) (gm:GameModel<GameState, Command<GameState,PlayerActionType>, PlayerActionType>) = 
+let addCardActions (cardId:CardId) (gm:GameModel<GameState, Command<GameState,PlayerActionType>, PlayerActionType>) = 
+    let card = gm.State.Card cardId
     let cardDef = CardRepository.repository.GetCard card.Title
     let newActions =
         cardDef.Actions
@@ -68,13 +70,13 @@ let addCardActions (card:Card) (gm:GameModel<GameState, Command<GameState,Player
                 (sprintf "%A[%d]: %s" card.Title card.Id ac.Name)
                 ac.Condition
                 ac.Effect
-                card)
+                cardId)
     let state' = { gm.State with CardActions = newActions @ gm.State.CardActions }
     {gm with State = state' }
 
 let addAllCardsActions (gm:GameModel<GameState, Command<GameState,PlayerActionType>, PlayerActionType>) = 
     gm.State.Cards 
-    |> List.fold (fun acc card -> addCardActions card acc) gm
+    |> List.fold (fun acc card -> addCardActions card.Id acc) gm
 
 let onActionPass player gs =
     gs |> changePlayerState player passPlayer

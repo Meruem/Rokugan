@@ -9,7 +9,7 @@ open PlayerActions
 let readyAllCards (gs:GameState) = 
     gs.Cards 
     |> List.filter Card.isBowed 
-    |> List.map Ready
+    |> List.map (fun c -> Ready c.Id)
     
 let returnRings (gs:GameState) =
     gs.Rings 
@@ -22,7 +22,7 @@ let gotoRegroupPhase gotoNextPhase =
             match card.Zone with 
             | DynastyInProvinces pos -> [DrawDynastyCard (card.Owner,pos)]
             | _ -> []
-            @ [DiscardFromPlay card] 
+            @ [DiscardFromPlay card.Id] 
         changes (cards |> List.collect drawAndDiscardCard)
         
     changes [ChangePhase Regroup]
