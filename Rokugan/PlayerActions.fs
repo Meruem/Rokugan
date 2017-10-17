@@ -32,6 +32,18 @@ let chooseCharacter player condition desc getTransform (gs:GameState) =
     |> List.filter (fun c -> condition c && Card.isCharacter c)
     |> List.map (chooseCharacterAction player desc getTransform)
 
+let chooseRevealedCardOrPass player desc next passAction gs =
+    let revealedActions = 
+        gs.RevealedCards 
+        |> List.map (chooseCardAction player desc next)
+    (pass player passAction) :: revealedActions
+
+let chooseRevealedCardOrPassCond condition player desc next passAction gs =
+    let revealedActions = 
+        gs.RevealedCards 
+        |> List.filter condition
+        |> List.map (chooseCardAction player desc next)
+    (pass player passAction) :: revealedActions
 
 //gets list of actions for both players for each dynasty card to be chosen
 //each action has continuation pointing again at this function
