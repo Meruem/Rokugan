@@ -3,6 +3,7 @@ module Card
 open RokuganShared
 open GameTypes
 open CardRepository
+open CardDef
 
 let (|Dynasty|_|) (card:Card) =
     match (repository.GetCard card.Title).Spec with
@@ -30,7 +31,16 @@ let (|Character|_|) (card:Card) =
     match repository.GetCard card.Title with
     | CharacterDef c -> Some card
     | _ -> None 
-    
+
+let (|Attachment|_|) (card: Card) =
+    match (repository.GetCard card.Title).Spec with
+    | CardSpec.Conflict c ->
+        match c with
+        | ConflictCardDef.Attachment a -> Some card 
+        | _ -> None
+    | _ -> None
+
+
 
 // ----------- Card creation ------------
 let createCard title player zone =
@@ -73,6 +83,12 @@ let dynastyCardPosition card =
     match card.Zone with
     | DynastyInProvinces n -> n
     | _ -> failwith "Card is not a dynasty card in provice"
+
+let isInPlay card = 
+    match card.Zone with
+    | ZoneName.Conflict -> true
+    | ZoneName.Home -> true
+    | _ -> false
 
 // ----------- State changes --------------
 
