@@ -11,9 +11,10 @@
   <ItemGroup>
     <Compile Include="Utils.fs" />
     <Compile Include="GameTypes.fs" />
+    <Compile Include="Transform.fs" />
+    <Compile Include="CardDef.fs" />
     <Compile Include="CardRepositoryClass.fs" />
     <Compile Include="GameUtils.fs" />
-    <Compile Include="Transform.fs" />
     <Compile Include="CardRepository.fs" />
     <Compile Include="Card.fs" />
     <Compile Include="Deck.fs" />
@@ -23,15 +24,15 @@
     <Compile Include="GameState.fs" />
     <Compile Include="PlayerActions.fs" />
     <Compile Include="Actions.fs" />
+    <Compile Include="Def.fs" />
     <Compile Include="Dynasty.fs" />
     <Compile Include="Draw.fs" />
     <Compile Include="Ring.fs" />
     <Compile Include="Conflict.fs" />
     <Compile Include="Fate.fs" />
     <Compile Include="Regroup.fs" />
-    <Compile Include="CardDef.fs" />
-    <Compile Include="CardSets/CoreCards.fs" />
     <Compile Include="CardSets/TestCards.fs" />
+    <Compile Include="CardSets/CoreCards.fs" />
     <Compile Include="SampleDeck.fs" />
     <Compile Include="Game.fs" />
     <Compile Include="Rokugan.fs" />
