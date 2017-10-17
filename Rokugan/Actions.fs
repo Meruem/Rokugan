@@ -6,7 +6,7 @@ open PlayerState
 open GameState
 open PlayerActions
 open CardRepository
-
+open CardDef
 
 let rec actions prompt gs =
     if hasPassed gs.Player1State && hasPassed gs.Player2State then []
@@ -59,7 +59,7 @@ let cardAction name condition effect card =
 
 
 
-let addCardActions (card:Card) (gm:GameModel<GameState, Command, PlayerActionType>) = 
+let addCardActions (card:Card) (gm:GameModel<GameState, Command<GameState,PlayerActionType>, PlayerActionType>) = 
     let cardDef = CardRepository.repository.GetCard card.Title
     let newActions =
         cardDef.Actions
@@ -72,7 +72,7 @@ let addCardActions (card:Card) (gm:GameModel<GameState, Command, PlayerActionTyp
     let state' = { gm.State with CardActions = newActions @ gm.State.CardActions }
     {gm with State = state' }
 
-let addAllCardsActions (gm:GameModel<GameState, Command, PlayerActionType>) = 
+let addAllCardsActions (gm:GameModel<GameState, Command<GameState,PlayerActionType>, PlayerActionType>) = 
     gm.State.Cards 
     |> List.fold (fun acc card -> addCardActions card acc) gm
 
