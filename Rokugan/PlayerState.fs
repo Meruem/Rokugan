@@ -2,8 +2,9 @@ module PlayerState
 
 open RokuganShared
 open GameTypes
-
 open CardRepository
+open CardDef
+
 open System
 
 let otherPlayer player = if player = Player1 then Player2 else Player1
