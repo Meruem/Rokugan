@@ -12,22 +12,27 @@ open Draw
 open Actions
 
 // helper function for command handlers which doesn't contain any sub-commands
-let send gsmod gs = (gsmod gs), []
-let cont = id
+let send gsmod (gm:GameModel<'a,'b,'c>) = {gm with State = (gsmod gm.State) }, []
+
+let cont gsmod (gm:GameModel<'a,'b,'c>)  = 
+    let gs', cmd =  gsmod gm.State
+    {gm with State = gs'}, cmd
+
+let gmsend gsmod (gm:GameModel<'a,'b,'c>) = (gsmod gm), []
 
 let onEndGame status (gs:GameState) =
     {gs with GamePhase = GamePhase.End status}
 
-let updateState command (gm:GameModel<GameState, Command, PlayerActionType>) = 
+let updateState command (gm:GameModel<GameState, Command<GameState,PlayerActionType>, PlayerActionType>) = 
     let (gs2, newcommands) = 
-        gm.State |>
+        gm |>
             match command with
             | ChangePhase p -> send <| onChangePhase p
             | RemoveCardState (state, card) -> send <| onRemoveCardState card state 
             | AddFate (player, amount) -> send <| onAddFate player amount 
             | DynastyPass player -> send <| onDynastyPass player 
             | SwitchActivePlayer -> send <| onSwitchActivePlayer
-            | PlayDynasty card -> send <| onPlayDynastyCard card
+            | PlayDynasty (card, pos) -> send <| onPlayDynastyCard card
             | AddFateOnCard (card, fate) -> send <| onAddFateToCard fate card
             | DrawDynastyCard (player, pos) -> send <| onDrawDynastyCard player pos
             | Bid (player, amount) -> send <| onPlayerBid player amount
@@ -62,8 +67,14 @@ let updateState command (gm:GameModel<GameState, Command, PlayerActionType>) =
             | Debug str -> send <| (fun gs -> (printfn "Debug: %s" str); gs)
             | AddCardEffect (card, lifetime, effect) -> send <| onAddCardEffect card lifetime effect
             | RemoveCardEffect id -> send <| onRemoveCardEffect id
-            | ConflictEnd -> send <| onConflictEnd
-    ({ gm with Log = command :: gm.Log; State = gs2 }, newcommands)
+            | ConflictEnd state -> send <| onConflictEnd state
+            | RevealCard card -> send <| onRevealCard card
+            | CleanRevealedCards -> send <| onCleanRevealedCards
+            | AddTrigger trg -> gmsend <| onAddTrigger trg
+            | RemoveTrigger trgId -> gmsend <| onRemoveTrigger trgId
+            | Shuffle (pl, deckType) -> send <| onDeckShuffle pl deckType
+            | PutCardFromDeckToHand id -> send <| onPutCardFromDeckToHand id
+    ({ gm with Log = command :: gm.Log }, newcommands)
 
 let rec update t (updateState:'cmd-> GameModel<'gs,'cmd, 'pa> -> (GameModel<'gs,'cmd, 'pa> * 'cmd list)) (gm:GameModel<'gs, 'cmd, 'pa>) =
     let cmds = 
@@ -86,7 +97,7 @@ let rec update t (updateState:'cmd-> GameModel<'gs,'cmd, 'pa> -> (GameModel<'gs,
             let cnt3 = cnt2 @ [fun () -> nextTransform] @ gm.Continuations // push other triggers first, then current context and then remaining continuations
             let gm3 = 
                 if trigger.Lifetime = Once then 
-                    gm2 |> Triggers.removeTrigger trigger.Name
+                    gm2 |> Triggers.removeTrigger trigger.Id
                 else gm2 
             update trigger.Transform  updateState {gm3 with Continuations = cnt3} 
     | [] -> 
@@ -121,7 +132,7 @@ let rec gotoNextPhase phase =
     | GamePhase.Regroup -> Regroup.gotoRegroupPhase (nextPhaseLazy Dynasty)
     | _ -> none ()
 
-let playAction n (gm:GameModel<GameState, Command, PlayerActionType>) =
+let playAction n (gm:GameModel<GameState, Command<GameState,PlayerActionType>, PlayerActionType>) =
     if n >= gm.Actions.Length then gm
     else
         let action = gm.Actions.[n]
@@ -146,7 +157,8 @@ let startGame playerConfig1 playerConfig2 firstPlayer =
             CardActions = []
             CardEffects = []
             Player1State = initializePlayerState playerConfig1 Player1
-            Player2State = initializePlayerState playerConfig2 Player2 }
+            Player2State = initializePlayerState playerConfig2 Player2 
+            RevealedCards = []}
         |> addSecondPlayer1Fate
     let gm =
         { State = gs 
