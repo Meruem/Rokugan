@@ -6,6 +6,7 @@ open GameState
 open PlayerState
 open PlayerActions
 open CardRepository
+open CardDef
 
 let attackState gs = 
     match gs.AttackState with
@@ -44,6 +45,15 @@ let resolveRingEffect (gs:GameState) yesNo =
         | Element.Water ->  Ring.resolveWaterRing state.Attacker 
         | _ -> failwith "ring should always have defined element"
     
+let endConflict gs =
+    let state = attackState gs
+    let winners = 
+        if attackerWon gs then state.Attackers 
+        else if defenderWon gs then state.Defenders else []
+    let loosers = 
+        if attackerWon gs then state.Defenders 
+        else if defenderWon gs then state.Attackers else []
+    [ConflictEnd (Some {Winners = winners; Loosers = loosers}) ])
 
 let getConflictResolveActions =
     let totalAttack gs = (attackState gs).Attackers |> calculateTotalSkill (attackState gs).Type
@@ -77,6 +87,7 @@ let getConflictResolveActions =
                 if (attackerWon gs) then (yesNo (attackState gs).Attacker "Resolve ring effect" (resolveRingEffect gs)) else [])
             "Resolve ring effect: "
     >+> act bowCombatants
+    >+> act endConflict
     >+> act (fun gs -> [SetActivePlayer (attackState gs).Defender])
 
 
@@ -99,7 +110,7 @@ let rec private chooseDefenders (gs:GameState) =
 
 let passConflict gs = 
     [PassConflict gs.ActivePlayer
-     ConflictEnd
+     ConflictEnd None
      SwitchActivePlayer]
 
 let rec private chooseAttackers (gs:GameState) = 
@@ -142,14 +153,13 @@ let rec declareAttackActions (gs:GameState) =
                 @ revealProvince prov)
             >+> playerActions chooseAttackers "Choose attackers: "
             >+> Actions.actionWindow FirstPlayer "Pre-conflict: "
-            >+> playerActions declareAttackActions "Declare conflict: "
-            >+> changes [ConflictEnd])
+            >+> playerActions declareAttackActions "Declare conflict: ")
     let passAction = 
         let cnt = 
             if gs.OtherPlayerState.DeclaredConflicts.Length = 2 then 
-                changes [PassConflict gs.ActivePlayer; ConflictEnd] 
+                changes [PassConflict gs.ActivePlayer; ConflictEnd None] 
             else 
-                changes [PassConflict gs.ActivePlayer; ConflictEnd] 
+                changes [PassConflict gs.ActivePlayer; ConflictEnd None] 
                 >+> Actions.actionWindow FirstPlayer "Pre-conflict: "
                 >+> changes [SetActivePlayer (otherPlayer gs.ActivePlayer)]
                 >+> playerActions declareAttackActions "Declare conflict: "
@@ -199,4 +209,5 @@ let onConflictStarted gs =
     let state = attackState gs
     gs |> changePlayerState state.Attacker (fun st -> {st with DeclaredConflicts = Some state.Type :: st.DeclaredConflicts}) 
 
-let onConflictEnd = cleanEffectsByLifetime Lifetime.Conflict
+let onConflictEnd state = 
+    cleanEffectsByLifetime Lifetime.Conflict
