@@ -6,6 +6,7 @@ open PlayerState
 open GameState
 open PlayerActions
 open CardRepository
+open CardDef
 
 let revealAllDynastyCardsAtProvinces gs =
     gs.Player1State.DynastyInProvinces @ gs.Player2State.DynastyInProvinces
@@ -35,8 +36,8 @@ let switchActivePlayer gs =
     else [SwitchActivePlayer]
     
 
-let playDynastyMod card pos addFate player = 
-    [ PlayDynasty card
+let playDynasty card pos addFate player = 
+    [ PlayDynasty (card, pos)
       AddFateOnCard (card, addFate)
       AddFate (player, -addFate)
       DrawDynastyCard (player, pos) ]
@@ -50,7 +51,7 @@ let rec dynastyPhaseActions (gs:GameState) =
             let card = dynastyCardAtPosition pos ps
             let playCard = 
                 fun fate -> 
-                        changes (playDynastyMod card pos fate gs.ActivePlayer)
+                        changes (playDynasty card pos fate gs.ActivePlayer)
                         >+> act switchActivePlayer
                         >+> playerActions dynastyPhaseActions "Dynasty phase:"
             playCharacter 
