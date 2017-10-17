@@ -44,6 +44,12 @@ let hasPlayerPassed player gs =
     | Player1 -> hasPassed gs.Player1State
     | Player2 -> hasPassed gs.Player2State
 
+let topConflictCards n player gs = 
+    let ps = gs |> playerState player
+    ps.ConflictDeck.Cards 
+    |> List.fold (fun (acc: Card list) c -> if acc.Length < n then c::acc else acc) []
+
+
 
 // -------------- Game state modifiers --------------
 
@@ -154,4 +160,32 @@ let onAddCardEffect =
 
 let onRemoveCardEffect = removeCardEffect
 
-    
+let onRevealCard card gs = { gs with RevealedCards = card :: gs.RevealedCards} 
+let onCleanRevealedCards gs = {gs with RevealedCards = []}
+let onAddTrigger = Triggers.addTrigger 
+
+let onRemoveTrigger = Triggers.removeTrigger
+
+let onDeckShuffle player deckType (gs:GameState) =
+    gs |> changePlayerState 
+        player
+        (fun ps ->
+            match deckType with
+            | Dynasty -> {ps with DynastyDeck = Deck.shuffleDeck ps.DynastyDeck}
+            | Conflict -> {ps with ConflictDeck = Deck.shuffleDeck ps.ConflictDeck})
+
+let onPutCardFromDeckToHand id (gs:GameState) =
+    let cardM = gs.Cards |> List.tryFind (fun c -> c.Id = id)
+    match cardM with 
+    | None -> printfn "Card not found"; gs
+    | Some card -> 
+        let card' = { card with Zone = Hand }
+        gs 
+        |> changePlayerState card.Owner
+            (fun ps -> 
+                match card.Zone with 
+                | ZoneName.ConflictDeck -> 
+                    { ps with 
+                        ConflictDeck = Deck (ps.ConflictDeck.Cards |> List.filter (fun c -> c.Id <> id))
+                        CardsInPlay = ps.CardsInPlay |> Map.add id card' }
+                | _ -> printfn "not in conflict deck"; ps) 
