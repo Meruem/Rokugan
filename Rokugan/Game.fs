@@ -87,39 +87,53 @@ let rec update t (updateState:'cmd-> GameModel<'gs,'cmd, 'pa> -> (GameModel<'gs,
         let (gm2, moreCommands) = updateState cmd gm   
         // update can return additional commands so add them to rest of commands
         let nextTransform = {t with Commands = Some (fun _-> xs) }
+        
+        // find all triggers which fires on current state/command
         let trgs = 
             gm2.Triggers 
-            |> List.filter (fun t -> t.Condition cmd gm2.State) //gm.State.Triggers.TryFind (cmd.ToString())
+            |> List.filter (fun t -> t.Condition cmd gm2.State) 
         match trgs with
-        | [] -> update nextTransform updateState gm2
+        | [] -> 
+            // no trigger, continue with rest of commands
+            update nextTransform updateState gm2
         | trigger :: rest -> 
             let cnt2 = rest |> List.map (fun trg -> (fun () -> trg.Effect cmd)) // other triggers
             let cnt3 = cnt2 @ [fun () -> nextTransform] @ gm.Continuations // push other triggers first, then current context and then remaining continuations
+            
+            // remove triggers with lifetime = Once
             let gm3 = 
                 if trigger.Lifetime = Once then 
                     gm2 |> Triggers.removeTrigger trigger.Id
                 else gm2 
+            // call update on trigger
             update (trigger.Effect cmd)  updateState {gm3 with Continuations = cnt3} 
     | [] -> 
         // no more commands
-        // if there is continuation -> push tu stack
+        // if there is continuation -> push to stack
         let gm' = 
             match t.Continuation with
             | _::_ -> {gm with Continuations = t.Continuation @ gm.Continuations}
             | [] -> gm
-        // if not action is defined pop continuation 
+        
+        // this will fire update on continuation (in case of 'None' or empty next actions)
         let updateContinuation gm =
             match gm.Continuations with
             | [] -> gm
             | cnt :: rest -> update (cnt()) updateState {gm with Continuations = rest} 
 
+        // check next actions
         match t.NextActions with
         | Some getactions -> 
             let newActions = getactions gm'.State
             match newActions with
-            | _ :: _ -> {gm' with Actions = newActions; Prompt = t.ActionPrompt}
-            | [] -> gm' |> updateContinuation  // empty player action -> pop continuation
+            | _ :: _ -> 
+                // actions are defined, set them as current actions
+                {gm' with Actions = newActions; Prompt = t.ActionPrompt}
+            | [] -> 
+                // empty player action -> pop continuation and call update on it
+                gm' |> updateContinuation  
         | None -> 
+            // if no actions are defined pop continuation from stack and call update again
             gm' |> updateContinuation
 
 let rec gotoNextPhase phase =
